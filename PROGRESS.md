@@ -3,7 +3,7 @@
 Claude Code updates this file after every milestone: tick the box, add a short note, and say what's next.
 **[ANDREW APPROVES]** = stop, show Andrew, and wait for his OK.
 
-**Current status:** 1.1 done (2026-10-11). Next up: milestone 1.2 (bear concept images, ~1 credit).
+**Current status:** 1.2 in progress: 4 bear concepts generated (`assets/concepts/bear/`), waiting for Andrew's pick. Then 1.3 (bear 3D model, 47.5 credits, ask first).
 
 ---
 
@@ -59,7 +59,7 @@ Starting balance: 1,210 (2026-10-11)
 
 | Date | What | Model | Credits | Balance |
 |---|---|---|---|---|
-| | | | | |
+| 2026-10-11 | 1.2 bear concepts ×4 (price check said 0.25 = per image) | `gpt_image_2_5` | 1 | 1,209 |
 
 ## Decision log
 | Date | Decision | Why |
@@ -73,4 +73,5 @@ Starting balance: 1,210 (2026-10-11)
 ## Session notes
 (Newest first. 1–3 lines per session: what got done, what's next, anything Andrew needs to do.)
 
+- **2026-10-11 · Session 1 (cont.).** Andrew OK'd the Phase 1 asks. Floorplan answers: pink sitting room = the common area (confirmed); downstairs bedroom is on the far east side next to the Catan room (matches the plan); basement stairs start right under the main stairs in the foyer and go down the opposite way (NOT the back hall). That conflicts with the bowling alley position; proposed a fix, waiting on Andrew before editing `floorplan.json`.
 - **2026-10-11 · Session 1.** Project lives in `~/Projects/the-den`, private repo github.com/aboston678/the-den. Higgsfield checked: 1,210 credits (Plus). Milestone 1.1 done and pushed. Next: 1.2 bear concepts. Andrew to answer the floorplan questions (is the pink room the "little common area"? where do the basement stairs start? which side is the downstairs bedroom?).
