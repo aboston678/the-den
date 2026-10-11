@@ -1,0 +1,44 @@
+.viewer-panel {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 420px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: rgb(31 42 34 / 0.88);
+  color: var(--cream);
+  font-size: 13px;
+}
+
+.viewer-panel strong {
+  color: var(--ember);
+  letter-spacing: 0.12em;
+}
+
+.viewer-panel code {
+  opacity: 0.7;
+  font-size: 11px;
+}
+
+.viewer-clips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.viewer-clips button {
+  border: 1px solid var(--cream);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--cream);
+  padding: 3px 8px;
+  cursor: pointer;
+}
+
+.viewer-clips button.active {
+  background: var(--ember);
+  border-color: var(--ember);
+}
