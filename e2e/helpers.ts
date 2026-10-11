@@ -7,9 +7,12 @@ export function failOnErrors(page: Page) {
   });
 }
 
-/** Create a party from the lobby and press Play. Returns the party code. */
-export async function hostGame(page: Page, name: string, { play = true } = {}) {
-  await page.goto("/");
+/**
+ * Create a party from the lobby and press Play. Returns the party code.
+ * world: "test" plays on the flat 1.6 test field instead of the property.
+ */
+export async function hostGame(page: Page, name: string, { play = true, world }: { play?: boolean; world?: "test" } = {}) {
+  await page.goto(world ? `/?world=${world}` : "/");
   await page.getByTestId("nickname").fill(name);
   await page.getByTestId("create").click();
   // The party card shows a moment before the server sends the code, so wait for a real one.
@@ -45,4 +48,14 @@ export async function newPlayer(browser: Browser) {
   const page = await context.newPage();
   failOnErrors(page);
   return page;
+}
+
+/** Frames per second over `ms` milliseconds. */
+export async function fps(page: Page, ms = 2000) {
+  return page.evaluate((ms) => new Promise<number>((done) => {
+    let n = 0;
+    const start = performance.now();
+    const tick = () => (performance.now() - start < ms ? (n++, requestAnimationFrame(tick)) : done((n * 1000) / ms));
+    requestAnimationFrame(tick);
+  }), ms);
 }

@@ -9,6 +9,8 @@ import { sendPose } from "../../net/party.ts";
 import { remotes } from "../../net/remotes.ts";
 import { clearPresses, consumePress, isHeld } from "../input/keyboard.ts";
 import { cameraState, playerState } from "../state.ts";
+import { groundY } from "../world/ground.ts";
+import { invisibleColliders } from "../world/invisible.ts";
 import { approach, facingYaw, moveDirection, turnToward } from "./movement.ts";
 import { useBearModel } from "./useBearModel.ts";
 
@@ -175,9 +177,20 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
 
     const tp = playerState.teleportTo;
     if (tp) {
-      p.x = tp.x; p.y = tp.y + CAPSULE_CENTER; p.z = tp.z;
+      let y = tp.y;
+      if (Number.isNaN(y)) {
+        const hit = world.castRay(new rapier.Ray({ x: tp.x, y: 80, z: tp.z }, { x: 0, y: -1, z: 0 }), 200, true, undefined, undefined, undefined, undefined,
+          (c) => c.handle !== collider.current!.handle && !invisibleColliders.has(c.handle));
+        y = hit ? 80 - hit.timeOfImpact : groundY(tp.x, tp.z);
+      }
+      p.x = tp.x; p.y = y + CAPSULE_CENTER; p.z = tp.z;
       moved.x = moved.y = moved.z = 0;
       st.vy = 0;
+      if (tp.yaw !== undefined) {
+        st.yaw = tp.yaw;
+        st.dir = { x: Math.sin(tp.yaw), z: Math.cos(tp.yaw) };
+        cameraState.yaw = tp.yaw + Math.PI; // camera behind the bear
+      }
       playerState.teleportTo = null;
       body.current.setTranslation(p, true);
     }
@@ -200,6 +213,7 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
     playerState.gameTime += dt;
     playerState.action = animator.action;
     playerState.colliderHandle = collider.current.handle;
+    playerState.yaw = st.yaw;
     if (visual.current) visual.current.rotation.y = st.yaw;
     animator.update(dt, Math.min(st.speed, groundSpeed));
 

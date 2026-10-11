@@ -1,7 +1,7 @@
 import { expect, type Page, test } from "@playwright/test";
 import { hostGame, joinGame, newPlayer, waitForBear } from "./helpers.ts";
 
-// Milestone 1.7: two "computers" (separate browser contexts) in one party.
+// Milestone 1.7: two "computers" (separate browser contexts) in one party, on the flat test field.
 
 const me = (p: Page) => p.evaluate(() => ({ ...window.__den!.player.position, action: window.__den!.player.action }));
 const others = (p: Page) => p.evaluate(() => window.__den!.remotes());
@@ -9,7 +9,7 @@ const others = (p: Page) => p.evaluate(() => window.__den!.remotes());
 async function twoBears(browser: Parameters<typeof newPlayer>[0]) {
   const a = await newPlayer(browser);
   const b = await newPlayer(browser);
-  const code = await hostGame(a, "Alpha", { play: false });
+  const code = await hostGame(a, "Alpha", { play: false, world: "test" });
   await joinGame(b, code, "Bravo");
   await expect(b.getByTestId("party-list")).toContainText("Alpha");
   await expect(b.getByTestId("play")).toHaveCount(0); // only the host can start

@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { failOnErrors, hostGame } from "./helpers.ts";
 
-// Milestone 1.6: the bear moves, jumps, roars, dances, and the camera avoids walls.
+// Milestone 1.6: the bear moves, jumps, roars, dances, and the camera avoids walls (on the flat test field).
 
 const den = (page: Page) => page.evaluate(() => {
   const d = window.__den!;
@@ -16,7 +16,7 @@ async function hold(page: Page, keys: string[], ms: number) {
 
 test.beforeEach(async ({ page }) => {
   failOnErrors(page);
-  await hostGame(page, "Tester");
+  await hostGame(page, "Tester", { world: "test" });
 });
 
 test("walks and sprints at the spec speeds", async ({ page }) => {
@@ -80,7 +80,7 @@ test("dance and roar start, and moving cancels them", async ({ page }) => {
 test("camera pulls in when a wall is behind the bear", async ({ page }) => {
   // Inside the test room (back wall at z = −13), 1.5 m from the back wall, with the camera
   // swung round to the −z side so the wall is right behind it.
-  await page.evaluate(() => window.__den!.teleport(-12, -11.5));
+  await page.evaluate(() => window.__den!.teleport(-12, -11.5, 0)); // on the floor, not the roof
   await page.evaluate(() => { window.__den!.camera.yaw = Math.PI; });
   await page.waitForTimeout(800);
   const { camera } = await den(page);

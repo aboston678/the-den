@@ -5,6 +5,7 @@ import { type PerspectiveCamera, Vector3 } from "three";
 import { CAMERA } from "../config.ts";
 import { approach } from "../player/movement.ts";
 import { cameraState, playerState } from "../state.ts";
+import { invisibleColliders } from "../world/invisible.ts";
 
 const target = new Vector3();
 const offset = new Vector3();
@@ -58,7 +59,7 @@ export function ThirdPersonCamera() {
     // How far back can we go before hitting something (ignoring the bear itself)?
     const ray = new rapier.Ray(target, offset);
     const hit = world.castRay(ray, cameraState.distance + CAMERA.wallPadding, true, undefined, undefined, undefined, undefined,
-      (c) => c.handle !== playerState.colliderHandle);
+      (c) => c.handle !== playerState.colliderHandle && !invisibleColliders.has(c.handle));
     const allowed = hit ? Math.max(0.4, hit.timeOfImpact - CAMERA.wallPadding) : cameraState.distance;
     cameraState.current = allowed < cameraState.current ? allowed : approach(cameraState.current, allowed, 3 * dt);
 

@@ -147,7 +147,7 @@ export function surfaceAt(x: number, z: number, h = heightAt(x, z)) {
 
 /** True if (x, z) is somewhere a tree, rock or fern may go (not lawn, road, water, walls or house). */
 export function isWild(x: number, z: number, clearance = 0) {
-  if (Math.abs(x) > 148 || Math.abs(z) > 148) return false;
+  if (Math.abs(x) > 172 || Math.abs(z) > 172) return false; // trees continue past the boundary, into the fog
   if (lawnMask(x, z) > 0.12) return false;
   const d = x - streamCenter(z);
   if (d > -15 - clearance && d < 14 + clearance) return false;
@@ -159,7 +159,14 @@ export function isWild(x: number, z: number, clearance = 0) {
   return true;
 }
 
-/** True inside the walkable area (the invisible boundary and the stream's wading limit). */
+/** True on the dock's boards (it reaches past the wading limit into deep water). */
+export function isOnDock(x: number, z: number) {
+  const d = x - streamCenter(DOCK.z);
+  return Math.abs(z - DOCK.z) <= DOCK.width / 2 && d >= DOCK.startD && d <= DOCK.startD + DOCK.length;
+}
+
+/** True inside the walkable area (the invisible boundary and the stream's wading limit, plus the dock). */
 export function isInBounds(x: number, z: number) {
-  return Math.abs(x) <= BOUNDARY_HALF && Math.abs(z) <= BOUNDARY_HALF && x - streamCenter(z) <= STREAM.wadeLimitD;
+  if (Math.abs(x) > BOUNDARY_HALF || Math.abs(z) > BOUNDARY_HALF) return false;
+  return x - streamCenter(z) <= STREAM.wadeLimitD || isOnDock(x, z);
 }

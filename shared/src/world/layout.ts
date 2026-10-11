@@ -112,7 +112,7 @@ export const STONE_WALLS: PathPoint[][] = [
   // Behind the greenhouse, along the back woodline (greenhouse-exterior photo).
   [{ x: -37, z: 10 }, { x: -35, z: 24 }, { x: -27, z: 36 }, { x: -14, z: 43 }, { x: 2, z: 45 }],
   // Along the north woodline beyond the front lawn.
-  [{ x: -16, z: -30 }, { x: 4, z: -33 }, { x: 24, z: -31 }, { x: 44, z: -24 }],
+  [{ x: -22, z: -38 }, { x: 4, z: -41 }, { x: 26, z: -39 }, { x: 47, z: -32 }],
   // An old boundary wall through the southern woods.
   [{ x: 24, z: 72 }, { x: 52, z: 68 }, { x: 80, z: 71 }, { x: 98, z: 66 }],
   // And one in the northern woods.

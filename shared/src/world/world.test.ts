@@ -60,9 +60,13 @@ describe("the property", () => {
     }
   });
 
-  it("the dock starts at a landing level with its boards, due east of the house", () => {
+  it("the dock starts at a landing level with its boards, due east of the house, and reaches deep water", () => {
     expect(heightAt(dockStartX() - 1, DOCK.z)).toBeCloseTo(DOCK.deckY, 1);
     expect(DOCK.deckY - STREAM.waterY).toBeGreaterThan(0.4);
+    const end = dockStartX() + DOCK.length - 0.3;
+    expect(isInBounds(end, DOCK.z)).toBe(true); // you can walk to the end...
+    expect(isInBounds(end, DOCK.z + DOCK.width)).toBe(false); // ...but not step off into deep water
+    expect(STREAM.waterY - heightAt(end, DOCK.z)).toBeGreaterThan(1);
   });
 
   it("the trail runs ~90 m from the back lawn to the dock", () => {

@@ -22,11 +22,18 @@ const TEXTURES = {
   planks: "weathered_planks",
 };
 
+/** Colour tweaks: the walls in the photos are grey fieldstone, the texture is brown slate. */
+const LOOK = {
+  stone_wall: { saturation: 0.3, brightness: 1.3 },
+};
+
 await mkdir(OUT, { recursive: true });
 const have = new Set(await readdir(SRC));
 for (const [name, id] of Object.entries(TEXTURES)) {
   if (!have.has(id)) throw new Error(`missing ${SRC}/${id}: run tools/fetch-polyhaven.mjs`);
-  await sharp(`${SRC}/${id}/diff.jpg`).resize(1024, 1024).webp({ quality: 85 }).toFile(`${OUT}/${name}_diff.webp`);
+  const diff = sharp(`${SRC}/${id}/diff.jpg`).resize(1024, 1024);
+  if (LOOK[name]) diff.modulate(LOOK[name]);
+  await diff.webp({ quality: 85 }).toFile(`${OUT}/${name}_diff.webp`);
   await sharp(`${SRC}/${id}/nor_gl.jpg`).resize(1024, 1024).webp({ quality: 90 }).toFile(`${OUT}/${name}_nor.webp`);
   await sharp(`${SRC}/${id}/rough.jpg`).resize(512, 512).greyscale().webp({ quality: 85 }).toFile(`${OUT}/${name}_rough.webp`);
   console.log("  ", name, "<-", id);

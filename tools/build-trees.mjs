@@ -27,28 +27,28 @@ const OUT = "client/public/models/trees.glb";
 const KINDS = {
   // Eastern white pine: tall bare trunk, layered crown in the top half. The forest's main tree.
   whitepine_a: { preset: "Pine Large", height: 27, seed: 1201, tweak: (o) => {
-    o.branch.start[1] = 0.42; o.branch.children[0] = 70; o.branch.gnarliness[1] = 0.14; o.branch.angle[1] = 112;
-    o.leaves.size *= 1.6; o.leaves.tint = 0xe0f0d0;
+    o.branch.start[1] = 0.56; o.branch.children[0] = 60; o.branch.gnarliness[1] = 0.14; o.branch.angle[1] = 98; o.branch.length[1] *= 0.9;
+    o.leaves.size *= 1.6; o.leaves.tint = 0xc4d6bc;
   } },
   whitepine_b: { preset: "Pine Large", height: 23, seed: 877, tweak: (o) => {
-    o.branch.start[1] = 0.36; o.branch.children[0] = 62; o.branch.gnarliness[1] = 0.2; o.branch.length[1] *= 0.85; o.branch.angle[1] = 105;
-    o.leaves.size *= 1.6; o.leaves.tint = 0xd8ecc8;
+    o.branch.start[1] = 0.5; o.branch.children[0] = 55; o.branch.gnarliness[1] = 0.2; o.branch.length[1] *= 0.8; o.branch.angle[1] = 96;
+    o.leaves.size *= 1.6; o.leaves.tint = 0xbcd0b4;
   } },
   // Hemlock: dense dark cone with branches nearly to the ground.
   hemlock: { preset: "Pine Medium", height: 17, seed: 431, tweak: (o) => {
-    o.branch.start[1] = 0.12; o.branch.angle[1] = 118; o.leaves.size *= 1.3; o.leaves.count = 36; o.leaves.tint = 0xb8d0b0;
+    o.branch.start[1] = 0.12; o.branch.angle[1] = 118; o.leaves.size *= 1.3; o.leaves.count = 36; o.leaves.tint = 0xa0b89c;
   } },
   // Red maple: rounded crown, smooth grey bark.
   maple: { preset: "Oak Medium", height: 17, seed: 2290, tweak: (o) => {
-    o.bark.tint = 0xb4b0a6; o.branch.start[1] = 0.4; o.leaves.size *= 1.3; o.leaves.tint = 0xe8f8d0;
+    o.bark.tint = 0xb4b0a6; o.branch.start[1] = 0.4; o.leaves.size *= 1.3; o.leaves.tint = 0xc4d4ac;
   } },
   // Red oak: broad and big-limbed.
-  oak: { preset: "Oak Large", height: 20, seed: 5150, tweak: (o) => { o.leaves.size *= 1.2; o.leaves.tint = 0xe0f0c8; } },
+  oak: { preset: "Oak Large", height: 20, seed: 5150, tweak: (o) => { o.leaves.size *= 1.2; o.leaves.tint = 0xbccca4; } },
   // Paper birch: white bark, light airy crown.
-  birch: { preset: "Aspen Large", height: 15, seed: 3319, tweak: (o) => { o.bark.type = "birch"; o.leaves.size *= 1.3; o.leaves.tint = 0xb0e890; } },
+  birch: { preset: "Aspen Large", height: 15, seed: 3319, tweak: (o) => { o.bark.type = "birch"; o.leaves.size *= 1.3; o.leaves.tint = 0xa4c888; } },
   // Understory saplings.
-  sapling_pine: { preset: "Pine Small", height: 4.5, seed: 61, budget: 0.4, tweak: (o) => { o.leaves.size *= 1.6; o.leaves.tint = 0xd8ecc8; } },
-  sapling_leafy: { preset: "Aspen Small", height: 4, seed: 92, budget: 0.4, tweak: (o) => { o.bark.type = "oak"; o.bark.tint = 0xb4b0a6; o.leaves.size *= 1.5; o.leaves.count *= 2; o.leaves.tint = 0xc0f0a0; } },
+  sapling_pine: { preset: "Pine Small", height: 4.5, seed: 61, budget: 0.4, tweak: (o) => { o.leaves.size *= 1.6; o.leaves.tint = 0xbcd0b4; } },
+  sapling_leafy: { preset: "Aspen Small", height: 4, seed: 92, budget: 0.4, tweak: (o) => { o.bark.type = "oak"; o.bark.tint = 0xb4b0a6; o.leaves.size *= 1.5; o.leaves.count *= 2; o.leaves.tint = 0xb0cc94; } },
 };
 
 /** Most triangles one tree may have at each detail level (lod0 near, lod1 middle, lod2 far). */

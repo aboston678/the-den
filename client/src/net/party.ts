@@ -1,5 +1,7 @@
 import { Callbacks, Client, type Room } from "@colyseus/sdk";
-import { type BearAction, MSG, PARTY_ROOM, type Pose, isValidRoomCode, normalizeRoomCode, sanitizeNickname } from "@den/shared";
+import {
+  type BearAction, MSG, PARTY_ROOM, type Pose, type WorldName, isValidRoomCode, isWorldName, normalizeRoomCode, sanitizeNickname,
+} from "@den/shared";
 import { create } from "zustand";
 import { playerState } from "../game/state.ts";
 import { addSnapshot, remotes } from "./remotes.ts";
@@ -38,6 +40,8 @@ interface PartyStore {
   sessionId: string;
   hostId: string;
   phase: "lobby" | "playing";
+  /** Which map the party plays on (the property, or the test field with ?world=test). */
+  world: WorldName;
   players: LobbyPlayer[];
   /** Other bears' session ids (for rendering them). */
   remoteIds: string[];
@@ -50,6 +54,7 @@ export const usePartyStore = create<PartyStore>(() => ({
   sessionId: "",
   hostId: "",
   phase: "lobby",
+  world: "property",
   players: [],
   remoteIds: [],
 }));
@@ -84,8 +89,11 @@ function friendlyError(err: unknown, code?: string) {
   return "Something went wrong joining the party. Try again.";
 }
 
+/** ?world=test starts a party on the 1.6 test field (dev and controller tests). */
+const requestedWorld = () => new URLSearchParams(location.search).get("world") ?? undefined;
+
 export async function createParty(name: string) {
-  return enter(() => getClient().create(PARTY_ROOM, { name: sanitizeNickname(name) }), name);
+  return enter(() => getClient().create(PARTY_ROOM, { name: sanitizeNickname(name), world: requestedWorld() }), name);
 }
 
 export async function joinParty(rawCode: string, name: string) {
@@ -195,6 +203,7 @@ function bind(r: Room) {
       code: r.state.code,
       hostId: r.state.hostId,
       phase: r.state.phase,
+      world: isWorldName(r.state.world) ? r.state.world : "property",
       players,
       remoteIds: players.map((p) => p.id).filter((id) => id !== r.sessionId),
     });
@@ -203,7 +212,7 @@ function bind(r: Room) {
   /** Put our bear where the server says (start of game, or rejoining mid-game). */
   const placeLocalBear = () => {
     const me = r.state?.players?.get(r.sessionId);
-    if (me) playerState.teleportTo = { x: me.x, y: me.y, z: me.z };
+    if (me) playerState.teleportTo = { x: me.x, y: me.y, z: me.z, yaw: me.yaw };
   };
 
   $.listen("phase", (phase: string, previous: string) => {
@@ -212,6 +221,7 @@ function bind(r: Room) {
   });
   $.listen("hostId", sync);
   $.listen("code", sync);
+  $.listen("world", sync);
 
   $.onAdd("players", (value: unknown, key: unknown) => {
     const p = value as NetPlayer;

@@ -9,6 +9,7 @@ import { remotes } from "../../net/remotes.ts";
 import { CAPSULE, CAPSULE_CENTER, JUMP_AIR_TIME } from "../config.ts";
 import { useBearModel } from "../player/useBearModel.ts";
 import { cameraState, playerState } from "../state.ts";
+import { invisibleColliders } from "../world/invisible.ts";
 
 /** Name tags: fully visible up close, gone by 30 m (GAME_SPEC §5.3). */
 const TAG_FULL = 15;
@@ -71,7 +72,7 @@ function RemoteBearView({ id }: { id: string }) {
     if (opacity > 0 && frame.current++ % 4 === 0) {
       const dir = tagWorld.clone().sub(camera.position).normalize();
       const hit = world.castRay(new rapier.Ray(camera.position, dir), dist, true, undefined, undefined, undefined, undefined,
-        (c) => c.handle !== collider.current?.handle && c.handle !== playerState.colliderHandle);
+        (c) => c.handle !== collider.current?.handle && c.handle !== playerState.colliderHandle && !invisibleColliders.has(c.handle));
       tag.current.dataset.occluded = hit && hit.timeOfImpact < dist - 0.3 ? "1" : "";
     }
     if (tag.current.dataset.occluded) opacity = 0;

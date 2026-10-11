@@ -5,6 +5,7 @@ interface Window {
   __den?: {
     player: {
       position: { x: number; y: number; z: number };
+      yaw: number;
       speed: number;
       gameTime: number;
       grounded: boolean;
@@ -15,6 +16,7 @@ interface Window {
     };
     camera: { yaw: number; pitch: number; distance: number; current: number; shake: number };
     teleport: (x: number, z: number, y?: number) => void;
+    ground: (x: number, z: number) => number;
     remotes: () => { id: string; name: string; x: number; z: number; action: string; tagVisible: boolean; connected: boolean }[];
   };
 }
