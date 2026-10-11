@@ -3,7 +3,7 @@
 Claude Code updates this file after every milestone: tick the box, add a short note, and say what's next.
 **[ANDREW APPROVES]** = stop, show Andrew, and wait for his OK.
 
-**Current status:** 1.3 waiting for Andrew's approval of the bear's look. Model: `client/public/models/bear-base.glb` (job 53f8fc92, 17.5 MB, 31k triangles, 24-bone rig, Idle clip, 2.10 m). View it: `npm run dev`, then http://localhost:5173/viewer.html
+**Current status:** 1.3 done. 1.4 rig test starting (Andrew OK'd 16 credits).
 
 ---
 
@@ -14,7 +14,8 @@ Goal: Andrew sends friends a link; everyone makes or joins a party, loads in at 
   - Done 2026-10-11. Colyseus 0.18 (core + ws-transport), Vite 8, React 19, R3F 9, Rapier, TypeScript 7. `npm run dev` starts both; `npm test` (10 unit tests) and `npm run test:e2e` (page renders + connects; two browsers share a party) pass. Placeholder scene: ground, sky, physics capsule as the bear stand-in.
 - [x] **1.2 Bear concept.** 4 concept images (`gpt_image_2_5`, ~1 credit total). **[ANDREW APPROVES]** the pick.
   - Done 2026-10-11. Andrew picked **#4** (`assets/concepts/bear/bear-concept-4.png`, Higgsfield job a8521404-145d-4cf5-b29d-7e841a83eea8): widest arm gap for rigging.
-- [ ] **1.3 Bear 3D model.** `meshy_v7_image_to_3d` with texture, PBR, A-pose, rig, Idle (47.5 credits; ask first). Turntable viewer page. **[ANDREW APPROVES]** the look.
+- [x] **1.3 Bear 3D model.** `meshy_v7_image_to_3d` with texture, PBR, A-pose, rig, Idle (47.5 credits; ask first). Turntable viewer page. **[ANDREW APPROVES]** the look.
+  - Done 2026-10-11. Andrew approved the look and asked for "a little fatter": `tools/fatten-bear.mjs` widens the torso 22% (+15% belly) in the mesh only, skeleton untouched, so clips still fit. Source kept at `assets/models/bear/bear-base-original.glb`; game uses `client/public/models/bear-base.glb`. Before/after: `assets/concepts/bear/bear-fatter-*.png`. Viewer: `/viewer.html`.
 - [ ] **1.4 Rig test.** 2 extra clips (Casual_Walk 30, RunFast 16; 16 credits). Prove the clips play on ONE skinned mesh in three.js. If not, stop and explain.
 - [ ] **1.5 All bear clips.** Remaining clips from GAME_SPEC §5.2 (~12 × 8 = ~96 credits; ask first). Show preview-GIF choices for the "preview first" clips. **[ANDREW APPROVES]** walk and dance picks. Merge and compress into one `bear.glb`.
 - [ ] **1.6 Character controller.** Test ground, third-person camera with wall avoidance, WASD/Shift/Space, mouse look, Y roar, B dance, smooth blending, no foot sliding.
@@ -71,6 +72,7 @@ Starting balance: 1,210 (2026-10-11)
 | 2026-10-11 | Vercel (site) + Railway (multiplayer server) + Supabase (accounts/DB) | Vercel can't run an always-on WebSocket game server |
 | 2026-10-11 | Google sign-in, no guest mode | Leaderboard + friends need real accounts; no passwords to manage |
 | 2026-10-11 | Dogs on the main floor only | Dog pathfinding on stairs isn't worth the complexity |
+| 2026-10-11 | Bear made fatter in code (torso +22%, belly +15%) instead of regenerating | Andrew wanted it a little fatter; reshaping the mesh keeps the same skeleton and costs no credits |
 | 2026-10-11 | Basement stairs moved under the main staircase; new basement stair landing; bowling lanes shifted ~6 m east (x 22→28); back hall became a pantry | Andrew: the real stairs start under the stairs going up. Lanes had to move so the stairs don't land on the approach |
 
 ## Session notes

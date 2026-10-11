@@ -15,10 +15,20 @@ interface ModelStats {
   clips: string[];
 }
 
-export function ModelViewer({ url }: { url: string }) {
+export function ModelViewer({
+  url,
+  compareUrl,
+  initialSpin = true,
+  initialAngle = 0,
+}: {
+  url: string;
+  compareUrl?: string | null;
+  initialSpin?: boolean;
+  initialAngle?: number;
+}) {
   const [stats, setStats] = useState<ModelStats | null>(null);
   const [clip, setClip] = useState<string | null>(null);
-  const [spin, setSpin] = useState(true);
+  const [spin, setSpin] = useState(initialSpin);
 
   return (
     <>
@@ -32,9 +42,18 @@ export function ModelViewer({ url }: { url: string }) {
           <Lightformer form="rect" intensity={0.6} color="#ffd9b0" position={[5, 1, -3]} rotation-y={-Math.PI / 2} scale={[4, 3, 1]} />
         </Environment>
         <Suspense fallback={null}>
-          <Turntable spin={spin}>
-            <Model url={url} clip={clip} onLoaded={(s) => { setStats(s); setClip(s.clips[0] ?? null); }} />
-          </Turntable>
+          <group position-x={compareUrl ? 0.85 : 0}>
+            <Turntable spin={spin} angle={initialAngle}>
+              <Model url={url} clip={clip} onLoaded={(s) => { setStats(s); setClip(s.clips[0] ?? null); }} />
+            </Turntable>
+          </group>
+          {compareUrl && (
+            <group position-x={-0.85}>
+              <Turntable spin={spin} angle={initialAngle}>
+                <Model url={compareUrl} clip={clip} onLoaded={() => {}} />
+              </Turntable>
+            </group>
+          )}
         </Suspense>
         <Doorway />
         <ContactShadows position={[0, 0.001, 0]} opacity={0.6} scale={8} blur={2.2} far={3} />
@@ -48,6 +67,7 @@ export function ModelViewer({ url }: { url: string }) {
       <div className="viewer-panel" data-testid="viewer-panel" data-loaded={stats ? "yes" : "no"}>
         <strong>THE DEN · model viewer</strong>
         <code>{url}</code>
+        {compareUrl && <code>left: {compareUrl} · right: {url}</code>}
         {stats ? (
           <>
             <span>Height: {stats.heightM.toFixed(2)} m (target {BEAR.heightM} m) · door frame {DOOR_HEIGHT.toFixed(2)} m</span>
@@ -72,8 +92,11 @@ export function ModelViewer({ url }: { url: string }) {
   );
 }
 
-function Turntable({ spin, children }: { spin: boolean; children: React.ReactNode }) {
+function Turntable({ spin, angle, children }: { spin: boolean; angle: number; children: React.ReactNode }) {
   const ref = useRef<Group>(null);
+  useEffect(() => {
+    if (ref.current) ref.current.rotation.y = angle;
+  }, [angle]);
   useFrame((_, dt) => {
     if (spin && ref.current) ref.current.rotation.y += dt * 0.4;
   });
@@ -119,7 +142,7 @@ function Model({ url, clip, onLoaded }: { url: string; clip: string | null; onLo
 function Doorway() {
   const post = 0.1;
   return (
-    <group position={[-1.9, 0, -0.6]} rotation-y={0.5}>
+    <group position={[-2.6, 0, -0.9]} rotation-y={0.5}>
       <mesh position={[-DOOR_WIDTH / 2 - post / 2, DOOR_HEIGHT / 2, 0]} castShadow>
         <boxGeometry args={[post, DOOR_HEIGHT, 0.15]} />
         <meshStandardMaterial color="#efe6d2" />

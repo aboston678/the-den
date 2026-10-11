@@ -10,3 +10,4 @@ __MACOSX/
 .vercel/
 playwright-report/
 test-results/
+client/public/models/*-preview.glb
