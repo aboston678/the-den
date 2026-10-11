@@ -3,7 +3,7 @@
 Claude Code updates this file after every milestone: tick the box, add a short note, and say what's next.
 **[ANDREW APPROVES]** = stop, show Andrew, and wait for his OK.
 
-**Current status:** 1.5 in progress. 9 clips submitted 2026-10-11 (job IDs in the credit ledger; check status, do NOT resubmit). Waiting for Andrew's picks: walk, run, dance, reel, bowling throw.
+**Current status:** 1.5 in progress. All 12 clips submitted (job IDs in the credit ledger; check status, do NOT resubmit). Andrew's picks: W1 Casual_Walk, R1 RunFast (keep existing), D1 All_Night_Dance, F1 Pull_Radish, B1 Crouch_Charge_and_Throw. Next: download, strip, retarget, merge into bear.glb.
 
 ---
 
@@ -75,6 +75,9 @@ Starting balance: 1,210 (2026-10-11)
 | 2026-10-11 | 1.5 clip StandUp: Sit_to_Stand_Transition_M (53), job d03156b0-6e0a-4ae7-bb34-9cef7140e070 | `meshy_rigging` | 8 | 1,089.5 |
 | 2026-10-11 | 1.5 clip Cast: Over_Shoulder_Throw (421), job 9d036e2c-5e16-480d-9c41-fbdc38f2feef | `meshy_rigging` | 8 | 1,081.5 |
 | 2026-10-11 | 1.5 clip Celebrate: Cheer_with_Both_Hands_Up (298), job 99679e22-9751-4f85-9697-15e0f05e80fb | `meshy_rigging` | 8 | 1,073.5 |
+| 2026-10-11 | 1.5 clip Dance: All_Night_Dance (64), job cbffae5d-c782-486e-b585-b91ecaa50697 | `meshy_rigging` | 8 | 1,065.5 |
+| 2026-10-11 | 1.5 clip Reel: Pull_Radish (283), job b6aded48-d6b0-4187-9ef8-eda9e3c01b80 | `meshy_rigging` | 8 | 1,057.5 |
+| 2026-10-11 | 1.5 clip Bowl: Crouch_Charge_and_Throw (398), job df8b6572-694e-47b5-ad16-f1783887eb13 | `meshy_rigging` | 8 | 1,049.5 |
 
 ## Decision log
 | Date | Decision | Why |
