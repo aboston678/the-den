@@ -3,14 +3,15 @@
 Claude Code updates this file after every milestone: tick the box, add a short note, and say what's next.
 **[ANDREW APPROVES]** = stop, show Andrew, and wait for his OK.
 
-**Current status:** Not started. Next up: milestone 1.1.
+**Current status:** 1.1 done (2026-10-11). Next up: milestone 1.2 (bear concept images, ~1 credit).
 
 ---
 
 ## Phase 1: Walk the property with friends
 Goal: Andrew sends friends a link; everyone makes or joins a party, loads in at the driveway, walks into the house, opens doors, roars, dances, and watches day turn to night.
 
-- [ ] **1.1 Project setup.** Monorepo (`client`/`server`/`shared`), TypeScript, Vite + React + React Three Fiber + Rapier, Colyseus server, Vitest, Playwright smoke test that opens the page and screenshots it, `npm run dev` runs everything, `.env.example`, `.gitignore`, pushed to GitHub.
+- [x] **1.1 Project setup.** Monorepo (`client`/`server`/`shared`), TypeScript, Vite + React + React Three Fiber + Rapier, Colyseus server, Vitest, Playwright smoke test that opens the page and screenshots it, `npm run dev` runs everything, `.env.example`, `.gitignore`, pushed to GitHub.
+  - Done 2026-10-11. Colyseus 0.18 (core + ws-transport), Vite 8, React 19, R3F 9, Rapier, TypeScript 7. `npm run dev` starts both; `npm test` (10 unit tests) and `npm run test:e2e` (page renders + connects; two browsers share a party) pass. Placeholder scene: ground, sky, physics capsule as the bear stand-in.
 - [ ] **1.2 Bear concept.** 4 concept images (`gpt_image_2_5`, ~1 credit total). **[ANDREW APPROVES]** the pick.
 - [ ] **1.3 Bear 3D model.** `meshy_v7_image_to_3d` with texture, PBR, A-pose, rig, Idle (47.5 credits; ask first). Turntable viewer page. **[ANDREW APPROVES]** the look.
 - [ ] **1.4 Rig test.** 2 extra clips (Casual_Walk 30, RunFast 16; 16 credits). Prove the clips play on ONE skinned mesh in three.js. If not, stop and explain.
@@ -71,3 +72,5 @@ Starting balance: 1,210 (2026-10-11)
 
 ## Session notes
 (Newest first. 1–3 lines per session: what got done, what's next, anything Andrew needs to do.)
+
+- **2026-10-11 · Session 1.** Project lives in `~/Projects/the-den`, private repo github.com/aboston678/the-den. Higgsfield checked: 1,210 credits (Plus). Milestone 1.1 done and pushed. Next: 1.2 bear concepts. Andrew to answer the floorplan questions (is the pink room the "little common area"? where do the basement stairs start? which side is the downstairs bedroom?).

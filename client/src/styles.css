@@ -1,0 +1,45 @@
+:root {
+  --forest: #1f2a22;
+  --bark: #3b2a1e;
+  --cream: #efe6d2;
+  --ember: #e0712c;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--forest);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.badge {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 6px;
+  background: rgb(31 42 34 / 0.85);
+  color: var(--cream);
+  font-size: 13px;
+  pointer-events: none;
+}
+
+.badge strong {
+  letter-spacing: 0.12em;
+  color: var(--ember);
+}
+
+.badge--error span {
+  color: #ff9a8a;
+}
