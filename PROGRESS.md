@@ -3,7 +3,7 @@
 Claude Code updates this file after every milestone: tick the box, add a short note, and say what's next.
 **[ANDREW APPROVES]** = stop, show Andrew, and wait for his OK.
 
-**Current status:** 1.7 in progress (NOT done). Built: party codes, lobby (create/join/Play), server-clamped 20 Hz poses, interpolated remote bears with animations, name tags (distance fade + wall occlusion), solid bumping + shove/stagger, roar camera shake, reload rejoin, host hand-off. Server tests 6/6. Browser: multiplayer 5/6 pass; `e2e/multiplayer.spec.ts` "a roar shakes nearby bears' cameras" failed in the last run (passed earlier; likely timing, investigate first). Walk-slide test now 3 s average, bar 25% of walk speed. Next: fix that test, run full suite twice, two-browser screenshots, tick 1.7.
+**Current status:** 1.7 done. Next: 1.8 outdoor map (300 × 300 m terrain, driveway, forest, stream, dock; ends with a screenshot tour for Andrew's approval).
 
 ---
 
@@ -22,7 +22,8 @@ Goal: Andrew sends friends a link; everyone makes or joins a party, loads in at 
   - Done 2026-10-11. Andrew's picks from previews: W1 Casual_Walk, R1 RunFast (kept), D1 All_Night_Dance, F1 Pull_Radish (reel), B1 Crouch_Charge_and_Throw (bowl). `npm run build:bear` -> `client/public/models/bear.glb`: 5.9 MB, 15 clips (Idle, Walk, Run, Jump, Roar, OpenDoor, Pet, SitDown, SitIdle, StandUp, Cast, Celebrate, Dance, Reel, Bowl), meshopt + WebP. All clips checked on the built bear (`assets/concepts/bear/bear-all-clips.png`). Notes for 1.6: Jump lifts the hips 0.8 m (strip or sync with physics); SitDown/StandUp/Cast end lowered/shifted (blend carefully); Dance sways ~1 m sideways. Pet and Bowl still need trimming (2.3 / 3.2).
 - [x] **1.6 Character controller.** Test ground, third-person camera with wall avoidance, WASD/Shift/Space, mouse look, Y roar, B dance, smooth blending, no foot sliding.
   - Done 2026-10-11. Code in `client/src/game/` (player, camera, input, test ground). Verified by `e2e/controller.spec.ts`: walk 2.4 / sprint 6 m/s, jump ~1.1 m, roar (3 s cooldown) and dance cancel on move, camera pulls in for walls, walk foot slide 0.23 m/s. Known: RunFast is stylised so sprint feet slide (~4 m/s, less visible at speed; a different run clip would fix it); walk speed lowered to 1.8 m/s on Andrew's call (clip now plays 2.5× its natural pace); roar sound waits for audio (1.10); roar camera shake for nearby bears comes with multiplayer (1.7). Later fixes (2026-10-11): ground flicker handled with coyote time + drop-based falling; bear waits for floor colliders on load and is lifted back if it ever ends up inside a floor (was sinking up to 1.5 m in ~half of page loads). Dev helpers: `window.__den` (state, `teleport(x,z)`, live-tunable `clip` timings), `?party=name` picks a room.
-- [ ] **1.7 Multiplayer.** Colyseus party rooms, 5-character codes, create/join, max 6, host hand-off, synced movement/animations, interpolation, name tags, bumping, reconnect. Two-browser test.
+- [x] **1.7 Multiplayer.** Colyseus party rooms, 5-character codes, create/join, max 6, host hand-off, synced movement/animations, interpolation, name tags, bumping, reconnect. Two-browser test.
+  - Done 2026-10-11. Lobby (create/join by code, party list, host-only Play), server-clamped 20 Hz poses, interpolated remote bears with animations, name tags (fade by 30 m, hidden behind walls), solid bumping + shove, roar shakes nearby cameras, page reload rejoins within 30 s (retries for a few seconds), host hand-off. Tests: 39 unit + 14 browser, full suite green twice in a row. Earlier flaky tests were test timing (code read before it arrived; 0.5 s shake missed between polls), now fixed. Screenshots: `docs/screenshots/1.7/`.
 - [ ] **1.8 Outdoor map.** 300 × 300 m terrain with the slope, lawn clearing, forest, driveway from the NW spawn, stone walls, boulder, stream, dock with the rod bucket (static for now), trail, perimeter. Screenshot tour. **[ANDREW APPROVES]**
 - [ ] **1.9 House shell.** From `docs/floorplan.json` at 1.25×: exterior matching the photos, every room, stairs, railings, windows, base materials per room, porch, deck, greenhouse shell, garage, basement den + bowling room shell. All doors open/close with E (synced); garage doors roll up. Screenshot tour of every room. **[ANDREW APPROVES]**
 - [ ] **1.10 Day/night + lights + audio.** 68-minute synced cycle, sky/sun/moon, exterior lights at dusk, interior lights always on, flashlight (F), ambient sound by time of day, positional stream audio.
@@ -97,6 +98,8 @@ Starting balance: 1,210 (2026-10-11)
 
 ## Session notes
 (Newest first. 1–3 lines per session: what got done, what's next, anything Andrew needs to do.)
+
+- **2026-10-11 · Session 2.** Finished 1.7 multiplayer: fixed two flaky browser tests and a hanging server-test shutdown, made reload-rejoin retry, two-browser screenshots in `docs/screenshots/1.7/`. Next: 1.8 outdoor map.
 
 - **2026-10-11 · Session 1 (cont. 4).** Walk speed 1.8 m/s (Andrew). Fixed bear sinking into floor on load. 1.7 multiplayer mostly built (see status). Session ended at usage limit.
 - **2026-10-11 · Session 1 (cont. 3).** 1.6 done: the bear walks/sprints/jumps/roars/dances on a test field with a third-person camera. Fixed a physics timing bug that lost ~15% of movement. Next: 1.7 multiplayer.
