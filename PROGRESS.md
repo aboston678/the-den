@@ -3,7 +3,7 @@
 Claude Code updates this file after every milestone: tick the box, add a short note, and say what's next.
 **[ANDREW APPROVES]** = stop, show Andrew, and wait for his OK.
 
-**Current status:** 1.4 rig test works with an extra conversion step (see 1.4 note). Waiting for Andrew's OK on that approach, then 1.5 (~96 credits, ask first). Rig-test preview: `npm run dev`, then `/viewer.html?model=/models/bear-rigtest-preview.glb` (regenerate with `node tools/retarget-clip.mjs client/public/models/bear-base.glb client/public/models/bear-rigtest-preview.glb Walk=assets/models/bear/clips/walk.glb Run=assets/models/bear/clips/run.glb`).
+**Current status:** 1.4 done. 1.5 starting: Andrew OK'd the remaining clips (~96 credits).
 
 ---
 
@@ -16,8 +16,8 @@ Goal: Andrew sends friends a link; everyone makes or joins a party, loads in at 
   - Done 2026-10-11. Andrew picked **#4** (`assets/concepts/bear/bear-concept-4.png`, Higgsfield job a8521404-145d-4cf5-b29d-7e841a83eea8): widest arm gap for rigging.
 - [x] **1.3 Bear 3D model.** `meshy_v7_image_to_3d` with texture, PBR, A-pose, rig, Idle (47.5 credits; ask first). Turntable viewer page. **[ANDREW APPROVES]** the look.
   - Done 2026-10-11. Andrew approved the look and asked for "a little fatter": `tools/fatten-bear.mjs` widens the torso 22% (+15% belly) in the mesh only, skeleton untouched, so clips still fit. Source kept at `assets/models/bear/bear-base-original.glb`; game uses `client/public/models/bear-base.glb`. Before/after: `assets/concepts/bear/bear-fatter-*.png`. Viewer: `/viewer.html`.
-- [ ] **1.4 Rig test.** 2 extra clips (Casual_Walk 30, RunFast 16; 16 credits). Prove the clips play on ONE skinned mesh in three.js. If not, stop and explain.
-  - 2026-10-11: clips do NOT drop straight onto our bear: every Higgsfield re-rig places joints differently (up to 23° / 15 cm vs our bear; walk vs run rigs differ ~5° / 2 cm). Fix (no credits): `tools/retarget-clip.mjs` converts each clip onto our skeleton so the mesh bends exactly like the clip's own rig (mean ~2 cm vs reference, about half the naive-copy error). Verified numerically (`tools/verify-retarget.mjs`) and visually (`assets/concepts/bear/rigtest/`). Clip sources stripped to skeleton+animation (`assets/models/bear/clips/`). Waiting for Andrew's OK on this approach before 1.5.
+- [x] **1.4 Rig test.** 2 extra clips (Casual_Walk 30, RunFast 16; 16 credits). Prove the clips play on ONE skinned mesh in three.js. If not, stop and explain.
+  - 2026-10-11: clips do NOT drop straight onto our bear: every Higgsfield re-rig places joints differently (up to 23° / 15 cm vs our bear; walk vs run rigs differ ~5° / 2 cm). Fix (no credits): `tools/retarget-clip.mjs` converts each clip onto our skeleton so the mesh bends exactly like the clip's own rig (mean ~2 cm vs reference, about half the naive-copy error). Verified numerically (`tools/verify-retarget.mjs`) and visually (`assets/concepts/bear/rigtest/`). Clip sources stripped to skeleton+animation (`assets/models/bear/clips/`). Andrew approved the approach (and the fatter bear) 2026-10-11.
 - [ ] **1.5 All bear clips.** Remaining clips from GAME_SPEC §5.2 (~12 × 8 = ~96 credits; ask first). Show preview-GIF choices for the "preview first" clips. **[ANDREW APPROVES]** walk and dance picks. Merge and compress into one `bear.glb`.
 - [ ] **1.6 Character controller.** Test ground, third-person camera with wall avoidance, WASD/Shift/Space, mouse look, Y roar, B dance, smooth blending, no foot sliding.
 - [ ] **1.7 Multiplayer.** Colyseus party rooms, 5-character codes, create/join, max 6, host hand-off, synced movement/animations, interpolation, name tags, bumping, reconnect. Two-browser test.
@@ -76,6 +76,7 @@ Starting balance: 1,210 (2026-10-11)
 | 2026-10-11 | Google sign-in, no guest mode | Leaderboard + friends need real accounts; no passwords to manage |
 | 2026-10-11 | Dogs on the main floor only | Dog pathfinding on stairs isn't worth the complexity |
 | 2026-10-11 | Bear made fatter in code (torso +22%, belly +15%) instead of regenerating | Andrew wanted it a little fatter; reshaping the mesh keeps the same skeleton and costs no credits |
+| 2026-10-11 | Every extra animation clip is retargeted onto the base bear's skeleton (`tools/retarget-clip.mjs`) | Higgsfield re-rigs per clip with different joint placement; straight copying bends the wrong spots. GAME_SPEC §5.1 updated |
 | 2026-10-11 | Basement stairs moved under the main staircase; new basement stair landing; bowling lanes shifted ~6 m east (x 22→28); back hall became a pantry | Andrew: the real stairs start under the stairs going up. Lanes had to move so the stairs don't land on the approach |
 
 ## Session notes

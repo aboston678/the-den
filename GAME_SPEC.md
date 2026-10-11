@@ -88,9 +88,9 @@ The Den is a private, browser-based, multiplayer 3D game for Andrew and his frie
 
    **[ANDREW APPROVES]** the pick.
 2. **3D model** — `generate_3d`, model `meshy_v7_image_to_3d`, with `should_texture: true`, `enable_pbr: true`, `pose_mode: "a-pose"`, `enable_rigging: true`, `rigging_height_meters: 2.1`, `enable_animation: true`, `animation_action_id: 0` (Idle). Verified cost: **47.5 credits**. **[ANDREW APPROVES]** the look in a simple turntable viewer page.
-3. **Rig test before spending more** — use model `meshy_rigging` (verified cost **8 credits per clip**) on the same mesh for 2 clips (Casual_Walk 30, RunFast 16). Load all three GLBs in three.js and confirm the clips play correctly on ONE skinned mesh (bone names/hierarchy match). If they don't match, stop and tell Andrew before generating more.
+3. **Rig test before spending more** — use model `meshy_rigging` (verified cost **8 credits per clip**) on the same mesh for 2 clips (Casual_Walk 30, RunFast 16). Load all three GLBs in three.js and confirm the clips play correctly on ONE skinned mesh (bone names/hierarchy match). If they don't match, stop and tell Andrew before generating more. *(Result 2026-10-11: names/hierarchy match but every re-rig places joints differently, so each clip is converted onto the base bear's skeleton with `tools/retarget-clip.mjs`. Andrew approved.)*
 4. **Remaining clips** (table below). Show Andrew the preview GIF links for any clip marked "preview first" and let him pick.
-5. **Process:** merge into one `bear.glb` (mesh + all clips) with gltf-transform; meshopt/Draco + KTX2 textures; target under 25 MB.
+5. **Process:** fatten the base mesh (`tools/fatten-bear.mjs`, torso +22%, belly +15%; Andrew's request), retarget every clip onto its skeleton (`tools/retarget-clip.mjs`), merge into one `bear.glb` (mesh + all clips) with gltf-transform; meshopt/Draco + KTX2 textures; target under 25 MB.
 
 ### 5.2 Animation clips (Higgsfield animation library IDs, verified)
 
