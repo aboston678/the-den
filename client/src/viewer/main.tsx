@@ -9,12 +9,15 @@ import "./viewer.css";
 const params = new URLSearchParams(location.search);
 const model = params.get("model") ?? "/models/bear-base.glb";
 const compare = params.get("compare");
+// &clips=/models/a.glb,/models/b.glb borrows the animation clips from other files and plays
+// them on the main model (the 1.4 rig test).
+const clipFiles = params.get("clips")?.split(",").filter(Boolean) ?? [];
 // &spin=0 starts paused; &angle=90 starts turned (degrees). Handy for matching screenshots.
 const spin = params.get("spin") !== "0";
 const angle = (Number(params.get("angle") ?? 0) * Math.PI) / 180;
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <ModelViewer url={model} compareUrl={compare} initialSpin={spin} initialAngle={angle} />
+    <ModelViewer url={model} compareUrl={compare} clipFiles={clipFiles} initialSpin={spin} initialAngle={angle} />
   </StrictMode>,
 );

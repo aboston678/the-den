@@ -2,7 +2,7 @@ import { ContactShadows, Environment, Lightformer, OrbitControls, useAnimations,
 import { Canvas, useFrame } from "@react-three/fiber";
 import { BEAR, HOUSE_SCALE } from "@den/shared";
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
-import { Box3, type Group, type Mesh, type SkinnedMesh, Vector3 } from "three";
+import { type AnimationClip, Box3, type Group, type Mesh, type SkinnedMesh, Vector3 } from "three";
 
 // A real interior door is 2.03 m; the house is built 1.25× bigger (GAME_SPEC §4).
 const DOOR_HEIGHT = 2.03 * HOUSE_SCALE;
@@ -18,11 +18,13 @@ interface ModelStats {
 export function ModelViewer({
   url,
   compareUrl,
+  clipFiles = [],
   initialSpin = true,
   initialAngle = 0,
 }: {
   url: string;
   compareUrl?: string | null;
+  clipFiles?: string[];
   initialSpin?: boolean;
   initialAngle?: number;
 }) {
@@ -44,7 +46,7 @@ export function ModelViewer({
         <Suspense fallback={null}>
           <group position-x={compareUrl ? 0.85 : 0}>
             <Turntable spin={spin} angle={initialAngle}>
-              <Model url={url} clip={clip} onLoaded={(s) => { setStats(s); setClip(s.clips[0] ?? null); }} />
+              <Model url={url} clipFiles={clipFiles} clip={clip} onLoaded={(s) => { setStats(s); setClip(s.clips.at(-1) ?? null); }} />
             </Turntable>
           </group>
           {compareUrl && (
@@ -103,9 +105,35 @@ function Turntable({ spin, angle, children }: { spin: boolean; angle: number; ch
   return <group ref={ref}>{children}</group>;
 }
 
-function Model({ url, clip, onLoaded }: { url: string; clip: string | null; onLoaded: (s: ModelStats) => void }) {
+function Model({
+  url,
+  clipFiles = [],
+  clip,
+  onLoaded,
+}: {
+  url: string;
+  clipFiles?: string[];
+  clip: string | null;
+  onLoaded: (s: ModelStats) => void;
+}) {
   const gltf = useGLTF(url);
-  const { actions } = useAnimations(gltf.animations, gltf.scene);
+  const extra = useGLTF(clipFiles) as unknown as { animations: AnimationClip[] }[];
+  // Clips from other files drive this model's bones by name, so they only work if the
+  // skeletons match. Name each borrowed clip after its file so they're easy to tell apart.
+  const animations = useMemo(
+    () => [
+      ...gltf.animations,
+      ...extra.flatMap((g, i) =>
+        g.animations.map((a) => {
+          const c = a.clone();
+          c.name = `${clipFiles[i]!.split("/").pop()!.replace(".glb", "")}: ${a.name}`;
+          return c;
+        }),
+      ),
+    ],
+    [gltf, extra, clipFiles],
+  );
+  const { actions } = useAnimations(animations, gltf.scene);
 
   const stats = useMemo<ModelStats>(() => {
     let triangles = 0;
@@ -121,8 +149,8 @@ function Model({ url, clip, onLoaded }: { url: string; clip: string | null; onLo
       }
     });
     const size = new Box3().setFromObject(gltf.scene).getSize(new Vector3());
-    return { heightM: size.y, triangles, bones: bones.size, clips: gltf.animations.map((a) => a.name) };
-  }, [gltf]);
+    return { heightM: size.y, triangles, bones: bones.size, clips: animations.map((a) => a.name) };
+  }, [gltf, animations]);
 
   useEffect(() => onLoaded(stats), [stats]); // eslint-disable-line react-hooks/exhaustive-deps
 
