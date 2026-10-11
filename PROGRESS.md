@@ -3,7 +3,7 @@
 Claude Code updates this file after every milestone: tick the box, add a short note, and say what's next.
 **[ANDREW APPROVES]** = stop, show Andrew, and wait for his OK.
 
-**Current status:** 1.4 done. 1.5 starting: Andrew OK'd the remaining clips (~96 credits).
+**Current status:** 1.5 in progress. 9 clips submitted 2026-10-11 (job IDs in the credit ledger; check status, do NOT resubmit). Waiting for Andrew's picks: walk, run, dance, reel, bowling throw.
 
 ---
 
@@ -66,6 +66,15 @@ Starting balance: 1,210 (2026-10-11)
 | 2026-10-11 | 1.3 bear 3D model: texture + PBR + A-pose + rig + Idle (job 53f8fc92) | `meshy_v7_image_to_3d` | 47.5 | 1,161.5 |
 | 2026-10-11 | 1.4 rig test: Casual_Walk (job f68116cc) | `meshy_rigging` | 8 | 1,153.5 |
 | 2026-10-11 | 1.4 rig test: RunFast (job 2e64ab6a) | `meshy_rigging` | 8 | 1,145.5 |
+| 2026-10-11 | 1.5 clip Jump: Regular_Jump (466), job 14064a5c-016a-4ee0-abeb-6abdf8db9ae4 | `meshy_rigging` | 8 | 1,137.5 |
+| 2026-10-11 | 1.5 clip Roar: Chest_Pound_Taunt (88), job dd00d07f-b877-499e-b04f-be24809d4c34 | `meshy_rigging` | 8 | 1,129.5 |
+| 2026-10-11 | 1.5 clip OpenDoor: open_door (285), job c5ac366b-221f-4998-87d4-9abcc4f3cad9 | `meshy_rigging` | 8 | 1,121.5 |
+| 2026-10-11 | 1.5 clip Pet: Male_Bend_Over_Pick_Up (276), job 89d34e38-f335-4a17-98b4-dc151d0aa1de | `meshy_rigging` | 8 | 1,113.5 |
+| 2026-10-11 | 1.5 clip SitDown: Stand_to_Sit_Transition_M (57), job bca00fd0-ac79-4fe1-ba4c-0956d02e85d2 | `meshy_rigging` | 8 | 1,105.5 |
+| 2026-10-11 | 1.5 clip SitIdle: Chair_Sit_Idle_M (33), job 7858fcee-7009-4133-90e3-75b5d9a7c7f1 | `meshy_rigging` | 8 | 1,097.5 |
+| 2026-10-11 | 1.5 clip StandUp: Sit_to_Stand_Transition_M (53), job d03156b0-6e0a-4ae7-bb34-9cef7140e070 | `meshy_rigging` | 8 | 1,089.5 |
+| 2026-10-11 | 1.5 clip Cast: Over_Shoulder_Throw (421), job 9d036e2c-5e16-480d-9c41-fbdc38f2feef | `meshy_rigging` | 8 | 1,081.5 |
+| 2026-10-11 | 1.5 clip Celebrate: Cheer_with_Both_Hands_Up (298), job 99679e22-9751-4f85-9697-15e0f05e80fb | `meshy_rigging` | 8 | 1,073.5 |
 
 ## Decision log
 | Date | Decision | Why |
