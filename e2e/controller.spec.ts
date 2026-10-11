@@ -29,8 +29,8 @@ test("walks and sprints at the spec speeds", async ({ page }) => {
   await hold(page, ["KeyW"], 2000);
   const b = await den(page);
   const walk = Math.hypot(b.position.x - a.position.x, b.position.z - a.position.z) / (b.gameTime - a.gameTime);
-  expect(walk).toBeGreaterThan(2.0); // 2.4 m/s, minus a moment of acceleration
-  expect(walk).toBeLessThan(2.45);
+  expect(walk).toBeGreaterThan(1.55); // 1.8 m/s, minus a moment of acceleration
+  expect(walk).toBeLessThan(1.85);
   expect(b.position.z).toBeLessThan(a.position.z); // W goes away from the camera (−z at start)
 
   await page.keyboard.down("ShiftLeft");
@@ -126,7 +126,7 @@ test("feet don't slide while walking or sprinting", async ({ page }) => {
     }
     const speed = slide / time;
     console.log(`${label}: planted-foot slide ${speed.toFixed(2)} m/s`);
-    // Walk (2.4 m/s) must stay planted. The RunFast clip is stylised (its foot speed varies a lot
+    // Walk (1.8 m/s) must stay planted. The RunFast clip is stylised (its foot speed varies a lot
     // within each stride) so some sprint slide is unavoidable; it's reported, not graded.
     if (label === "walk") expect(speed, "walk foot slide").toBeLessThan(0.35);
   }

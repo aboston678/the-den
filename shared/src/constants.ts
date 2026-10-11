@@ -22,7 +22,7 @@ export const HOUSE_SCALE = 1.25;
 /** Bear size and movement (GAME_SPEC §5.3). */
 export const BEAR = {
   heightM: 2.1,
-  walkSpeed: 2.4,
+  walkSpeed: 1.8,
   sprintSpeed: 6.0,
   jumpApexM: 1.1,
   gravity: 20,

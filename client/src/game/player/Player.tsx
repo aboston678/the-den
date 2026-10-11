@@ -16,6 +16,12 @@ useGLTF.preload(BEAR_URL);
 
 const JUMP_AIR_TIME = (2 * MOVE.jumpVelocity) / MOVE.gravity;
 const MAX_DT = 0.1;
+/** Grace period after leaving the ground in which the bear still counts as grounded ("coyote time"). */
+const COYOTE = 0.15;
+/** Only switch to the falling pose after actually dropping this far below the last ground height. */
+const FALL_DROP = 0.4;
+/** Ground probe: a ray from this high above the feet straight down (stays inside the bear). */
+const PROBE_FROM = 1.0;
 const UP = new Vector3(0, 1, 0);
 const tmpMatrix = new Matrix4();
 const tmpMatrix2 = new Matrix4();
@@ -25,7 +31,7 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
   const body = useRef<RapierRigidBody>(null);
   const collider = useRef<RapierCollider>(null);
   const visual = useRef<Group>(null);
-  const { world } = useRapier();
+  const { world, rapier } = useRapier();
 
   // Created in an effect (not useMemo) so React's dev-mode double mount gets a fresh one.
   const controllerRef = useRef<KinematicCharacterController | null>(null);
@@ -57,7 +63,7 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
   const toes = useMemo(() => ["LeftToeBase", "RightToeBase"].map((n) => model.getObjectByName(n)!), [model]);
 
   // Start facing away from the camera (which begins on the +z side looking toward −z).
-  const s = useRef({ vy: 0, speed: 0, yaw: Math.PI, dir: { x: 0, z: -1 }, airTime: 0, actionTime: 0, roarReadyAt: 0 });
+  const s = useRef({ vy: 0, speed: 0, yaw: Math.PI, dir: { x: 0, z: -1 }, airTime: 0, actionTime: 0, roarReadyAt: 0, groundY: 0, ready: false });
 
   useFrame(({ clock }, rawDt) => {
     const controller = controllerRef.current;
@@ -67,6 +73,23 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
     const dt = Math.min(rawDt, MAX_DT);
     const st = s.current;
     const now = clock.elapsedTime;
+
+    /** Height of the floor under (x, feetY, z), probing from inside the bear, or null. */
+    const floorBelow = (x: number, feetY: number, z: number) => {
+      const hit = world.castRay(
+        new rapier.Ray({ x, y: feetY + PROBE_FROM, z }, { x: 0, y: -1, z: 0 }),
+        PROBE_FROM + 0.6, true, undefined, undefined, undefined, undefined,
+        (c) => c.handle !== collider.current!.handle,
+      );
+      return hit ? feetY + PROBE_FROM - hit.timeOfImpact : null;
+    };
+    // Don't start simulating until the level's colliders exist under the bear; otherwise it
+    // falls into the floor during the first frames after loading.
+    if (!st.ready) {
+      const start = body.current.translation();
+      if (floorBelow(start.x, start.y - CAPSULE_CENTER, start.z) === null) return;
+      st.ready = true;
+    }
     st.actionTime += dt;
 
     const dir = moveDirection(
@@ -99,7 +122,7 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
     action = animator.action;
     if (moving && (action === "dance" || action === "roar")) start("locomotion"); // moving cancels
     if (action === "roar" && animator.roarFinished) start("locomotion");
-    if (consumePress("Space") && grounded && animator.action !== "jump") {
+    if (consumePress("Space") && grounded && animator.action !== "jump" && st.vy <= 0) {
       st.vy = MOVE.jumpVelocity;
       start("jump");
     }
@@ -124,6 +147,16 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
     if (nowGrounded && st.vy < 0) st.vy = -1; // stay pressed onto slopes and steps
 
     const p = body.current.translation();
+
+    // If the feet ever end up below a floor (Rapier's controller ignores surfaces it's already
+    // inside), lift the bear back on top.
+    const floorY = st.vy <= 0 ? floorBelow(p.x, p.y - CAPSULE_CENTER, p.z) : null;
+    const feet = p.y + moved.y - CAPSULE_CENTER;
+    if (floorY !== null && feet < floorY - 0.03) {
+      moved.y += floorY - feet;
+      st.vy = 0;
+    }
+
     const tp = playerState.teleportTo;
     if (tp) {
       p.x = tp.x; p.y = tp.y + CAPSULE_CENTER; p.z = tp.z;
@@ -135,15 +168,19 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
     body.current.setNextKinematicTranslation({ x: p.x + moved.x, y: p.y + moved.y, z: p.z + moved.z });
 
     // --- air states ---
+    // Rapier's ground flag can flicker for a few frames while standing still, so: coyote time
+    // for jumping, and "falling" only once the bear has really dropped.
     st.airTime = nowGrounded ? 0 : st.airTime + dt;
-    if (action === "locomotion" && st.airTime > 0.25) start("fall");
+    const feetY = p.y + moved.y - CAPSULE_CENTER;
+    if (nowGrounded) st.groundY = feetY;
+    if (action === "locomotion" && !nowGrounded && feetY < st.groundY - FALL_DROP) start("fall");
     if ((action === "jump" || action === "fall") && nowGrounded && st.actionTime > 0.1 && st.vy <= 0) start("locomotion");
 
     // --- outputs ---
     const groundSpeed = Math.hypot(moved.x, moved.z) / dt; // slower when pushing into a wall
     playerState.position.set(p.x + moved.x, p.y + moved.y - CAPSULE_CENTER, p.z + moved.z);
     playerState.speed = groundSpeed;
-    playerState.grounded = nowGrounded;
+    playerState.grounded = nowGrounded || (st.airTime < COYOTE && st.vy <= 0);
     playerState.gameTime += dt;
     playerState.action = animator.action;
     playerState.colliderHandle = collider.current.handle;

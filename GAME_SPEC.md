@@ -117,7 +117,7 @@ Base + 14 extra clips ≈ 47.5 + 112 = **~160 credits**.
 ### 5.3 Movement feel
 
 - Camera-relative movement: W/A/S/D move forward/left/back/right relative to the camera; the bear turns to face where it's going (no strafe clips needed).
-- Walk 2.4 m/s · Sprint (hold Shift) 6.0 m/s · Jump apex ~1.1 m · gravity ~20 m/s² (snappy, not floaty).
+- Walk 1.8 m/s (was 2.4; Andrew 2026-10-11, the walk clip looked hurried) · Sprint (hold Shift) 6.0 m/s · Jump apex ~1.1 m · gravity ~20 m/s² (snappy, not floaty).
 - Smooth animation blending (idle↔walk↔sprint by speed; ~0.15 s crossfades). Feet should not visibly slide: match clip playback speed to movement speed.
 - Camera: ~3.5 m behind outdoors, mouse look with pointer lock, scroll to zoom 2–6 m, pulls in automatically to avoid walls (essential indoors), FOV ~70.
 - **Roar (Y):** plays the roar clip + loud positional roar (audible ~60 m). Bears within 6 m get a small camera shake. 3 s cooldown.
