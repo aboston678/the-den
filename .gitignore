@@ -11,3 +11,4 @@ __MACOSX/
 playwright-report/
 test-results/
 client/public/models/*-preview.glb
+assets/polyhaven/

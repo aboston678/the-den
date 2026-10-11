@@ -1,4 +1,4 @@
-import { BEAR, MAX_PLAYERS } from "./constants.ts";
+import { BEAR } from "./constants.ts";
 
 // Networking rules shared by the browser and the game server (GAME_SPEC §7).
 
@@ -55,10 +55,4 @@ export function sanitizePose(input: unknown, prev: Pose, seconds: number): Pose 
     speed: clampN(num(raw.speed, 0), 0, BEAR.sprintSpeed * 1.2),
     action,
   };
-}
-
-/** Where the bear in party slot 0–5 starts: a short line, facing −z (into the map). */
-export function spawnPoint(slot: number): { x: number; z: number; yaw: number } {
-  const s = Math.max(0, Math.min(MAX_PLAYERS - 1, Math.floor(slot)));
-  return { x: (s - (MAX_PLAYERS - 1) / 2) * 1.8, z: 4, yaw: Math.PI };
 }

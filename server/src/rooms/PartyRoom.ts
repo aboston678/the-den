@@ -5,7 +5,9 @@ import {
   NET_TICK_HZ,
   type Pose,
   RECONNECT_WINDOW_S,
+  type WorldName,
   generateRoomCode,
+  isWorldName,
   sanitizeNickname,
   sanitizePose,
   spawnPoint,
@@ -30,9 +32,10 @@ export class PartyRoom extends Room<{ state: PartyState }> {
   state = new PartyState();
   private lastPoseAt = new Map<string, number>();
 
-  async onCreate() {
+  async onCreate(options?: { world?: unknown }) {
     this.roomId = await uniqueRoomCode();
     this.state.code = this.roomId;
+    if (isWorldName(options?.world)) this.state.world = options.world;
     this.patchRate = 1000 / NET_TICK_HZ;
 
     this.onMessage(MSG.pose, (client, message) => {
@@ -48,7 +51,7 @@ export class PartyRoom extends Room<{ state: PartyState }> {
     this.onMessage(MSG.start, (client) => {
       if (client.sessionId !== this.state.hostId || this.state.phase !== "lobby") return;
       this.state.phase = "playing";
-      this.state.players.forEach((player) => placeAtSpawn(player));
+      this.state.players.forEach((player) => placeAtSpawn(player, this.state.world as WorldName));
     });
   }
 
@@ -56,7 +59,7 @@ export class PartyRoom extends Room<{ state: PartyState }> {
     const player = new Player();
     player.name = sanitizeNickname(options?.name);
     player.slot = this.freeSlot();
-    placeAtSpawn(player);
+    placeAtSpawn(player, this.state.world as WorldName);
     this.state.players.set(client.sessionId, player);
     if (!this.state.hostId) this.state.hostId = client.sessionId;
   }
@@ -94,7 +97,7 @@ function poseOf(p: Player): Pose {
   return { x: p.x, y: p.y, z: p.z, yaw: p.yaw, speed: p.speed, action: p.action as Pose["action"] };
 }
 
-function placeAtSpawn(player: Player) {
-  const spot = spawnPoint(player.slot);
-  Object.assign(player, { x: spot.x, y: 0, z: spot.z, yaw: spot.yaw, speed: 0, action: "locomotion" });
+function placeAtSpawn(player: Player, world: WorldName) {
+  const spot = spawnPoint(player.slot, world);
+  Object.assign(player, { x: spot.x, y: spot.y, z: spot.z, yaw: spot.yaw, speed: 0, action: "locomotion" });
 }

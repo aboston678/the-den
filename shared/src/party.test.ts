@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { MAX_PLAYERS } from "./constants.ts";
-import { type Pose, sanitizePose, spawnPoint } from "./party.ts";
+import { type Pose, sanitizePose } from "./party.ts";
 
 const prev: Pose = { x: 0, y: 0, z: 0, yaw: 0, speed: 0, action: "locomotion" };
 
@@ -26,14 +26,5 @@ describe("sanitizePose", () => {
     expect(p).toMatchObject({ x: 0, y: 0, z: 0, yaw: 0, action: "locomotion" });
     expect(p.speed).toBeCloseTo(7.2); // capped at 1.2 × sprint
     expect(sanitizePose(undefined, prev, 0.05)).toEqual({ ...prev, speed: 0 });
-  });
-});
-
-describe("spawnPoint", () => {
-  it("gives each slot its own spot", () => {
-    const spots = Array.from({ length: MAX_PLAYERS }, (_, i) => spawnPoint(i));
-    const xs = new Set(spots.map((s) => s.x));
-    expect(xs.size).toBe(MAX_PLAYERS);
-    for (let i = 1; i < spots.length; i++) expect(spots[i]!.x - spots[i - 1]!.x).toBeGreaterThanOrEqual(1.5);
   });
 });

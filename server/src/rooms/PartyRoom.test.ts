@@ -1,5 +1,5 @@
 import { Client, type Room } from "@colyseus/sdk";
-import { MAX_PLAYERS, MSG, PARTY_ROOM, isValidRoomCode } from "@den/shared";
+import { MAX_PLAYERS, MSG, PARTY_ROOM, isValidRoomCode, spawnPoint } from "@den/shared";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createGameServer } from "../app.ts";
 
@@ -68,6 +68,26 @@ describe("party room", () => {
     await until(() => b.state.phase === "playing");
     await a.leave();
     await until(() => b.state.hostId === b.sessionId);
+  });
+
+  it("starts bears on the property's driveway, or on the test field when asked", async () => {
+    const a = track(await client().create(PARTY_ROOM, { name: "Alpha" }));
+    a.send(MSG.start);
+    await until(() => a.state.phase === "playing");
+    const spot = spawnPoint(0);
+    expect(a.state.world).toBe("property");
+    const me = a.state.players.get(a.sessionId);
+    for (const k of ["x", "y", "z"] as const) expect(me[k]).toBeCloseTo(spot[k], 3);
+
+    const b = track(await client().create(PARTY_ROOM, { name: "Bravo", world: "test" }));
+    b.send(MSG.start);
+    await until(() => b.state.phase === "playing");
+    expect(b.state.world).toBe("test");
+    expect(b.state.players.get(b.sessionId).z).toBe(spawnPoint(0, "test").z);
+
+    const c = track(await client().create(PARTY_ROOM, { name: "Charlie", world: "moon" }));
+    await until(() => c.state.code !== undefined && c.state.code !== "");
+    expect(c.state.world).toBe("property"); // unknown worlds are ignored
   });
 
   it("clamps impossible movement", async () => {

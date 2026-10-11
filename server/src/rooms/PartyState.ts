@@ -24,6 +24,7 @@ export const PartyState = schema(
     phase: t.string().default("lobby"), // "lobby" | "playing"
     code: t.string(),
     hostId: t.string(),
+    world: t.string().default("property"), // "property" | "test" (the 1.6 test field, for dev and tests)
     players: t.map(Player),
   },
   "PartyState",

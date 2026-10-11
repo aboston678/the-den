@@ -18,7 +18,8 @@
     "test": "vitest run",
     "test:e2e": "playwright test",
     "fetch:clips": "node tools/fetch-clips.mjs",
-    "build:bear": "node tools/build-bear.mjs"
+    "build:bear": "node tools/build-bear.mjs",
+    "build:outdoor": "node tools/fetch-polyhaven.mjs && node tools/build-outdoor-textures.mjs && node tools/build-outdoor-props.mjs && node --import ./tools/lib/register-asset-imports.mjs tools/build-trees.mjs"
   },
   "devDependencies": {
     "@gltf-transform/core": "^4.5.1",
