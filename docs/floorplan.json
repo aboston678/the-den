@@ -15,23 +15,27 @@
       "ceiling_height": 2.4,
       "rooms": [
         {"id": "den", "name": "Basement TV den", "x": 11, "z": 5, "w": 11, "d": 5,
-         "notes": "Exposed pine beams, cream walls, beige carpet. Tufted leather Chesterfield sofa, brown leather recliner, TV on a wood stand (shows the rotating TV images), side table with globe, nautical chart on wall, pine armoire. French doors on the south wall open straight onto the lawn (walkout). Basement stairs arrive in its west end.",
+         "notes": "Exposed pine beams, cream walls, beige carpet. Tufted leather Chesterfield sofa, brown leather recliner, TV on a wood stand (shows the rotating TV images), side table with globe, nautical chart on wall, pine armoire. French doors on the south wall open straight onto the lawn (walkout).",
          "photos": ["office-library_and_basement-den.jpg (right half)"]},
         {"id": "utility", "name": "Utility room", "x": 11, "z": 0, "w": 11, "d": 5,
          "notes": "Closed door only, not enterable (saves work).", "photos": []},
+        {"id": "stair_landing", "name": "Basement stair landing", "x": 22, "z": 0, "w": 6, "d": 6,
+         "notes": "Where the basement stairs arrive (they run under the main staircase). Opens south into the bowling lounge and east onto the bowlers' end of the lanes.", "photos": []},
         {"id": "bowling_lounge", "name": "Bowling lounge", "x": 22, "z": 6, "w": 12, "d": 4,
-         "notes": "Seating, ball rack, view of both lanes, overhead score screens visible. Open to the alley along its north side.", "photos": []},
-        {"id": "bowling_alley", "name": "Bowling alley (2 lanes)", "x": 22, "z": 0, "w": 28, "d": 6,
-         "notes": "Two side-by-side lanes running WEST -> EAST: bowler stands at the west end, pins at the east end. Regulation proportions before the 1.25 game scale: 4.6 m approach, 18.29 m foul line to head pin, ~4 m pin deck + pit + machine. Ball return between the lanes. Extends ~16 m past the house footprint underground; nobody can see that from outside.",
+         "notes": "Seating, ball rack, view of both lanes, overhead score screens visible. Open to the stair landing and the alley along its north side.", "photos": []},
+        {"id": "bowling_alley", "name": "Bowling alley (2 lanes)", "x": 28, "z": 0, "w": 28, "d": 6,
+         "notes": "Two side-by-side lanes running WEST -> EAST: bowler stands at the west end, pins at the east end. Regulation proportions before the 1.25 game scale: 4.6 m approach, 18.29 m foul line to head pin, ~4 m pin deck + pit + machine. Ball return between the lanes. Starts east of the stair landing and extends ~22 m past the house footprint underground; nobody can see that from outside.",
          "photos": []}
       ],
       "doors": [
         {"a": "den", "b": "outside", "x": 17.5, "z": 10, "width": 1.6, "type": "french"},
         {"a": "den", "b": "bowling_lounge", "x": 22, "z": 8, "width": 2.5, "type": "opening"},
-        {"a": "den", "b": "utility", "x": 17.5, "z": 5, "width": 0.9, "type": "hinged", "locked": true}
+        {"a": "den", "b": "utility", "x": 17.5, "z": 5, "width": 0.9, "type": "hinged", "locked": true},
+        {"a": "stair_landing", "b": "bowling_lounge", "x": 25, "z": 6, "width": 3.0, "type": "opening"},
+        {"a": "stair_landing", "b": "bowling_alley", "x": 28, "z": 3, "width": 5.0, "type": "opening"}
       ],
       "stairs": [
-        {"id": "basement_stairs", "from_level": "main", "x": 12, "z": 7.4, "w": 4.5, "d": 1.2, "direction": "descends toward east", "notes": "Starts in the back hall off the kitchen, lands in the den."}
+        {"id": "basement_stairs", "from_level": "main", "x": 25.6, "z": 0.3, "w": 1.2, "d": 3.0, "direction": "directly under the main staircase, running the opposite way, down to the basement stair landing (L-turn is fine to fit the drop)", "notes": "Andrew 2026-10-11: the basement stairs start right under the stairs that go up. Entered through the white door under the stairs (visible in great-room-balcony-foyer.jpg)."}
       ]
     },
     {
@@ -51,8 +55,8 @@
         {"id": "kitchen", "name": "Kitchen", "x": 11, "z": 0.5, "w": 6, "d": 6.5,
          "notes": "Straight ahead from the garage door. Knotty pine cabinets and island with double sink, pine counters, black electric range, stainless fridge, hanging copper/steel pot rack, exposed timber-beam ceiling with spotlights, terracotta tile floor, braided rugs, microwave, toaster, kettle.",
          "photos": ["kitchen.jpg", "foyer-stairs_and_kitchen.jpg (right half)"]},
-        {"id": "back_hall", "name": "Back hall + basement stairs", "x": 11, "z": 7, "w": 6, "d": 2,
-         "notes": "Short hall behind the kitchen holding the stairs down to the basement.", "photos": []},
+        {"id": "pantry", "name": "Pantry", "x": 11, "z": 7, "w": 6, "d": 2,
+         "notes": "Small walk-in pantry behind the kitchen: shelves of food and jars. (Was the back hall; the basement stairs moved under the main staircase on 2026-10-11.)", "photos": []},
         {"id": "dining_hall", "name": "Dining hall (casual)", "x": 17, "z": 0, "w": 4.5, "d": 5,
          "notes": "On the LEFT after the kitchen. Wood farmhouse table with 4 slat-back chairs, blue braided rug, brass ceiling fan, beige speckled wallpaper, framed print, flowers on a white plant stand.",
          "photos": ["dining-hall_and_formal-dining.jpg (left half)"]},
@@ -92,7 +96,7 @@
         {"a": "mudroom", "b": "outside", "x": 9.25, "z": 0.5, "width": 0.9, "type": "exterior"},
         {"a": "mudroom", "b": "half_bath", "x": 9.25, "z": 5.5, "width": 0.8, "type": "hinged"},
         {"a": "mudroom", "b": "kitchen", "x": 11, "z": 3.0, "width": 1.5, "type": "opening"},
-        {"a": "kitchen", "b": "back_hall", "x": 14, "z": 7, "width": 1.2, "type": "opening"},
+        {"a": "kitchen", "b": "pantry", "x": 14, "z": 7, "width": 1.2, "type": "opening"},
         {"a": "kitchen", "b": "dining_hall", "x": 17, "z": 2.5, "width": 2.5, "type": "opening"},
         {"a": "kitchen", "b": "common_area", "x": 17, "z": 6.0, "width": 1.2, "type": "opening"},
         {"a": "dining_hall", "b": "common_area", "x": 19.25, "z": 5, "width": 2.0, "type": "opening"},
@@ -109,7 +113,7 @@
         {"a": "greenhouse", "b": "outside", "x": 11, "z": 10.5, "width": 0.9, "type": "exterior"}
       ],
       "stairs": [
-        {"id": "main_stairs", "to_level": "upper", "x": 25.6, "z": 0.3, "w": 1.2, "d": 3.0, "direction": "rises from the foyer to the upstairs landing (L-shape is fine)"},
+        {"id": "main_stairs", "to_level": "upper", "x": 25.6, "z": 0.3, "w": 1.2, "d": 3.0, "direction": "rises from the foyer to the upstairs landing (L-shape is fine)", "notes": "The basement stairs run underneath, going down the opposite way."},
         {"id": "deck_stairs", "to_level": "lawn", "x": 16.5, "z": 13.0, "w": 1.2, "d": 2.5, "direction": "down from the deck's west end to the back lawn"}
       ]
     },

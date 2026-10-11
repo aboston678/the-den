@@ -28,6 +28,7 @@ SPECIAL = {
     "garage": "#d9d9d9",
     "bowling_alley": "#cfdcf0",
     "bowling_lounge": "#cfdcf0",
+    "stair_landing": "#dfe7f2",
     "utility": "#c9cfd6",
 }
 OUTDOOR_FILL = "#ffffff"
@@ -41,9 +42,10 @@ LABELS = {
     "great_room": ("Living room\n(great room)\nsunken, 2-story", 25.2, None),
     "office": ("Office /\nlibrary\n(under\nstairs)", None, None),
     "den": ("Basement\nTV den", 19.0, None),
-    "bowling_alley": ("Bowling alley (2 lanes)", 36.0, 5.4),
+    "bowling_alley": ("Bowling alley (2 lanes)", 42.0, 5.4),
     "common_area": ("Common\narea (pink\nsitting\nroom)", None, None),
-    "back_hall": ("", None, None),
+    "pantry": ("Pantry", None, None),
+    "stair_landing": ("Stair\nlanding", 23.6, 4.6),
     "formal_dining": ("Formal\ndining -\nCATAN\nROOM", None, None),
     "bedroom_main": ("Downstairs\nbedroom\n(blue)", None, None),
 }
@@ -55,7 +57,7 @@ fig, axes = plt.subplots(3, 1, figsize=(16, 17.5),
                          gridspec_kw={"hspace": 0.08, "height_ratios": [16, 20.4, 15.1]})
 fig.patch.set_facecolor("white")
 fig.suptitle(
-    "THE DEN - house floor plan (DRAFT v1 for Andrew to correct)",
+    "THE DEN - house floor plan (DRAFT v2, Andrew's answers 2026-10-11)",
     fontsize=20, fontweight="bold", color=INK, y=0.995,
 )
 fig.text(
@@ -91,7 +93,7 @@ for ax, lid in zip(axes, order):
     rects = all_rects(lv)
     ax.set_title(lv["name"], fontsize=16, fontweight="bold", loc="left", color=INK, pad=8)
     ax.set_aspect("equal")
-    ax.set_xlim(-2.5, 51.5)
+    ax.set_xlim(-2.5, 57.5)
     ax.set_ylim(*YLIM[lid])  # inverted so north (z=0) is at the top
     ax.axis("off")
 
@@ -156,11 +158,6 @@ for ax, lid in zip(axes, order):
         ax.text(s["x"] + s["w"] / 2, s["z"] + s["d"] / 2, "stairs", ha="center", va="center",
                 fontsize=8.5, color="#333", zorder=8,
                 bbox=dict(facecolor="white", edgecolor="none", pad=0.8))
-    if lid == "main":
-        ax.add_patch(Rectangle((12.0, 7.4), 4.5, 1.2, facecolor="#ffffff", edgecolor="#555",
-                               linewidth=1.2, hatch="---", zorder=7))
-        ax.text(14.25, 8.0, "back hall: stairs down", ha="center", va="center", fontsize=8.5, zorder=8,
-                bbox=dict(facecolor="white", edgecolor="none", pad=0.8))
     if lid == "upper":
         ax.add_patch(Rectangle((25.6, 0.3), 1.2, 3.0, facecolor="#ffffff", edgecolor="#555",
                                linewidth=1.2, hatch="---", zorder=7))
@@ -194,10 +191,12 @@ for ax, lid in zip(axes, order):
             "   formal dining (Catan),",
             "   1 bedroom, office under stairs",
             "",
-            "CHECK THESE, ANDREW:",
-            "- Is the pink room the common area?",
-            "- Where do the basement stairs start?",
-            "- Which side is the downstairs bedroom?",
+            "ANSWERED BY ANDREW (2026-10-11):",
+            "- Pink room = the common area",
+            "- Basement stairs: under the main",
+            "  stairs, going down the other way",
+            "- Downstairs bedroom: east side,",
+            "  next to the Catan room",
         ]
         ax.text(36.0, -2.6, "\n".join(notes), fontsize=10.5, va="top", ha="left", color=INK,
                 family="DejaVu Sans", linespacing=1.45,
