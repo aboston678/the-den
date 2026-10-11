@@ -3,7 +3,7 @@
 Claude Code updates this file after every milestone: tick the box, add a short note, and say what's next.
 **[ANDREW APPROVES]** = stop, show Andrew, and wait for his OK.
 
-**Current status:** 1.5 in progress. All 12 clips submitted (job IDs in the credit ledger; check status, do NOT resubmit). Andrew's picks: W1 Casual_Walk, R1 RunFast (keep existing), D1 All_Night_Dance, F1 Pull_Radish, B1 Crouch_Charge_and_Throw. Next: download, strip, retarget, merge into bear.glb.
+**Current status:** 1.5 done. Next up: milestone 1.6 (character controller), no credits needed.
 
 ---
 
@@ -15,10 +15,11 @@ Goal: Andrew sends friends a link; everyone makes or joins a party, loads in at 
 - [x] **1.2 Bear concept.** 4 concept images (`gpt_image_2_5`, ~1 credit total). **[ANDREW APPROVES]** the pick.
   - Done 2026-10-11. Andrew picked **#4** (`assets/concepts/bear/bear-concept-4.png`, Higgsfield job a8521404-145d-4cf5-b29d-7e841a83eea8): widest arm gap for rigging.
 - [x] **1.3 Bear 3D model.** `meshy_v7_image_to_3d` with texture, PBR, A-pose, rig, Idle (47.5 credits; ask first). Turntable viewer page. **[ANDREW APPROVES]** the look.
-  - Done 2026-10-11. Andrew approved the look and asked for "a little fatter": `tools/fatten-bear.mjs` widens the torso 22% (+15% belly) in the mesh only, skeleton untouched, so clips still fit. Source kept at `assets/models/bear/bear-base-original.glb`; game uses `client/public/models/bear-base.glb`. Before/after: `assets/concepts/bear/bear-fatter-*.png`. Viewer: `/viewer.html`.
+  - Done 2026-10-11. Andrew approved the look and asked for "a little fatter": `tools/fatten-bear.mjs` widens the torso 22% (+15% belly) in the mesh only, skeleton untouched, so clips still fit. Source kept at `assets/models/bear/bear-base-original.glb`; game now uses `client/public/models/bear.glb` (built in 1.5). Before/after: `assets/concepts/bear/bear-fatter-*.png`. Viewer: `/viewer.html`.
 - [x] **1.4 Rig test.** 2 extra clips (Casual_Walk 30, RunFast 16; 16 credits). Prove the clips play on ONE skinned mesh in three.js. If not, stop and explain.
   - 2026-10-11: clips do NOT drop straight onto our bear: every Higgsfield re-rig places joints differently (up to 23° / 15 cm vs our bear; walk vs run rigs differ ~5° / 2 cm). Fix (no credits): `tools/retarget-clip.mjs` converts each clip onto our skeleton so the mesh bends exactly like the clip's own rig (mean ~2 cm vs reference, about half the naive-copy error). Verified numerically (`tools/verify-retarget.mjs`) and visually (`assets/concepts/bear/rigtest/`). Clip sources stripped to skeleton+animation (`assets/models/bear/clips/`). Andrew approved the approach (and the fatter bear) 2026-10-11.
-- [ ] **1.5 All bear clips.** Remaining clips from GAME_SPEC §5.2 (~12 × 8 = ~96 credits; ask first). Show preview-GIF choices for the "preview first" clips. **[ANDREW APPROVES]** walk and dance picks. Merge and compress into one `bear.glb`.
+- [x] **1.5 All bear clips.** Remaining clips from GAME_SPEC §5.2 (~12 × 8 = ~96 credits; ask first). Show preview-GIF choices for the "preview first" clips. **[ANDREW APPROVES]** walk and dance picks. Merge and compress into one `bear.glb`.
+  - Done 2026-10-11. Andrew's picks from previews: W1 Casual_Walk, R1 RunFast (kept), D1 All_Night_Dance, F1 Pull_Radish (reel), B1 Crouch_Charge_and_Throw (bowl). `npm run build:bear` -> `client/public/models/bear.glb`: 5.9 MB, 15 clips (Idle, Walk, Run, Jump, Roar, OpenDoor, Pet, SitDown, SitIdle, StandUp, Cast, Celebrate, Dance, Reel, Bowl), meshopt + WebP. All clips checked on the built bear (`assets/concepts/bear/bear-all-clips.png`). Notes for 1.6: Jump lifts the hips 0.8 m (strip or sync with physics); SitDown/StandUp/Cast end lowered/shifted (blend carefully); Dance sways ~1 m sideways. Pet and Bowl still need trimming (2.3 / 3.2).
 - [ ] **1.6 Character controller.** Test ground, third-person camera with wall avoidance, WASD/Shift/Space, mouse look, Y roar, B dance, smooth blending, no foot sliding.
 - [ ] **1.7 Multiplayer.** Colyseus party rooms, 5-character codes, create/join, max 6, host hand-off, synced movement/animations, interpolation, name tags, bumping, reconnect. Two-browser test.
 - [ ] **1.8 Outdoor map.** 300 × 300 m terrain with the slope, lawn clearing, forest, driveway from the NW spawn, stone walls, boulder, stream, dock with the rod bucket (static for now), trail, perimeter. Screenshot tour. **[ANDREW APPROVES]**
@@ -89,10 +90,12 @@ Starting balance: 1,210 (2026-10-11)
 | 2026-10-11 | Dogs on the main floor only | Dog pathfinding on stairs isn't worth the complexity |
 | 2026-10-11 | Bear made fatter in code (torso +22%, belly +15%) instead of regenerating | Andrew wanted it a little fatter; reshaping the mesh keeps the same skeleton and costs no credits |
 | 2026-10-11 | Every extra animation clip is retargeted onto the base bear's skeleton (`tools/retarget-clip.mjs`) | Higgsfield re-rigs per clip with different joint placement; straight copying bends the wrong spots. GAME_SPEC §5.1 updated |
+| 2026-10-11 | Bear textures shipped as WebP for now; KTX2 deferred to 1.12 | KTX2 encoder (toktx) isn't installed on this Mac and the bear is one shared 3-texture set; revisit with the house's many textures |
 | 2026-10-11 | Basement stairs moved under the main staircase; new basement stair landing; bowling lanes shifted ~6 m east (x 22→28); back hall became a pantry | Andrew: the real stairs start under the stairs going up. Lanes had to move so the stairs don't land on the approach |
 
 ## Session notes
 (Newest first. 1–3 lines per session: what got done, what's next, anything Andrew needs to do.)
 
+- **2026-10-11 · Session 1 (cont. 2).** Milestones 1.2–1.5 done: bear concept #4, 3D model made a bit fatter in code, rig test needed a clip-conversion step (approved), all 15 clips built into `bear.glb`. Floorplan v2 (basement stairs). Credits: 1,049.5 left (160.5 spent). Next: 1.6 character controller.
 - **2026-10-11 · Session 1 (cont.).** Andrew OK'd the Phase 1 asks. Floorplan answers: pink sitting room = the common area (confirmed); downstairs bedroom is on the far east side next to the Catan room (matches the plan); basement stairs start right under the main stairs in the foyer and go down the opposite way (NOT the back hall). Andrew approved the fix; `floorplan.json` + `floorplan.png` updated (see decision log).
 - **2026-10-11 · Session 1.** Project lives in `~/Projects/the-den`, private repo github.com/aboston678/the-den. Higgsfield checked: 1,210 credits (Plus). Milestone 1.1 done and pushed. Next: 1.2 bear concepts. Andrew to answer the floorplan questions (is the pink room the "little common area"? where do the basement stairs start? which side is the downstairs bedroom?).

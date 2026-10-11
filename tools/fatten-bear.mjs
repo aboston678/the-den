@@ -14,7 +14,7 @@ import { ALL_EXTENSIONS } from "@gltf-transform/extensions";
 const amount = Number(process.argv[2] ?? 0.22);
 const belly = Number(process.argv[3] ?? 0.15);
 const input = process.argv[4] ?? "assets/models/bear/bear-base-original.glb";
-const output = process.argv[5] ?? "client/public/models/bear-base.glb";
+const output = process.argv[5] ?? "bear-fat.glb";
 
 // How much each bone's influence counts toward "torso" (0 = untouched, 1 = full amount).
 const TORSO_FACTOR = {

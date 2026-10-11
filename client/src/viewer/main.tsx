@@ -4,10 +4,10 @@ import { ModelViewer } from "./ModelViewer.tsx";
 import "../styles.css";
 import "./viewer.css";
 
-// Dev-only turntable page for approving 3D models: /viewer.html?model=/models/bear-base.glb
+// Dev-only turntable page for approving 3D models: /viewer.html?model=/models/bear.glb
 // Add &compare=/models/other.glb to show a second model beside it.
 const params = new URLSearchParams(location.search);
-const model = params.get("model") ?? "/models/bear-base.glb";
+const model = params.get("model") ?? "/models/bear.glb";
 const compare = params.get("compare");
 // &clips=/models/a.glb,/models/b.glb borrows the animation clips from other files and plays
 // them on the main model (the 1.4 rig test).
