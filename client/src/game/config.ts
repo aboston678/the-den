@@ -18,7 +18,14 @@ export const MOVE = {
   gravity: BEAR.gravity,
   jumpVelocity: Math.sqrt(2 * BEAR.gravity * BEAR.jumpApexM),
   roarCooldown: 3, // s
+  /** Bumping (GAME_SPEC §5.3): soft shove when touching, much stronger from a sprinting bear. */
+  shove: 2, // m/s
+  sprintShove: 6, // m/s extra
+  staggerTime: 0.35, // s of slowed movement after a sprint shove
 } as const;
+
+/** Seconds a jump spends in the air. */
+export const JUMP_AIR_TIME = (2 * MOVE.jumpVelocity) / MOVE.gravity;
 
 /** Capsule matching the 2.1 m bear. */
 export const CAPSULE = {

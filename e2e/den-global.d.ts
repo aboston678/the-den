@@ -11,7 +11,8 @@ interface Window {
       trackFeet: boolean;
       feet: [{ x: number; y: number; z: number }, { x: number; y: number; z: number }];
     };
-    camera: { yaw: number; pitch: number; distance: number; current: number };
+    camera: { yaw: number; pitch: number; distance: number; current: number; shake: number };
     teleport: (x: number, z: number, y?: number) => void;
+    remotes: () => { id: string; name: string; x: number; z: number; action: string; tagVisible: boolean; connected: boolean }[];
   };
 }

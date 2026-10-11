@@ -61,3 +61,142 @@ body,
 .controls-hint b {
   color: var(--ember);
 }
+
+.lobby {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 18px;
+  background: radial-gradient(circle at 50% 30%, #2f3f33, var(--forest) 70%);
+  color: var(--cream);
+}
+
+.lobby h1 {
+  margin: 0;
+  font-size: 56px;
+  letter-spacing: 0.2em;
+  color: var(--ember);
+}
+
+.lobby-card {
+  display: grid;
+  gap: 12px;
+  width: 340px;
+  padding: 22px;
+  border-radius: 10px;
+  background: rgb(0 0 0 / 0.25);
+}
+
+.lobby label {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.lobby input,
+.lobby button {
+  font: inherit;
+  padding: 9px 12px;
+  border-radius: 6px;
+  border: 1px solid rgb(239 230 210 / 0.35);
+  background: rgb(0 0 0 / 0.25);
+  color: var(--cream);
+}
+
+.lobby button {
+  cursor: pointer;
+  background: var(--bark);
+}
+
+.lobby button.primary {
+  background: var(--ember);
+  border-color: var(--ember);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.lobby button.quiet {
+  background: transparent;
+}
+
+.lobby button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.lobby-join {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+}
+
+.lobby-join input {
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+}
+
+.lobby-code {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 36px;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+}
+
+.lobby-players {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 6px;
+}
+
+.lobby-players li {
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: rgb(0 0 0 / 0.2);
+}
+
+.lobby-players li.away {
+  opacity: 0.5;
+}
+
+.lobby .tag {
+  margin-left: 8px;
+  font-size: 11px;
+  color: var(--ember);
+  text-transform: uppercase;
+}
+
+.lobby-note {
+  margin: 0;
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+.lobby-error {
+  margin: 0;
+  color: #ff9a8a;
+  font-size: 13px;
+}
+
+.name-tag {
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: rgb(31 42 34 / 0.7);
+  color: var(--cream);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+  transition: opacity 0.15s;
+}
+
+.name-tag.away {
+  opacity: 0.5;
+  font-style: italic;
+}

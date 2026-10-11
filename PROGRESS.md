@@ -3,7 +3,7 @@
 Claude Code updates this file after every milestone: tick the box, add a short note, and say what's next.
 **[ANDREW APPROVES]** = stop, show Andrew, and wait for his OK.
 
-**Current status:** 1.6 done. Next up: milestone 1.7 (multiplayer: party codes, synced bears, name tags, bumping, reconnect).
+**Current status:** 1.7 in progress (NOT done). Built: party codes, lobby (create/join/Play), server-clamped 20 Hz poses, interpolated remote bears with animations, name tags (distance fade + wall occlusion), solid bumping + shove/stagger, roar camera shake, reload rejoin, host hand-off. Server tests 6/6. Browser: multiplayer 5/6 pass; `e2e/multiplayer.spec.ts` "a roar shakes nearby bears' cameras" failed in the last run (passed earlier; likely timing, investigate first). Walk-slide test now 3 s average, bar 25% of walk speed. Next: fix that test, run full suite twice, two-browser screenshots, tick 1.7.
 
 ---
 
@@ -98,6 +98,7 @@ Starting balance: 1,210 (2026-10-11)
 ## Session notes
 (Newest first. 1–3 lines per session: what got done, what's next, anything Andrew needs to do.)
 
+- **2026-10-11 · Session 1 (cont. 4).** Walk speed 1.8 m/s (Andrew). Fixed bear sinking into floor on load. 1.7 multiplayer mostly built (see status). Session ended at usage limit.
 - **2026-10-11 · Session 1 (cont. 3).** 1.6 done: the bear walks/sprints/jumps/roars/dances on a test field with a third-person camera. Fixed a physics timing bug that lost ~15% of movement. Next: 1.7 multiplayer.
 - **2026-10-11 · Session 1 (cont. 2).** Milestones 1.2–1.5 done: bear concept #4, 3D model made a bit fatter in code, rig test needed a clip-conversion step (approved), all 15 clips built into `bear.glb`. Floorplan v2 (basement stairs). Credits: 1,049.5 left (160.5 spent). Next: 1.6 character controller.
 - **2026-10-11 · Session 1 (cont.).** Andrew OK'd the Phase 1 asks. Floorplan answers: pink sitting room = the common area (confirmed); downstairs bedroom is on the far east side next to the Catan room (matches the plan); basement stairs start right under the main stairs in the foyer and go down the opposite way (NOT the back hall). Andrew approved the fix; `floorplan.json` + `floorplan.png` updated (see decision log).

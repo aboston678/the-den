@@ -4,6 +4,7 @@ import { Suspense, useEffect } from "react";
 import { ThirdPersonCamera } from "./camera/ThirdPersonCamera.tsx";
 import { attachKeyboard } from "./input/keyboard.ts";
 import { Player } from "./player/Player.tsx";
+import { RemoteBears } from "./remote/RemoteBears.tsx";
 import { TestGround } from "./world/TestGround.tsx";
 
 const SUN: [number, number, number] = [40, 30, 25];
@@ -36,6 +37,7 @@ export function GameScene() {
         <Suspense fallback={null}>
           <Player />
         </Suspense>
+        <RemoteBears />
         <ThirdPersonCamera />
       </Physics>
     </>

@@ -1,50 +1,30 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
+import { failOnErrors, hostGame, joinGame, newPlayer, waitForBear } from "./helpers.ts";
 
-/** Fail the test on any browser console error or uncaught exception. */
-function trackErrors(page: Page) {
+test("lobby loads, a party starts, the 3D world renders", async ({ page }) => {
   const errors: string[] = [];
-  page.on("console", (msg) => {
-    if (msg.type() === "error") errors.push(msg.text());
-  });
-  page.on("pageerror", (err) => errors.push(err.message));
-  return errors;
-}
+  page.on("console", (msg) => msg.type() === "error" && errors.push(msg.text()));
+  failOnErrors(page);
 
-test("page loads, renders 3D and connects to the game server", async ({ page }) => {
-  const errors = trackErrors(page);
-
-  await page.goto(`/?party=smoke-solo-${Date.now()}`);
-  await expect(page.locator("canvas")).toBeVisible({ timeout: 15_000 });
-  await expect(page.getByTestId("connection-status")).toHaveAttribute("data-status", "connected", {
-    timeout: 15_000,
-  });
-
-  // Let the physics capsule fall and settle before the screenshot.
-  await page.waitForTimeout(2_000);
+  await page.goto("/");
+  await expect(page.getByTestId("lobby")).toBeVisible();
+  await page.screenshot({ path: "test-results/smoke-lobby.png" });
+  const code = await hostGame(page, "Smokey");
+  await expect(page.getByTestId("connection-status")).toContainText(code);
+  await page.waitForTimeout(1500);
   await page.screenshot({ path: "test-results/smoke.png" });
-
   expect(errors).toEqual([]);
 });
 
 test("two browsers end up in the same party", async ({ browser }) => {
-  const a = await browser.newPage();
-  const b = await browser.newPage();
-  const errors = [...trackErrors(a), ...trackErrors(b)];
-
-  const party = `smoke-${Date.now()}`;
-  await a.goto(`/?party=${party}`);
-  await expect(a.getByTestId("connection-status")).toHaveAttribute("data-status", "connected", {
-    timeout: 15_000,
-  });
-  await b.goto(`/?party=${party}`);
-  await expect(b.getByTestId("connection-status")).toHaveAttribute("data-status", "connected", {
-    timeout: 15_000,
-  });
-
-  await expect(a.getByTestId("connection-status")).toContainText("2 in party");
-  await expect(b.getByTestId("connection-status")).toContainText("2 in party");
-
-  expect(errors).toEqual([]);
-  await a.close();
-  await b.close();
+  const a = await newPlayer(browser);
+  const b = await newPlayer(browser);
+  const code = await hostGame(a, "Alpha", { play: false });
+  await joinGame(b, code, "Bravo");
+  await expect(a.getByTestId("party-list")).toContainText("Bravo");
+  await expect(b.getByTestId("party-list")).toContainText("Alpha");
+  await a.getByTestId("play").click();
+  await waitForBear(a);
+  await waitForBear(b);
+  await expect.poll(() => b.evaluate(() => window.__den!.remotes().map((r) => r.name))).toEqual(["Alpha"]);
 });

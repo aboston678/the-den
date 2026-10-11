@@ -2,6 +2,7 @@
 // (not React state) because they change every frame.
 import { Vector3 } from "three";
 import { CLIP } from "./config.ts";
+import { remotes } from "../net/remotes.ts";
 
 export const playerState = {
   position: new Vector3(), // feet position
@@ -25,6 +26,8 @@ export const cameraState = {
   distance: 3.5,
   /** Actual distance after pulling in for walls. */
   current: 3.5,
+  /** Seconds of camera shake left (roars nearby, getting shoved). */
+  shake: 0,
 };
 
 export type BearAction = "locomotion" | "jump" | "fall" | "roar" | "dance";
@@ -38,6 +41,8 @@ declare global {
       teleport: (x: number, z: number, y?: number) => void;
       /** Clip timing constants, writable for live tuning in dev tools. */
       clip: typeof CLIP;
+      /** Other bears as this client sees them. */
+      remotes: () => { id: string; name: string; x: number; z: number; action: string; tagVisible: boolean; connected: boolean }[];
     };
   }
 }
@@ -45,6 +50,16 @@ window.__den = {
   player: playerState,
   camera: cameraState,
   clip: CLIP,
+  remotes: () =>
+    [...remotes.values()].map((r) => ({
+      id: r.id,
+      name: r.name,
+      x: r.current.x,
+      z: r.current.z,
+      action: r.current.action,
+      tagVisible: r.tagVisible,
+      connected: r.connected,
+    })),
   teleport: (x, z, y = 0) => {
     playerState.teleportTo = { x, y, z };
   },

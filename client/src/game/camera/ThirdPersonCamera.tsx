@@ -64,6 +64,12 @@ export function ThirdPersonCamera() {
 
     camera.position.copy(target).addScaledVector(offset, cameraState.current);
     camera.lookAt(target);
+    if (cameraState.shake > 0) {
+      const a = 0.12 * Math.min(1, cameraState.shake / 0.5);
+      camera.position.x += (Math.random() - 0.5) * a;
+      camera.position.y += (Math.random() - 0.5) * a;
+      cameraState.shake = Math.max(0, cameraState.shake - dt);
+    }
   });
 
   return null;

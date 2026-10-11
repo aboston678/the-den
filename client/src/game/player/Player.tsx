@@ -1,20 +1,17 @@
-import { useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { CapsuleCollider, RigidBody, type RapierCollider, type RapierRigidBody, useRapier } from "@react-three/rapier";
 import { useEffect, useMemo, useRef } from "react";
 import type { KinematicCharacterController } from "@dimforge/rapier3d-compat";
 import { type Group, Matrix4, Vector3 } from "three";
-import { clone as cloneSkinned } from "three/examples/jsm/utils/SkeletonUtils.js";
-import { CAPSULE, CAPSULE_CENTER, CONTROLLER_OFFSET, MOVE } from "../config.ts";
+import { NET_TICK_HZ } from "@den/shared";
+import { CAPSULE, CAPSULE_CENTER, CONTROLLER_OFFSET, JUMP_AIR_TIME, MOVE } from "../config.ts";
+import { sendPose } from "../../net/party.ts";
+import { remotes } from "../../net/remotes.ts";
 import { clearPresses, consumePress, isHeld } from "../input/keyboard.ts";
 import { cameraState, playerState } from "../state.ts";
-import { BearAnimator } from "./BearAnimator.ts";
 import { approach, facingYaw, moveDirection, turnToward } from "./movement.ts";
+import { useBearModel } from "./useBearModel.ts";
 
-const BEAR_URL = "/models/bear.glb";
-useGLTF.preload(BEAR_URL);
-
-const JUMP_AIR_TIME = (2 * MOVE.jumpVelocity) / MOVE.gravity;
 const MAX_DT = 0.1;
 /** Grace period after leaving the ground in which the bear still counts as grounded ("coyote time"). */
 const COYOTE = 0.15;
@@ -50,20 +47,12 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
     };
   }, [world]);
 
-  const { scene, animations } = useGLTF(BEAR_URL);
-  const model = useMemo(() => {
-    const m = cloneSkinned(scene);
-    m.traverse((o) => {
-      o.castShadow = true;
-      o.frustumCulled = false; // skinned bounds don't follow the animation
-    });
-    return m;
-  }, [scene]);
-  const animator = useMemo(() => new BearAnimator(model, animations), [model, animations]);
+  const { model, animator } = useBearModel();
   const toes = useMemo(() => ["LeftToeBase", "RightToeBase"].map((n) => model.getObjectByName(n)!), [model]);
 
   // Start facing away from the camera (which begins on the +z side looking toward −z).
-  const s = useRef({ vy: 0, speed: 0, yaw: Math.PI, dir: { x: 0, z: -1 }, airTime: 0, actionTime: 0, roarReadyAt: 0, groundY: 0, ready: false });
+  const s = useRef({ vy: 0, speed: 0, yaw: Math.PI, dir: { x: 0, z: -1 }, airTime: 0, actionTime: 0, roarReadyAt: 0, groundY: 0, ready: false,
+    pushX: 0, pushZ: 0, staggerUntil: 0, sendTimer: 0 });
 
   useFrame(({ clock }, rawDt) => {
     const controller = controllerRef.current;
@@ -128,9 +117,32 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
     }
     action = animator.action;
 
+    // --- bumping: when touching another bear, shove ourselves away (each client moves only its
+    // own bear). A sprinting bear shoves much harder and makes us stagger.
+    const touch = 2 * CAPSULE.radius + 0.15;
+    for (const r of remotes.values()) {
+      const dx = playerState.position.x - r.current.x, dz = playerState.position.z - r.current.z;
+      const d = Math.hypot(dx, dz);
+      if (d >= touch || d < 1e-4 || Math.abs(playerState.position.y - r.current.y) > 1.5) continue;
+      const sprinting = r.current.speed > MOVE.walkSpeed + 0.5;
+      const strength = MOVE.shove + (sprinting ? MOVE.sprintShove : 0);
+      if (strength > Math.hypot(st.pushX, st.pushZ)) {
+        st.pushX = (dx / d) * strength;
+        st.pushZ = (dz / d) * strength;
+      }
+      if (sprinting && st.staggerUntil < playerState.gameTime) {
+        st.staggerUntil = playerState.gameTime + MOVE.staggerTime;
+        cameraState.shake = Math.max(cameraState.shake, 0.3);
+      }
+    }
+    const pushDecay = Math.exp(-6 * dt);
+    st.pushX *= pushDecay;
+    st.pushZ *= pushDecay;
+
     // --- horizontal: accelerate toward walk/sprint speed, turn to face the way we go ---
     const canMove = action === "locomotion" || action === "jump" || action === "fall";
-    const targetSpeed = canMove && moving ? (sprint ? MOVE.sprintSpeed : MOVE.walkSpeed) : 0;
+    const staggered = playerState.gameTime < st.staggerUntil;
+    const targetSpeed = (canMove && moving ? (sprint ? MOVE.sprintSpeed : MOVE.walkSpeed) : 0) * (staggered ? 0.3 : 1);
     st.speed = approach(st.speed, targetSpeed, MOVE.acceleration * dt);
     if (moving && canMove) {
       st.dir = dir;
@@ -139,7 +151,11 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
 
     // --- vertical: gravity ---
     st.vy -= MOVE.gravity * dt;
-    const desired = { x: st.dir.x * st.speed * dt, y: st.vy * dt, z: st.dir.z * st.speed * dt };
+    const desired = {
+      x: (st.dir.x * st.speed + st.pushX) * dt,
+      y: st.vy * dt,
+      z: (st.dir.z * st.speed + st.pushZ) * dt,
+    };
     controller.computeColliderMovement(collider.current, desired);
     const moved = controller.computedMovement();
     const nowGrounded = controller.computedGrounded();
@@ -186,6 +202,14 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
     playerState.colliderHandle = collider.current.handle;
     if (visual.current) visual.current.rotation.y = st.yaw;
     animator.update(dt, Math.min(st.speed, groundSpeed));
+
+    // --- tell the party where we are, 20 times a second ---
+    st.sendTimer += dt;
+    if (st.sendTimer >= 1 / NET_TICK_HZ) {
+      st.sendTimer = 0;
+      const pos = playerState.position;
+      sendPose({ x: pos.x, y: pos.y, z: pos.z, yaw: st.yaw, speed: playerState.speed, action: animator.action });
+    }
     if (playerState.trackFeet && visual.current) {
       // Test helper only: toe positions relative to the bear, placed with this frame's
       // position and facing (the scene graph's own transforms lag the physics by a frame).
