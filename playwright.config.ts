@@ -5,11 +5,14 @@ export default defineConfig({
   testDir: "e2e",
   timeout: 60_000,
   fullyParallel: false,
+  workers: 1, // tests share one game server and party room
   reporter: [["list"]],
   use: {
     ...devices["Desktop Chrome"],
     baseURL: "http://localhost:5173",
     viewport: { width: 1280, height: 720 },
+    // Use the Mac's GPU so the 3D scene runs at real frame rates in tests.
+    launchOptions: process.platform === "darwin" ? { args: ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist"] } : {},
   },
   webServer: [
     {

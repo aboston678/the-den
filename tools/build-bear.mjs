@@ -2,7 +2,8 @@
 //
 //   1. tools/fatten-bear.mjs     (torso +22%, belly +15%; Andrew's request)
 //   2. tools/retarget-clip.mjs   (every clip in assets/models/bear/clips/manifest.json)
-//   3. rename the built-in Idle, drop unused data, resample keyframes, meshopt + WebP
+//   3. remove the jump's own lift (physics does the lifting)
+//   4. rename the built-in Idle, drop unused data, resample keyframes, meshopt + WebP
 //
 // Usage: node tools/build-bear.mjs   ->   client/public/models/bear.glb
 
@@ -15,6 +16,7 @@ import { ALL_EXTENSIONS } from "@gltf-transform/extensions";
 import { dedup, meshopt, prune, resample, textureCompress } from "@gltf-transform/functions";
 import { MeshoptDecoder, MeshoptEncoder } from "meshoptimizer";
 import sharp from "sharp";
+import { removeLift } from "./lib/remove-lift.mjs";
 
 const ORIGINAL = "assets/models/bear/bear-base-original.glb";
 const CLIPS = "assets/models/bear/clips";
@@ -34,6 +36,7 @@ const io = new NodeIO()
   .registerExtensions(ALL_EXTENSIONS)
   .registerDependencies({ "meshopt.encoder": MeshoptEncoder, "meshopt.decoder": MeshoptDecoder });
 const doc = await io.read(animated);
+console.log(`Jump: removed up to ${removeLift(doc, "Jump").toFixed(2)} m of built-in lift`);
 for (const anim of doc.getRoot().listAnimations()) {
   if (anim.getName() === "Armature|Idle|baselayer") anim.setName("Idle"); // the base model's built-in clip
 }

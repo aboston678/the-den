@@ -12,6 +12,7 @@
   "dependencies": {
     "@colyseus/sdk": "^0.18.5",
     "@den/shared": "*",
+    "@dimforge/rapier3d-compat": "^0.19.2",
     "@react-three/drei": "^10.7.9",
     "@react-three/fiber": "^9.8.1",
     "@react-three/postprocessing": "^3.2.0",

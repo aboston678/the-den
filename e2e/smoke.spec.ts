@@ -13,7 +13,7 @@ function trackErrors(page: Page) {
 test("page loads, renders 3D and connects to the game server", async ({ page }) => {
   const errors = trackErrors(page);
 
-  await page.goto("/");
+  await page.goto(`/?party=smoke-solo-${Date.now()}`);
   await expect(page.locator("canvas")).toBeVisible({ timeout: 15_000 });
   await expect(page.getByTestId("connection-status")).toHaveAttribute("data-status", "connected", {
     timeout: 15_000,
@@ -31,11 +31,12 @@ test("two browsers end up in the same party", async ({ browser }) => {
   const b = await browser.newPage();
   const errors = [...trackErrors(a), ...trackErrors(b)];
 
-  await a.goto("/");
+  const party = `smoke-${Date.now()}`;
+  await a.goto(`/?party=${party}`);
   await expect(a.getByTestId("connection-status")).toHaveAttribute("data-status", "connected", {
     timeout: 15_000,
   });
-  await b.goto("/");
+  await b.goto(`/?party=${party}`);
   await expect(b.getByTestId("connection-status")).toHaveAttribute("data-status", "connected", {
     timeout: 15_000,
   });

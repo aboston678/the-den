@@ -30,7 +30,9 @@ export async function connectToParty(name = "Bear") {
 
   try {
     const client = new Client(SERVER_URL);
-    room = await client.joinOrCreate(PARTY_ROOM, { name });
+    // ?party=name joins a separate room (tests use this); real party codes come in 1.7.
+    const party = new URLSearchParams(location.search).get("party") ?? "default";
+    room = await client.joinOrCreate(PARTY_ROOM, { name, party });
     room.onStateChange((state) => {
       usePartyStore.setState({ playerCount: state.players?.size ?? 0 });
     });

@@ -23,7 +23,8 @@ const server = new Server({
   },
 });
 
-server.define(PARTY_ROOM, PartyRoom);
+// Until party codes arrive (1.7), clients pick a named room; tests use their own names.
+server.define(PARTY_ROOM, PartyRoom).filterBy(["party"]);
 
 await server.listen(PORT);
 console.log(`[den] game server listening on :${PORT} (allowed origins: ${ALLOWED_ORIGINS.join(", ")})`);
