@@ -3,7 +3,7 @@
 Claude Code updates this file after every milestone: tick the box, add a short note, and say what's next.
 **[ANDREW APPROVES]** = stop, show Andrew, and wait for his OK.
 
-**Current status:** 1.2 done. 1.3 in progress: Andrew OK'd 47.5 credits for the bear 3D model.
+**Current status:** 1.2 done. 1.3 in progress: bear 3D model submitted 2026-10-11, Higgsfield job `53f8fc92-4ff8-49c1-bfe0-3b4243c0a8e1` (meshy_v7, 47.5 credits, approved). If a session ends mid-job, check this job's status; do NOT resubmit.
 
 ---
 
@@ -61,6 +61,7 @@ Starting balance: 1,210 (2026-10-11)
 | Date | What | Model | Credits | Balance |
 |---|---|---|---|---|
 | 2026-10-11 | 1.2 bear concepts ×4 (price check said 0.25 = per image) | `gpt_image_2_5` | 1 | 1,209 |
+| 2026-10-11 | 1.3 bear 3D model: texture + PBR + A-pose + rig + Idle (job 53f8fc92) | `meshy_v7_image_to_3d` | 47.5 | 1,161.5 |
 
 ## Decision log
 | Date | Decision | Why |
