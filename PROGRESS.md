@@ -3,7 +3,7 @@
 Claude Code updates this file after every milestone: tick the box, add a short note, and say what's next.
 **[ANDREW APPROVES]** = stop, show Andrew, and wait for his OK.
 
-**Current status:** 1.5 done. Next up: milestone 1.6 (character controller), no credits needed.
+**Current status:** 1.6 done. Next up: milestone 1.7 (multiplayer: party codes, synced bears, name tags, bumping, reconnect).
 
 ---
 
@@ -20,7 +20,8 @@ Goal: Andrew sends friends a link; everyone makes or joins a party, loads in at 
   - 2026-10-11: clips do NOT drop straight onto our bear: every Higgsfield re-rig places joints differently (up to 23° / 15 cm vs our bear; walk vs run rigs differ ~5° / 2 cm). Fix (no credits): `tools/retarget-clip.mjs` converts each clip onto our skeleton so the mesh bends exactly like the clip's own rig (mean ~2 cm vs reference, about half the naive-copy error). Verified numerically (`tools/verify-retarget.mjs`) and visually (`assets/concepts/bear/rigtest/`). Clip sources stripped to skeleton+animation (`assets/models/bear/clips/`). Andrew approved the approach (and the fatter bear) 2026-10-11.
 - [x] **1.5 All bear clips.** Remaining clips from GAME_SPEC §5.2 (~12 × 8 = ~96 credits; ask first). Show preview-GIF choices for the "preview first" clips. **[ANDREW APPROVES]** walk and dance picks. Merge and compress into one `bear.glb`.
   - Done 2026-10-11. Andrew's picks from previews: W1 Casual_Walk, R1 RunFast (kept), D1 All_Night_Dance, F1 Pull_Radish (reel), B1 Crouch_Charge_and_Throw (bowl). `npm run build:bear` -> `client/public/models/bear.glb`: 5.9 MB, 15 clips (Idle, Walk, Run, Jump, Roar, OpenDoor, Pet, SitDown, SitIdle, StandUp, Cast, Celebrate, Dance, Reel, Bowl), meshopt + WebP. All clips checked on the built bear (`assets/concepts/bear/bear-all-clips.png`). Notes for 1.6: Jump lifts the hips 0.8 m (strip or sync with physics); SitDown/StandUp/Cast end lowered/shifted (blend carefully); Dance sways ~1 m sideways. Pet and Bowl still need trimming (2.3 / 3.2).
-- [ ] **1.6 Character controller.** Test ground, third-person camera with wall avoidance, WASD/Shift/Space, mouse look, Y roar, B dance, smooth blending, no foot sliding.
+- [x] **1.6 Character controller.** Test ground, third-person camera with wall avoidance, WASD/Shift/Space, mouse look, Y roar, B dance, smooth blending, no foot sliding.
+  - Done 2026-10-11. Code in `client/src/game/` (player, camera, input, test ground). Verified by `e2e/controller.spec.ts`: walk 2.4 / sprint 6 m/s, jump ~1.1 m, roar (3 s cooldown) and dance cancel on move, camera pulls in for walls, walk foot slide 0.23 m/s. Known: RunFast is stylised so sprint feet slide (~4 m/s, less visible at speed; a different run clip would fix it); walk clip plays 3.4× its natural pace to reach 2.4 m/s (Andrew to judge the feel); roar sound waits for audio (1.10); roar camera shake for nearby bears comes with multiplayer (1.7). Dev helpers: `window.__den` (state, `teleport(x,z)`, live-tunable `clip` timings), `?party=name` picks a room.
 - [ ] **1.7 Multiplayer.** Colyseus party rooms, 5-character codes, create/join, max 6, host hand-off, synced movement/animations, interpolation, name tags, bumping, reconnect. Two-browser test.
 - [ ] **1.8 Outdoor map.** 300 × 300 m terrain with the slope, lawn clearing, forest, driveway from the NW spawn, stone walls, boulder, stream, dock with the rod bucket (static for now), trail, perimeter. Screenshot tour. **[ANDREW APPROVES]**
 - [ ] **1.9 House shell.** From `docs/floorplan.json` at 1.25×: exterior matching the photos, every room, stairs, railings, windows, base materials per room, porch, deck, greenhouse shell, garage, basement den + bowling room shell. All doors open/close with E (synced); garage doors roll up. Screenshot tour of every room. **[ANDREW APPROVES]**
@@ -96,6 +97,7 @@ Starting balance: 1,210 (2026-10-11)
 ## Session notes
 (Newest first. 1–3 lines per session: what got done, what's next, anything Andrew needs to do.)
 
+- **2026-10-11 · Session 1 (cont. 3).** 1.6 done: the bear walks/sprints/jumps/roars/dances on a test field with a third-person camera. Fixed a physics timing bug that lost ~15% of movement. Next: 1.7 multiplayer.
 - **2026-10-11 · Session 1 (cont. 2).** Milestones 1.2–1.5 done: bear concept #4, 3D model made a bit fatter in code, rig test needed a clip-conversion step (approved), all 15 clips built into `bear.glb`. Floorplan v2 (basement stairs). Credits: 1,049.5 left (160.5 spent). Next: 1.6 character controller.
 - **2026-10-11 · Session 1 (cont.).** Andrew OK'd the Phase 1 asks. Floorplan answers: pink sitting room = the common area (confirmed); downstairs bedroom is on the far east side next to the Catan room (matches the plan); basement stairs start right under the main stairs in the foyer and go down the opposite way (NOT the back hall). Andrew approved the fix; `floorplan.json` + `floorplan.png` updated (see decision log).
 - **2026-10-11 · Session 1.** Project lives in `~/Projects/the-den`, private repo github.com/aboston678/the-den. Higgsfield checked: 1,210 credits (Plus). Milestone 1.1 done and pushed. Next: 1.2 bear concepts. Andrew to answer the floorplan questions (is the pink room the "little common area"? where do the basement stairs start? which side is the downstairs bedroom?).
