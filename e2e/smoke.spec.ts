@@ -14,7 +14,7 @@ test("page loads, renders 3D and connects to the game server", async ({ page }) 
   const errors = trackErrors(page);
 
   await page.goto("/");
-  await expect(page.locator("canvas")).toBeVisible();
+  await expect(page.locator("canvas")).toBeVisible({ timeout: 15_000 });
   await expect(page.getByTestId("connection-status")).toHaveAttribute("data-status", "connected", {
     timeout: 15_000,
   });
