@@ -21,12 +21,16 @@ export function ModelViewer({
   clipFiles = [],
   initialSpin = true,
   initialAngle = 0,
+  initialClip = null,
+  freezeAt = null,
 }: {
   url: string;
   compareUrl?: string | null;
   clipFiles?: string[];
   initialSpin?: boolean;
   initialAngle?: number;
+  initialClip?: string | null;
+  freezeAt?: number | null;
 }) {
   const [stats, setStats] = useState<ModelStats | null>(null);
   const [clip, setClip] = useState<string | null>(null);
@@ -46,13 +50,22 @@ export function ModelViewer({
         <Suspense fallback={null}>
           <group position-x={compareUrl ? 0.85 : 0}>
             <Turntable spin={spin} angle={initialAngle}>
-              <Model url={url} clipFiles={clipFiles} clip={clip} onLoaded={(s) => { setStats(s); setClip(s.clips.at(-1) ?? null); }} />
+              <Model
+                url={url}
+                clipFiles={clipFiles}
+                clip={clip}
+                freezeAt={freezeAt}
+                onLoaded={(s) => {
+                  setStats(s);
+                  setClip(initialClip && s.clips.includes(initialClip) ? initialClip : (s.clips.at(-1) ?? null));
+                }}
+              />
             </Turntable>
           </group>
           {compareUrl && (
             <group position-x={-0.85}>
               <Turntable spin={spin} angle={initialAngle}>
-                <Model url={compareUrl} clip={clip} onLoaded={() => {}} />
+                <Model url={compareUrl} clip={clip} freezeAt={freezeAt} onLoaded={() => {}} />
               </Turntable>
             </group>
           )}
@@ -109,11 +122,13 @@ function Model({
   url,
   clipFiles = [],
   clip,
+  freezeAt = null,
   onLoaded,
 }: {
   url: string;
   clipFiles?: string[];
   clip: string | null;
+  freezeAt?: number | null;
   onLoaded: (s: ModelStats) => void;
 }) {
   const gltf = useGLTF(url);
@@ -156,12 +171,19 @@ function Model({
 
   useEffect(() => {
     if (!clip) return;
-    const action = actions[clip];
-    action?.reset().fadeIn(0.2).play();
+    // A compared model may name its clips differently; fall back to its first clip.
+    const action = actions[clip] ?? Object.values(actions)[0];
+    if (freezeAt !== null && action) {
+      action.reset().play();
+      action.time = freezeAt;
+      action.paused = true;
+    } else {
+      action?.reset().fadeIn(0.2).play();
+    }
     return () => {
       action?.fadeOut(0.2);
     };
-  }, [clip, actions]);
+  }, [clip, actions, freezeAt]);
 
   return <primitive object={gltf.scene} />;
 }

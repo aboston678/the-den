@@ -1,0 +1,9 @@
+{
+  "_readme": "Source animation clips from Higgsfield meshy_rigging, stripped to skeleton + animation by tools/strip-clip.mjs. Full originals (with mesh) can be re-downloaded from the URLs for verification.",
+  "clips": {
+    "Walk": { "action": "Casual_Walk (30)", "job": "f68116cc-ef6f-4a13-9164-07a898303c83", "file": "walk.glb",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3KSfYE82xmSZSyzEC1rV4Jsxvlh/hf_20261011_201015_f68116cc-ef6f-4a13-9164-07a898303c83.glb" },
+    "Run": { "action": "RunFast (16)", "job": "2e64ab6a-6c59-4d88-8274-be5a063fd042", "file": "run.glb",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3KSfYE82xmSZSyzEC1rV4Jsxvlh/hf_20261011_201016_2e64ab6a-6c59-4d88-8274-be5a063fd042.glb" }
+  }
+}

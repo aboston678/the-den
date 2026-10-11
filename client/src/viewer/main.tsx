@@ -15,9 +15,20 @@ const clipFiles = params.get("clips")?.split(",").filter(Boolean) ?? [];
 // &spin=0 starts paused; &angle=90 starts turned (degrees). Handy for matching screenshots.
 const spin = params.get("spin") !== "0";
 const angle = (Number(params.get("angle") ?? 0) * Math.PI) / 180;
+// &clip=Run picks the clip; &t=0.25 freezes it at that many seconds (for matching screenshots).
+const clipName = params.get("clip");
+const freezeAt = params.has("t") ? Number(params.get("t")) : null;
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <ModelViewer url={model} compareUrl={compare} clipFiles={clipFiles} initialSpin={spin} initialAngle={angle} />
+    <ModelViewer
+      url={model}
+      compareUrl={compare}
+      clipFiles={clipFiles}
+      initialSpin={spin}
+      initialAngle={angle}
+      initialClip={clipName}
+      freezeAt={freezeAt}
+    />
   </StrictMode>,
 );
