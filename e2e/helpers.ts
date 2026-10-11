@@ -12,7 +12,10 @@ export async function hostGame(page: Page, name: string, { play = true } = {}) {
   await page.goto("/");
   await page.getByTestId("nickname").fill(name);
   await page.getByTestId("create").click();
-  const code = (await page.getByTestId("party-code").textContent({ timeout: 15_000 }))!.trim();
+  // The party card shows a moment before the server sends the code, so wait for a real one.
+  const codeEl = page.getByTestId("party-code");
+  await expect(codeEl).toHaveText(/^[A-Z2-9]{5}$/, { timeout: 15_000 });
+  const code = (await codeEl.textContent())!.trim();
   if (play) {
     await page.getByTestId("play").click();
     await waitForBear(page);

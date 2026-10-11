@@ -22,7 +22,8 @@ beforeAll(async () => {
   await server.listen(PORT);
 });
 afterAll(async () => {
-  await Promise.all(rooms.map((r) => r.leave().catch(() => {})));
+  // Skip rooms a test already left: leaving twice never resolves.
+  await Promise.all(rooms.filter((r) => r.connection.isOpen).map((r) => r.leave().catch(() => {})));
   await server.gracefullyShutdown(false);
 });
 

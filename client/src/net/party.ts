@@ -126,7 +126,7 @@ export async function tryRejoin() {
   usePartyStore.setState({ status: "connecting", error: null });
   joining = (async () => {
     try {
-      bind(await getClient().reconnect(token));
+      bind(await reconnectWithRetry(token));
     } catch {
       forgetToken();
       usePartyStore.setState({ status: "idle" });
@@ -135,6 +135,21 @@ export async function tryRejoin() {
     }
   })();
   return joining;
+}
+
+/**
+ * The reloaded page can ask to rejoin before the server has noticed the old page closed,
+ * and the server refuses until it has. So keep trying for a few seconds before giving up.
+ */
+async function reconnectWithRetry(token: string, tries = 8, gapMs = 500) {
+  for (let i = 1; ; i++) {
+    try {
+      return await getClient().reconnect(token);
+    } catch (err) {
+      if (i >= tries) throw err;
+      await new Promise((r) => setTimeout(r, gapMs));
+    }
+  }
 }
 
 export async function leaveParty() {

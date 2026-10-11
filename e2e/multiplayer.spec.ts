@@ -67,8 +67,19 @@ test("bears are solid and shove each other", async ({ browser }) => {
 
 test("a roar shakes nearby bears' cameras", async ({ browser }) => {
   const { a, b } = await twoBears(browser);
+  // Bravo must have Alpha's bear loaded before the roar, or there's nothing to react to.
+  await expect.poll(async () => (await others(b)).length).toBe(1);
+  // The shake only lasts 0.5 s, so record its peak every frame rather than hoping a poll lands inside it.
+  await b.evaluate(() => {
+    window.__peakShake = 0;
+    const tick = () => {
+      window.__peakShake = Math.max(window.__peakShake!, window.__den!.camera.shake);
+      requestAnimationFrame(tick);
+    };
+    tick();
+  });
   await a.keyboard.press("KeyY");
-  await expect.poll(() => b.evaluate(() => window.__den!.camera.shake), { timeout: 3000 }).toBeGreaterThan(0);
+  await expect.poll(() => b.evaluate(() => window.__peakShake!), { timeout: 3000 }).toBeGreaterThan(0);
 });
 
 test("reloading the page rejoins the party", async ({ browser }) => {

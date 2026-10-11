@@ -1,5 +1,7 @@
 // The game exposes window.__den for tests (see client/src/game/state.ts).
 interface Window {
+  /** Set by tests that record the strongest camera shake seen. */
+  __peakShake?: number;
   __den?: {
     player: {
       position: { x: number; y: number; z: number };
