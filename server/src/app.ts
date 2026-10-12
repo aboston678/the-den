@@ -20,7 +20,8 @@ export function createGameServer(allowedOrigins: string[]) {
     greet: false,
     express: (app) => {
       app.get("/health", (_req, res) => {
-        res.json({ ok: true });
+        // Railway sets RAILWAY_GIT_COMMIT_SHA: shows which version is live.
+        res.json({ ok: true, version: process.env.RAILWAY_GIT_COMMIT_SHA?.slice(0, 7) ?? "local" });
       });
     },
   });
