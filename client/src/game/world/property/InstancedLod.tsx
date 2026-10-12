@@ -19,6 +19,23 @@ export interface LodLevel {
   maxDist: number;
   parts: LodPart[];
   castShadow?: boolean;
+  /**
+   * A simpler model that casts this level's shadows instead (the level itself then casts none).
+   * It's drawn only into shadow maps, never on screen (see shadowOnly).
+   */
+  shadowProxy?: LodPart[];
+}
+
+/** Make an instanced mesh draw only into shadow maps: on screen it draws zero copies. */
+function shadowOnly(mesh: InstancedMesh) {
+  let saved = 0;
+  mesh.onBeforeRender = () => {
+    saved = mesh.count;
+    mesh.count = 0;
+  };
+  mesh.onAfterRender = () => {
+    mesh.count = saved;
+  };
 }
 
 /**
@@ -46,15 +63,27 @@ export function InstancedLod({ items, levels, radius, name }: { items: Placement
     return out;
   }, [items]);
 
-  const meshes = useMemo(() => levels.map((level) => level.parts.map((part) => {
-    const mesh = new InstancedMesh(part.geometry, part.material, Math.max(1, items.length));
-    mesh.count = 0;
-    mesh.frustumCulled = false; // we cull per copy ourselves
-    mesh.castShadow = !!level.castShadow;
-    mesh.receiveShadow = true;
-    mesh.name = name;
-    return mesh;
-  })), [levels, items, name]);
+  const meshes = useMemo(() => levels.map((level) => [
+    ...level.parts.map((part) => {
+      const mesh = new InstancedMesh(part.geometry, part.material, Math.max(1, items.length));
+      mesh.count = 0;
+      mesh.frustumCulled = false; // we cull per copy ourselves
+      mesh.castShadow = !!level.castShadow && !level.shadowProxy;
+      mesh.receiveShadow = true;
+      mesh.name = name;
+      return mesh;
+    }),
+    ...(level.shadowProxy ?? []).map((part) => {
+      const mesh = new InstancedMesh(part.geometry, part.material, Math.max(1, items.length));
+      mesh.count = 0;
+      mesh.frustumCulled = false;
+      mesh.castShadow = true;
+      mesh.receiveShadow = false;
+      shadowOnly(mesh);
+      mesh.name = `${name}:shadow`;
+      return mesh;
+    }),
+  ]), [levels, items, name]);
   useEffect(() => () => meshes.flat().forEach((m) => m.dispose()), [meshes]);
 
   const state = useMemo(() => ({ timer: REFRESH_S, lastPos: new Vector3(1e9, 0, 0), lastQuat: new Quaternion(), lastBias: 1 }), []);
@@ -84,7 +113,8 @@ export function InstancedLod({ items, levels, radius, name }: { items: Placement
       }
       const slot = counts[lod]!++;
       tmp.m.fromArray(base, i * 16);
-      levels[lod]!.parts.forEach((part, p) => {
+      const level = levels[lod]!;
+      [...level.parts, ...(level.shadowProxy ?? [])].forEach((part, p) => {
         tmp.pv.multiplyMatrices(tmp.m, part.matrix).toArray(meshes[lod]![p]!.instanceMatrix.array, slot * 16);
       });
     }

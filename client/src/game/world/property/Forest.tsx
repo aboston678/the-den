@@ -102,7 +102,13 @@ export function Forest() {
     const [near, mid, far] = q.treeLods;
     const treeLevels = (kind: string): LodLevel[] => [
       { maxDist: near, castShadow: true, parts: [...partsOf(trees, `${kind}_lod0_bark`), ...partsOf(trees, `${kind}_lod0_leaves`)] },
-      { maxDist: mid, castShadow: q.treeShadowLevels > 1, parts: [...partsOf(trees, `${kind}_lod1_bark`), ...partsOf(trees, `${kind}_lod1_leaves`)] },
+      {
+        maxDist: mid,
+        castShadow: q.treeShadowLevels > 1,
+        parts: [...partsOf(trees, `${kind}_lod1_bark`), ...partsOf(trees, `${kind}_lod1_leaves`)],
+        // Their shadows come from the far-detail tree: a shadow doesn't show the difference, and it's a quarter of the work.
+        shadowProxy: q.treeShadowLevels > 1 ? [...partsOf(trees, `${kind}_lod2_bark`), ...partsOf(trees, `${kind}_lod2_leaves`)] : undefined,
+      },
       { maxDist: far, castShadow: false, parts: [{ ...impostors.get(kind)!, matrix: new Matrix4() }] },
     ];
     const saplingLevels = (kind: string): LodLevel[] => [

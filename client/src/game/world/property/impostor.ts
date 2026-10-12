@@ -8,7 +8,7 @@ import type { LodPart } from "./InstancedLod.tsx";
 // a small picture, and far-away copies are drawn as a single card that always turns to face the
 // camera. 2 triangles instead of ~800, and beyond ~60 m nobody can tell, especially through haze.
 
-const W = 192, H = 384;
+const W = 384, H = 768; // sharp enough not to look fuzzy at the hand-over distance
 
 export interface Impostor {
   geometry: PlaneGeometry;

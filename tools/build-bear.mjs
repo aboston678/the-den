@@ -39,7 +39,7 @@ const io = new NodeIO()
 const doc = await io.read(animated);
 console.log(`Jump: removed up to ${removeLift(doc, "Jump").toFixed(2)} m of built-in lift`);
 // Clips that walk forward on their own (root motion): the game moves the bear instead.
-for (const name of ["Walk2"]) {
+for (const name of ["Walk"]) { // walking_2 travels forward on its own
   if (!doc.getRoot().listAnimations().some((a) => a.getName() === name)) continue;
   const d = removeDrift(doc, name);
   console.log(`${name}: removed ${d.metres.toFixed(2)} m of built-in travel (natural speed ${d.speed.toFixed(2)} m/s)`);

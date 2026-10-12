@@ -112,6 +112,9 @@ Starting balance: 1,210 (2026-10-11)
 | 2026-10-11 | Cape roof: eaves 1 m above the upstairs floor, 35° pitch, peak ~7.2 m over the great room; sloped ceilings in the upstairs front and back rooms; dormers give the front rooms windows | Matches the exterior photos (low eaves, dormers) and GAME_SPEC's ~7 m great-room peak |
 | 2026-10-11 | Steep house stairs use an invisible smooth ramp for walking; the bear presses less hard into the ground | At 1.25× the treads are 27 cm, too shallow for step-by-step climbing; the old ground press slowed climbing to a crawl |
 | 2026-10-11 | Doors are server-checked (you must be next to a door to open it) | Stops a modified client opening doors from across the map |
+| 2026-10-12 | Smaller map: walkable ~110 m west / 105 m N and S of the house, east past the stream; driveway walk ~105 m (was 166) (GAME_SPEC §4 updated) | Andrew: the woods round the map were too big |
+| 2026-10-12 | Walk clip is now walking_2 (566); its built-in forward travel is stripped | Andrew: the walk looked funny (Casual_Walk was playing 2.5× its natural pace); he picked walking_2 from a side-by-side video |
+| 2026-10-12 | Mid-distance trees cast shadows from their far-detail shape (shadow-only stand-ins); shadows reach 55 m on Medium; far-tree cards 2× sharper | Andrew: the background looked fuzzy and shadows popped in as you ran |
 | 2026-10-12 | Medium has no bloom/SSAO/vignette; they're High-only (GAME_SPEC §17 updated) | On an M1 at 1080p they cost ~15 fps; Medium must hold 60 |
 | 2026-10-12 | Far trees drawn as impostor cards baked at load; forest LODs per preset; indoors the forest uses cheap levels | Trees were 2–5M triangles; this keeps Medium at 60 fps at 1080p |
 | 2026-10-12 | Textures stay WebP (KTX2 not needed) | Measured texture memory ~320 MB, well under the 1 GB budget |
@@ -127,6 +130,7 @@ Starting balance: 1,210 (2026-10-11)
 ## Session notes
 (Newest first. 1–3 lines per session: what got done, what's next, anything Andrew needs to do.)
 
+- **2026-10-12 · Session 3 (cont. 4).** Andrew played online: works. Feedback: woods too big → smaller map; walk looked funny → 3 new walks tried (24 credits), he picked walking_2; distance fuzzy/shadows popping → sharper far trees + shadows reach 55 m. Work on branch `feedback-1` until verified, then merged to main (goes live). Still to do for 1.13: the two-computer test with a friend.
 - **2026-10-12 · Session 3 (cont. 3).** 1.13: Andrew set up Railway + Vercel; game online, tests pass live. Next: Andrew + a friend play from two computers ([ANDREW APPROVES]). Remind Andrew before Railway's 30-day trial ends.
 - **2026-10-12 · Session 3 (cont. 2).** 1.12 done: presets + impostor trees; Medium 60 fps at 1080p on the M1. No credits. Next: 1.13 deploy (Andrew will need to create Vercel + Railway accounts; step-by-step).
 - **2026-10-12 · Session 3 (cont.).** 1.11 built: lyric intro, home screen, settings, loading, pause, HUD. Logo #2 picked (1 credit). Andrew approved. Next: 1.12 performance.

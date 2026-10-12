@@ -4,7 +4,7 @@ import { BEAR } from "@den/shared";
 
 /** Natural ground speed / timing of the bear's clips, measured with tools/measure-clips.mjs. */
 export const CLIP = {
-  walkNaturalSpeed: 0.71, // m/s at timeScale 1
+  walkNaturalSpeed: 0.95, // m/s at timeScale 1 (walking_2, Andrew's pick 2026-10-12; was Casual_Walk 0.71)
   runNaturalSpeed: 6.55,
   jumpTakeoff: 0.57, // s into the Jump clip where the feet leave the ground
   jumpLand: 1.1,

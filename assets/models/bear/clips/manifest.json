@@ -1,11 +1,11 @@
 {
-  "_readme": "Source animation clips from Higgsfield meshy_rigging, stripped to skeleton + animation by tools/strip-clip.mjs. Full originals (with mesh) can be re-downloaded from the URLs for verification.",
+  "_readme": "Source animation clips from Higgsfield meshy_rigging, stripped to skeleton + animation by tools/strip-clip.mjs. Full originals (with mesh) can be re-downloaded from the URLs for verification. 'unused' lists clips that were tried and not picked (Andrew chose walking_2 for Walk on 2026-10-12).",
   "clips": {
     "Walk": {
-      "action": "Casual_Walk (30)",
-      "job": "f68116cc-ef6f-4a13-9164-07a898303c83",
-      "file": "walk.glb",
-      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3KSfYE82xmSZSyzEC1rV4Jsxvlh/hf_20261011_201015_f68116cc-ef6f-4a13-9164-07a898303c83.glb"
+      "action": "walking_2 (566)",
+      "job": "fdb413de-cc46-44e7-b473-224ad0a239ce",
+      "file": "walk-2.glb",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3KSfYE82xmSZSyzEC1rV4Jsxvlh/hf_20261012_215527_fdb413de-cc46-44e7-b473-224ad0a239ce.glb"
     },
     "Run": {
       "action": "RunFast (16)",
@@ -84,6 +84,14 @@
       "job": "df8b6572-694e-47b5-ad16-f1783887eb13",
       "file": "bowl.glb",
       "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3KSfYE82xmSZSyzEC1rV4Jsxvlh/hf_20261011_203608_df8b6572-694e-47b5-ad16-f1783887eb13.glb"
+    }
+  },
+  "unused": {
+    "WalkCasual (was Walk until 2026-10-12)": {
+      "action": "Casual_Walk (30)",
+      "job": "f68116cc-ef6f-4a13-9164-07a898303c83",
+      "file": "walk.glb",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3KSfYE82xmSZSyzEC1rV4Jsxvlh/hf_20261011_201015_f68116cc-ef6f-4a13-9164-07a898303c83.glb"
     },
     "WalkOrc": {
       "action": "Slow_Orc_Walk (119)",
@@ -96,12 +104,6 @@
       "job": "02e2371b-16fc-4790-9d0c-0a3fc3c70d29",
       "file": "walk-monster.glb",
       "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3KSfYE82xmSZSyzEC1rV4Jsxvlh/hf_20261012_215526_02e2371b-16fc-4790-9d0c-0a3fc3c70d29.glb"
-    },
-    "Walk2": {
-      "action": "walking_2 (566)",
-      "job": "fdb413de-cc46-44e7-b473-224ad0a239ce",
-      "file": "walk-2.glb",
-      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3KSfYE82xmSZSyzEC1rV4Jsxvlh/hf_20261012_215527_fdb413de-cc46-44e7-b473-224ad0a239ce.glb"
     }
   }
 }

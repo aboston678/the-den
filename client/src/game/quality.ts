@@ -34,15 +34,15 @@ export interface Quality {
 
 export const PRESETS: Record<Tier, Quality> = {
   low: {
-    tier: "low", dpr: 0.75, shadowMap: 1024, shadowHalf: 30, treeLods: [18, 40, 140], treeShadowLevels: 1, smallFar: 30, fog: [25, 140],
+    tier: "low", dpr: 0.75, shadowMap: 1024, shadowHalf: 35, treeLods: [18, 45, 150], treeShadowLevels: 2, smallFar: 30, fog: [25, 140],
     interiorLights: 2, exteriorLights: 1, flashlightShadow: false, indoorShadow: false, bloom: false, ambientOcclusion: false,
   },
   medium: {
-    tier: "medium", dpr: 1, shadowMap: 2048, shadowHalf: 40, treeLods: [20, 45, 185], treeShadowLevels: 1, smallFar: 32, fog: [35, 185],
+    tier: "medium", dpr: 1, shadowMap: 2048, shadowHalf: 55, treeLods: [22, 48, 200], treeShadowLevels: 2, smallFar: 32, fog: [35, 185],
     interiorLights: 4, exteriorLights: 2, flashlightShadow: true, indoorShadow: false, bloom: false, ambientOcclusion: false,
   },
   high: {
-    tier: "high", dpr: 1.25, shadowMap: 4096, shadowHalf: 55, treeLods: [35, 75, 200], treeShadowLevels: 1, smallFar: 50, fog: [40, 200],
+    tier: "high", dpr: 1.25, shadowMap: 4096, shadowHalf: 70, treeLods: [35, 80, 210], treeShadowLevels: 2, smallFar: 50, fog: [40, 200],
     interiorLights: 6, exteriorLights: 3, flashlightShadow: true, indoorShadow: true, bloom: true, ambientOcclusion: true,
   },
 };
