@@ -7,6 +7,8 @@ import { dirname, join } from "node:path";
 export const TEXTURES = [
   "leafy_grass", "forrest_ground_01", "forest_leaves_02", "asphalt_02",
   "river_small_rocks", "stacked_stone_wall", "weathered_planks", "brown_mud_leaves_01",
+  // The house (milestone 1.9).
+  "wood_floor", "terracotta_floor_tiles", "garage_floor", "grey_roof_01", "red_brick", "coated_pine",
 ];
 export const MODELS = [
   "fern_02", "boulder_01", "rock_moss_set_01", "rock_moss_set_02", "dead_tree_trunk", "tree_stump_01", "shrub_02", "shrub_04",

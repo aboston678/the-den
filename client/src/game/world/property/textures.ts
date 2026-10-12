@@ -5,7 +5,8 @@ import {
 
 // CC0 ground and material textures (docs/ASSETS.md), built by tools/build-outdoor-textures.mjs.
 const DIR = "/textures/outdoor";
-export type OutdoorTexture = "lawn" | "forest" | "forest_edge" | "mud" | "streambed" | "asphalt" | "stone_wall" | "planks";
+export type OutdoorTexture = "lawn" | "forest" | "forest_edge" | "mud" | "streambed" | "asphalt" | "stone_wall" | "planks"
+  | "oak_floor" | "terracotta" | "concrete" | "knotty_pine" | "shingles" | "brick";
 
 /** Colour, normal and roughness maps for one material, tiled every `tile` metres of UV. */
 export function useOutdoorMaps(name: OutdoorTexture) {

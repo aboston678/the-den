@@ -20,6 +20,13 @@ const TEXTURES = {
   asphalt: "asphalt_02",
   stone_wall: "stacked_stone_wall",
   planks: "weathered_planks",
+  // The house (milestone 1.9).
+  oak_floor: "wood_floor",
+  terracotta: "terracotta_floor_tiles",
+  concrete: "garage_floor",
+  shingles: "grey_roof_01",
+  brick: "red_brick",
+  knotty_pine: "coated_pine",
 };
 
 /** Colour tweaks: the walls in the photos are grey fieldstone, the texture is brown slate. */
