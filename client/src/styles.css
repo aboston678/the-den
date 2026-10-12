@@ -62,125 +62,211 @@ body,
   color: var(--ember);
 }
 
-.lobby {
+/* --- home screen (milestone 1.11) --- */
+.home {
   position: fixed;
   inset: 0;
-  display: grid;
-  place-content: center;
-  justify-items: center;
-  gap: 18px;
-  background: radial-gradient(circle at 50% 30%, #2f3f33, var(--forest) 70%);
+  background: #0b100d;
   color: var(--cream);
+  font-family: "Oswald", system-ui, sans-serif;
 }
-
-.lobby h1 {
-  margin: 0;
-  font-size: 56px;
-  letter-spacing: 0.2em;
-  color: var(--ember);
+.home-stage {
+  position: absolute;
+  inset: 0;
 }
-
-.lobby-card {
+.home-panel {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: min(400px, 92vw);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 34px 32px;
+  background: linear-gradient(to right, rgb(8 11 9 / 0.92) 60%, transparent);
+}
+.home-logo {
+  width: 250px;
+  mix-blend-mode: screen;
+  margin: -12px 0 6px -10px;
+}
+.panel {
   display: grid;
   gap: 12px;
-  width: 340px;
-  padding: 22px;
-  border-radius: 10px;
-  background: rgb(0 0 0 / 0.25);
 }
-
-.lobby label {
+.field {
   display: grid;
   gap: 6px;
   font-size: 13px;
-}
-
-.lobby input,
-.lobby button {
-  font: inherit;
-  padding: 9px 12px;
-  border-radius: 6px;
-  border: 1px solid rgb(239 230 210 / 0.35);
-  background: rgb(0 0 0 / 0.25);
-  color: var(--cream);
-}
-
-.lobby button {
-  cursor: pointer;
-  background: var(--bark);
-}
-
-.lobby button.primary {
-  background: var(--ember);
-  border-color: var(--ember);
-  font-weight: 700;
   letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgb(239 230 210 / 0.7);
 }
-
-.lobby button.quiet {
+.home input,
+.home button,
+.panel input,
+.panel button,
+.panel select {
+  padding: 11px 14px;
+  border: 1px solid rgb(239 230 210 / 0.18);
+  border-radius: 6px;
+  background: rgb(255 255 255 / 0.06);
+  color: var(--cream);
+  font: 500 16px "Oswald", system-ui, sans-serif;
+  letter-spacing: 0.04em;
+}
+.home button,
+.panel button {
+  cursor: pointer;
+  text-transform: uppercase;
+}
+.home button:hover,
+.panel button:hover {
+  background: rgb(255 255 255 / 0.12);
+}
+button.primary {
+  border-color: transparent;
+  background: var(--ember);
+  color: #1b120b;
+  font-weight: 700;
+}
+button.primary:hover {
+  background: #f0843f;
+}
+button.big {
+  padding: 15px;
+  font-size: 22px;
+  letter-spacing: 0.12em;
+}
+button.quiet {
+  border-color: transparent;
   background: transparent;
+  color: rgb(239 230 210 / 0.65);
 }
-
-.lobby button:disabled {
+button:disabled {
   opacity: 0.5;
   cursor: default;
 }
-
-.lobby-join {
+.home-join {
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 8px;
 }
-
-.lobby-join input {
+.home-join input {
   text-transform: uppercase;
-  letter-spacing: 0.15em;
+  letter-spacing: 0.2em;
 }
-
-.lobby-code {
+.home-code {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  font-size: 36px;
-  font-weight: 700;
-  letter-spacing: 0.25em;
+  gap: 14px;
 }
-
-.lobby-players {
+.home-code span {
+  font-size: 46px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: var(--ember);
+}
+.home-players {
   margin: 0;
   padding: 0;
   list-style: none;
   display: grid;
   gap: 6px;
+  font-size: 18px;
 }
-
-.lobby-players li {
-  padding: 6px 10px;
-  border-radius: 6px;
-  background: rgb(0 0 0 / 0.2);
-}
-
-.lobby-players li.away {
+.home-players li.away {
   opacity: 0.5;
 }
-
-.lobby .tag {
+.tag {
   margin-left: 8px;
-  font-size: 11px;
-  color: var(--ember);
+  padding: 1px 7px;
+  border-radius: 4px;
+  background: rgb(239 230 210 / 0.12);
+  font-size: 12px;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
-
-.lobby-note {
+.note {
   margin: 0;
   font-size: 13px;
-  opacity: 0.8;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgb(239 230 210 / 0.6);
+}
+.error {
+  margin: 0;
+  color: #ff9a76;
+  font-family: system-ui, sans-serif;
+  font-size: 14px;
+}
+.home-settings {
+  margin-top: auto;
+  align-self: flex-start;
+}
+.home-tag {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+  font-family: "Oswald", system-ui, sans-serif;
+  font-size: 15px;
+  white-space: nowrap;
+}
+.home-tag.you {
+  background: rgb(224 113 44 / 0.85);
+  color: #1b120b;
 }
 
-.lobby-error {
-  margin: 0;
-  color: #ff9a8a;
-  font-size: 13px;
+/* --- settings / pause --- */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  background: rgb(0 0 0 / 0.55);
+  backdrop-filter: blur(3px);
+  font-family: "Oswald", system-ui, sans-serif;
+  color: var(--cream);
+}
+.modal-backdrop .panel {
+  width: min(440px, 92vw);
+  padding: 26px 28px;
+  border-radius: 12px;
+  background: #121a15;
+  border: 1px solid rgb(239 230 210 / 0.12);
+  box-shadow: 0 30px 80px rgb(0 0 0 / 0.6);
+}
+.modal-backdrop h2 {
+  margin: 0 0 6px;
+  font-size: 28px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.setting {
+  display: grid;
+  grid-template-columns: 130px 1fr 52px;
+  align-items: center;
+  gap: 12px;
+  font-size: 16px;
+}
+.setting input[type="range"] {
+  padding: 0;
+  accent-color: var(--ember);
+}
+.setting output {
+  text-align: right;
+  color: rgb(239 230 210 / 0.7);
+}
+.setting.check {
+  grid-template-columns: 1fr auto;
+}
+.setting.check input {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--ember);
 }
 
 .name-tag {
@@ -222,4 +308,215 @@ body,
   background: #e07a2f;
   color: #1b1b1b;
   text-align: center;
+}
+
+/* --- splash + lyric intro (milestone 1.11) --- */
+.splash {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: #000;
+  color: var(--cream);
+  font: 500 15px/1 "Oswald", system-ui, sans-serif;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.splash span {
+  opacity: 0.75;
+  animation: splash-pulse 2.4s ease-in-out infinite;
+}
+@keyframes splash-pulse {
+  50% { opacity: 0.35; }
+}
+
+.intro {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  overflow: hidden;
+}
+.intro-overlay {
+  position: absolute;
+  inset: 0;
+}
+.splash:disabled {
+  cursor: default;
+}
+.splash-loading {
+  width: min(240px, 50vw);
+  height: 2px;
+  background: rgb(239 230 210 / 0.15);
+}
+.splash-loading div {
+  height: 100%;
+  background: var(--ember);
+  transition: width 0.3s ease;
+}
+.intro-scene {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 2.5s ease;
+}
+.intro-scene.ready {
+  opacity: 1;
+}
+.intro-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at center, transparent 45%, rgb(0 0 0 / 0.55) 100%),
+    linear-gradient(to top, rgb(0 0 0 / 0.55), transparent 40%);
+}
+.intro-lyric {
+  position: absolute;
+  left: 50%;
+  bottom: 18%;
+  width: min(92vw, 1100px);
+  margin-left: max(-46vw, -550px);
+  text-align: center;
+  color: var(--cream);
+  font: 600 clamp(28px, 5vw, 64px)/1.1 "Oswald", system-ui, sans-serif;
+  letter-spacing: 0.02em;
+  text-shadow: 0 2px 18px rgb(0 0 0 / 0.75), 0 0 2px rgb(0 0 0 / 0.6);
+  opacity: 0;
+  pointer-events: none;
+}
+.intro-logo-shade {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(ellipse 45% 40% at 50% 47%, rgb(0 0 0 / 0.6), transparent 100%);
+}
+.intro-logo {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(62vw, 720px);
+  translate: -50% -55%;
+  mix-blend-mode: screen; /* the logo's black background disappears */
+  opacity: 0;
+  pointer-events: none;
+}
+.intro-skip {
+  position: absolute;
+  right: 24px;
+  bottom: 22px;
+  padding: 9px 16px;
+  border: 1px solid rgb(239 230 210 / 0.35);
+  border-radius: 999px;
+  background: rgb(0 0 0 / 0.35);
+  color: var(--cream);
+  font: 500 14px/1 "Oswald", system-ui, sans-serif;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+}
+.intro-skip:hover {
+  background: rgb(224 113 44 / 0.85);
+  border-color: transparent;
+}
+
+/* --- HUD, pause, loading (milestone 1.11) --- */
+.badge-time {
+  padding-left: 10px;
+  border-left: 1px solid rgb(239 230 210 / 0.2);
+  color: rgb(239 230 210 / 0.8);
+}
+.controls-hint {
+  transition: opacity 2s ease;
+}
+.controls-hint.faded {
+  opacity: 0;
+}
+.party-overlay {
+  position: fixed;
+  top: 60px;
+  left: 50%;
+  translate: -50% 0;
+  min-width: 260px;
+  padding: 16px 22px;
+  border-radius: 10px;
+  background: rgb(12 18 14 / 0.88);
+  color: var(--cream);
+  font-family: "Oswald", system-ui, sans-serif;
+  pointer-events: none;
+}
+.party-overlay h3 {
+  margin: 0 0 8px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ember);
+}
+.party-overlay ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 4px;
+  font-size: 18px;
+}
+.party-overlay li.away {
+  opacity: 0.5;
+}
+.pause-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 18px;
+  margin: 10px 0 0;
+  font-size: 14px;
+}
+.pause-controls div {
+  display: flex;
+  gap: 8px;
+}
+.pause-controls dt {
+  min-width: 52px;
+  color: var(--ember);
+}
+.pause-controls dd {
+  margin: 0;
+  color: rgb(239 230 210 / 0.75);
+}
+.loading {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 22px;
+  background: radial-gradient(ellipse at center, #16201a, #070a08 75%);
+  color: var(--cream);
+  font-family: "Oswald", system-ui, sans-serif;
+  transition: opacity 0.9s ease;
+}
+.loading.done {
+  opacity: 0;
+  pointer-events: none;
+}
+.loading img {
+  width: min(420px, 70vw);
+  mix-blend-mode: screen;
+}
+.loading-bar {
+  width: min(360px, 70vw);
+  height: 3px;
+  background: rgb(239 230 210 / 0.12);
+}
+.loading-bar div {
+  height: 100%;
+  background: var(--ember);
+  transition: width 0.4s ease;
+}
+.loading p {
+  margin: 0;
+  font-size: 17px;
+  letter-spacing: 0.04em;
+  color: rgb(239 230 210 / 0.75);
 }

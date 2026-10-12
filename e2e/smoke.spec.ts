@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { closePlayers, failOnErrors, hostGame, joinGame, newPlayer, waitForBear } from "./helpers.ts";
+import { closePlayers, failOnErrors, hostGame, joinGame, newPlayer, openGame, waitForBear } from "./helpers.ts";
 
 test.afterEach(closePlayers);
 
@@ -8,7 +8,7 @@ test("lobby loads, a party starts, the 3D world renders", async ({ page }) => {
   page.on("console", (msg) => msg.type() === "error" && errors.push(msg.text()));
   failOnErrors(page);
 
-  await page.goto("/");
+  await openGame(page);
   await expect(page.getByTestId("lobby")).toBeVisible();
   await page.screenshot({ path: "test-results/smoke-lobby.png" });
   const code = await hostGame(page, "Smokey");

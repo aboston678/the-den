@@ -1,4 +1,5 @@
 import { AudioListener, Object3D, PositionalAudio } from "three";
+import { settings } from "../../ui/settings.ts";
 
 // Sound for the game (GAME_SPEC §10): one listener on the camera, decoded sounds cached by name,
 // and short positional one-shots (roars, birds, loons). Browsers only allow sound after the
@@ -56,7 +57,7 @@ export async function playAt(name: string, x: number, y: number, z: number, volu
   sound.setBuffer(buffer);
   sound.setRefDistance(range);
   sound.setRolloffFactor(1.2);
-  sound.setVolume(volume);
+  sound.setVolume(volume * settings().effects);
   sound.position.set(x, y, z);
   soundRoot.add(sound);
   sound.updateMatrixWorld();

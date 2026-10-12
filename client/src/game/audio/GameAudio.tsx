@@ -5,6 +5,7 @@ import { PositionalAudio } from "three";
 import { usePartyStore } from "../../net/party.ts";
 import { FIRE_POS, indoor } from "../house/lights.ts";
 import { current } from "../sky/look.ts";
+import { settings } from "../../ui/settings.ts";
 import { playerState } from "../state.ts";
 import { getListener, loadSound, playAt, soundRoot } from "./audio.ts";
 import { fireBuffer, roomToneBuffer, windBuffer } from "./synth.ts";
@@ -142,18 +143,19 @@ export function GameAudio() {
     const inside = indoor.amount;
     outdoorFilter.frequency.setTargetAtTime(18000 - 17000 * inside, now, 0.15);
     outdoorGain.gain.setTargetAtTime(1 - 0.65 * inside, now, 0.15);
-    for (const bed of parts.beds) bed.gain.gain.setTargetAtTime(bed.level(), now, 0.5);
+    const amb = settings().ambience;
+    for (const bed of parts.beds) bed.gain.gain.setTargetAtTime(bed.level() * amb, now, 0.5);
 
     const p = playerState.position;
     for (const s of parts.positional) {
       if (s.userData.fire) {
-        s.setVolume(0.9 * current.sky.exteriorLights);
+        s.setVolume(0.9 * current.sky.exteriorLights * amb);
         continue;
       }
       const z = p.z + (s.userData.streamOffset as number);
       s.position.set(streamCenter(z) - 6, p.y > -6 ? -7 : p.y, z);
       // Muffled indoors too (the house is far from the stream anyway).
-      s.setVolume(1.5 * (1 - 0.7 * inside));
+      s.setVolume(1.5 * (1 - 0.7 * inside) * amb);
     }
 
     // Day: a woodpecker or a thrush somewhere in the trees. Night: a loon on the stream.
@@ -164,14 +166,14 @@ export function GameAudio() {
       timers.bird = 25 + Math.random() * 45;
       if (sky.daylight > 0.5) {
         const a = Math.random() * Math.PI * 2, d = 25 + Math.random() * 30;
-        void playAt(Math.random() < 0.5 ? "flicker" : "thrush", p.x + Math.cos(a) * d, p.y + 8, p.z + Math.sin(a) * d, 0.7 * (1 - 0.6 * inside), 12);
+        void playAt(Math.random() < 0.5 ? "flicker" : "thrush", p.x + Math.cos(a) * d, p.y + 8, p.z + Math.sin(a) * d, 0.7 * (1 - 0.6 * inside) * amb, 12);
       }
     }
     if (timers.loon <= 0) {
       timers.loon = 45 + Math.random() * 75;
       if (property && current.night > 0.6) {
         const z = p.z + (Math.random() - 0.5) * 120;
-        void playAt(`loon-${1 + Math.floor(Math.random() * 3)}`, streamCenter(z), -7, z, 1 - 0.6 * inside, 40);
+        void playAt(`loon-${1 + Math.floor(Math.random() * 3)}`, streamCenter(z), -7, z, (1 - 0.6 * inside) * amb, 40);
       }
     }
   });

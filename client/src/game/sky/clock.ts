@@ -5,6 +5,12 @@ import { START_TIME, wrapTime } from "@den/shared";
 
 let serverTime: number = START_TIME;
 let receivedAt = performance.now();
+/** A fixed time of day (the intro's dusk), or null to follow the party's clock. */
+let held: number | null = null;
+
+export function holdClock(time: number | null) {
+  held = time;
+}
 
 export function setServerClock(time: number) {
   serverTime = time;
@@ -12,4 +18,4 @@ export function setServerClock(time: number) {
 }
 
 /** Seconds into the 68-minute cycle, right now. */
-export const gameClock = () => wrapTime(serverTime + (performance.now() - receivedAt) / 1000);
+export const gameClock = () => held ?? wrapTime(serverTime + (performance.now() - receivedAt) / 1000);

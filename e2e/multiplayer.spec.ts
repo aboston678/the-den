@@ -1,5 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
-import { closePlayers, hostGame, joinGame, newPlayer, waitForBear } from "./helpers.ts";
+import { closePlayers, hostGame, joinGame, newPlayer, skipIntro, waitForBear } from "./helpers.ts";
 
 test.afterEach(closePlayers);
 
@@ -87,6 +87,7 @@ test("a roar shakes nearby bears' cameras", async ({ browser }) => {
 test("reloading the page rejoins the party", async ({ browser }) => {
   const { a, b, code } = await twoBears(browser);
   await b.reload();
+  await skipIntro(b); // every page load plays the intro; the party seat is kept meanwhile
   await waitForBear(b);
   await expect(b.getByTestId("connection-status")).toContainText(code);
   await expect.poll(async () => (await others(a)).length).toBe(1);

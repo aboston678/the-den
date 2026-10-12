@@ -12,11 +12,25 @@ export function failOnErrors(page: Page) {
 }
 
 /**
+ * Load the game the way a player does: "Click to start", then skip the lyric intro.
+ * (After a reload, call skipIntro on its own: the page is already loading.)
+ */
+export async function openGame(page: Page, url = "/") {
+  await page.goto(url);
+  await skipIntro(page);
+}
+
+export async function skipIntro(page: Page) {
+  await page.getByTestId("start").click();
+  await page.getByTestId("skip-intro").click();
+}
+
+/**
  * Create a party from the lobby and press Play. Returns the party code.
  * world: "test" plays on the flat 1.6 test field instead of the property.
  */
 export async function hostGame(page: Page, name: string, { play = true, world }: { play?: boolean; world?: "test" } = {}) {
-  await page.goto(world ? `/?world=${world}` : "/");
+  await openGame(page, world ? `/?world=${world}` : "/");
   await page.getByTestId("nickname").fill(name);
   await page.getByTestId("create").click();
   // The party card shows a moment before the server sends the code, so wait for a real one.
@@ -32,7 +46,7 @@ export async function hostGame(page: Page, name: string, { play = true, world }:
 
 /** Join a party by code from the lobby. */
 export async function joinGame(page: Page, code: string, name: string) {
-  await page.goto("/");
+  await openGame(page);
   await page.getByTestId("nickname").fill(name);
   await page.getByTestId("join-code").fill(code);
   await page.getByTestId("join").click();

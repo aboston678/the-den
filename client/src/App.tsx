@@ -1,20 +1,50 @@
 import { Canvas } from "@react-three/fiber";
-import { useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { GameScene } from "./game/GameScene.tsx";
 import { tryRejoin, usePartyStore } from "./net/party.ts";
 import { ActionPrompt } from "./ui/ActionPrompt.tsx";
-import { ConnectionBadge } from "./ui/ConnectionBadge.tsx";
-import { ControlsHint } from "./ui/ControlsHint.tsx";
-import { Lobby } from "./ui/Lobby.tsx";
+import { ConnectionBadge, ControlsHint, PartyList } from "./ui/Hud.tsx";
+import { LoadingScreen } from "./ui/LoadingScreen.tsx";
+import { Pause } from "./ui/Pause.tsx";
+import { Intro } from "./ui/intro/Intro.tsx";
+import { IntroBackdrop } from "./ui/intro/IntroBackdrop.tsx";
+import { resumeMenuMusic, stopMenuMusic } from "./ui/intro/music.ts";
+import { Splash } from "./ui/intro/Splash.tsx";
+import { Home } from "./ui/home/Home.tsx";
+
+/** Every page load: "Click to start" → the lyric intro → the lobby (or straight back into your game). */
+type Stage = "splash" | "intro" | "menus";
 
 export function App() {
+  const [stage, setStage] = useState<Stage>("splash");
+  const [backdropReady, setBackdropReady] = useState(false);
   const inGame = usePartyStore((s) => (s.status === "in-party" || s.status === "reconnecting") && s.phase === "playing");
+  const playing = stage === "menus" && inGame;
 
   useEffect(() => {
-    tryRejoin(); // back into the party after a page reload
+    tryRejoin(); // back into the party after a page reload (keeps your seat while the intro plays)
   }, []);
 
-  return inGame ? (
+  // The menu song fades out as the game starts, and comes back if you leave to the menus.
+  useEffect(() => {
+    if (stage !== "menus") return;
+    if (playing) stopMenuMusic(3);
+    else void resumeMenuMusic();
+  }, [stage, playing]);
+
+  const start = useCallback(() => setStage("intro"), []);
+  const introDone = useCallback(() => setStage("menus"), []);
+  const ready = useCallback(() => setBackdropReady(true), []);
+
+  if (stage !== "menus") {
+    return (
+      <div className="intro" data-stage={stage}>
+        <IntroBackdrop visible={stage === "intro"} onReady={ready} />
+        {stage === "splash" ? <Splash onStart={start} ready={backdropReady} /> : <Intro onDone={introDone} />}
+      </div>
+    );
+  }
+  return playing ? (
     <>
       <Canvas shadows="percentage" camera={{ position: [0, 3, 6], fov: 70 }}>
         <GameScene />
@@ -22,8 +52,11 @@ export function App() {
       <ConnectionBadge />
       <ControlsHint />
       <ActionPrompt />
+      <PartyList />
+      <Pause />
+      <LoadingScreen />
     </>
   ) : (
-    <Lobby />
+    <Home />
   );
 }

@@ -6,6 +6,7 @@ import { CAMERA } from "../config.ts";
 import { approach } from "../player/movement.ts";
 import { cameraState, playerState } from "../state.ts";
 import { invisibleColliders } from "../world/invisible.ts";
+import { settings } from "../../ui/settings.ts";
 
 const target = new Vector3();
 const offset = new Vector3();
@@ -33,8 +34,10 @@ export function ThirdPersonCamera() {
     };
     const look = (e: MouseEvent) => {
       if (document.pointerLockElement !== canvas) return;
-      cameraState.yaw -= e.movementX * CAMERA.sensitivity;
-      cameraState.pitch = Math.min(CAMERA.maxPitch, Math.max(CAMERA.minPitch, cameraState.pitch + e.movementY * CAMERA.sensitivity));
+      const { sensitivity, invertY } = settings();
+      const k = CAMERA.sensitivity * sensitivity;
+      cameraState.yaw -= e.movementX * k;
+      cameraState.pitch = Math.min(CAMERA.maxPitch, Math.max(CAMERA.minPitch, cameraState.pitch + e.movementY * k * (invertY ? -1 : 1)));
     };
     const zoom = (e: WheelEvent) => {
       e.preventDefault();
