@@ -31,6 +31,7 @@ You are building **The Den**, a private multiplayer 3D browser game, for Andrew.
 
 ## Hard rules
 - **Never** put the property's street address or town name in code, UI, filenames, commit messages, or generation prompts. It's just "the house".
+  - Exception (Andrew, 2026-10-12): the intro's first lyric line shows the town name as sung. That one on-screen line only; commit messages, filenames and generation prompts still never contain it.
 - Secrets live only in `.env` files (gitignored) and in the hosting dashboards. The Supabase service-role key is server-only.
 - No real brand logos or wordmarks in anything generated.
 - Record the source and license of every third-party asset in `docs/ASSETS.md`.

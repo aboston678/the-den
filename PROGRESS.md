@@ -3,7 +3,7 @@
 Claude Code updates this file after every milestone: tick the box, add a short note, and say what's next.
 **[ANDREW APPROVES]** = stop, show Andrew, and wait for his OK.
 
-**Current status:** 1.10 done (day/night, lights, flashlight, sound). Next: 1.11 menus (the loading video will need Andrew's OK on credits).
+**Current status:** working on 1.11 menus (lyric intro first). Logo picked (#2).
 
 ---
 
@@ -84,6 +84,7 @@ Starting balance: 1,210 (2026-10-11)
 | 2026-10-11 | 1.5 clip Dance: All_Night_Dance (64), job cbffae5d-c782-486e-b585-b91ecaa50697 | `meshy_rigging` | 8 | 1,065.5 |
 | 2026-10-11 | 1.5 clip Reel: Pull_Radish (283), job b6aded48-d6b0-4187-9ef8-eda9e3c01b80 | `meshy_rigging` | 8 | 1,057.5 |
 | 2026-10-11 | 1.5 clip Bowl: Crouch_Charge_and_Throw (398), job df8b6572-694e-47b5-ad16-f1783887eb13 | `meshy_rigging` | 8 | 1,049.5 |
+| 2026-10-12 | 1.11 logo options ×4 (price check 0.25 per image); Andrew picked #2, job c848d826-bbe9-40af-a19f-33d544f50d6c | `gpt_image_2_5` | 1 | 1,048.5 |
 
 ## Decision log
 | Date | Decision | Why |
@@ -105,6 +106,8 @@ Starting balance: 1,210 (2026-10-11)
 | 2026-10-11 | Cape roof: eaves 1 m above the upstairs floor, 35° pitch, peak ~7.2 m over the great room; sloped ceilings in the upstairs front and back rooms; dormers give the front rooms windows | Matches the exterior photos (low eaves, dormers) and GAME_SPEC's ~7 m great-room peak |
 | 2026-10-11 | Steep house stairs use an invisible smooth ramp for walking; the bear presses less hard into the ground | At 1.25× the treads are 27 cm, too shallow for step-by-step climbing; the old ground press slowed climbing to a crawl |
 | 2026-10-11 | Doors are server-checked (you must be next to a door to open it) | Stops a modified client opening doors from across the map |
+| 2026-10-12 | Intro is a lyric video over the 3D property at dusk (Andrew's 19 s clip), Skip button, every page load; AI loading video dropped (GAME_SPEC §11 updated) | Andrew's design; the 3D world is free and warms up the game's assets |
+| 2026-10-12 | The intro's first lyric shows the town name as sung (CLAUDE.md exception) | Andrew's call: it's his song, and the song already says it aloud |
 | 2026-10-12 | Day/night clock: server keeps seconds-into-cycle and sends it once a second; browsers count between ticks | Tiny network cost, everyone within ~0.1 s |
 | 2026-10-12 | House lights: glowing fixture in every room + a small pool of real lights that move to the fixtures nearest you; no indoor shadow-casting lights for now (GAME_SPEC §8.2 updated) | Every real light costs every pixel; 10 lamps took the game from 60 to ~20 fps. The pool keeps the count fixed (no shader rebuild stutter) |
 | 2026-10-12 | Forest leaves ignore lamps and flashlights; bark/rocks ignore lamps | The forest's overlapping leaves are most of the screen; this kept ~55 fps |

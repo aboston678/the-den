@@ -17,3 +17,5 @@ Every model, texture, HDRI, sound or font not made in this repo goes here.
 | Birds and Wind - Ambient (Spring Spring) | Daytime forest ambience (1.10) | https://opengameart.org/content/birds-and-wind-ambient-birds-wind-and-synth | CC0 | Same scripts; section 23–60 s (skips a few synth notes) |
 | VistulaShort (RandomMind) | Stream water (1.10) | https://opengameart.org/content/sea-and-river-wave-sounds | CC0 | Same scripts; section 30–76 s |
 | ffmpeg-static 5.3 | Dev tool for trimming/encoding the sounds | https://github.com/eugeneware/ffmpeg-static | GPL-3.0 (tool only; nothing of it ships in the game) | npm dev dependency |
+| logo-option-1..4.png, logo.png | THE DEN logo (1.11); Andrew picked option 2, cropped to `client/public/ui/logo.png` | Generated with Higgsfield `gpt_image_2_5` (job c848d826 for #2) | Andrew's (own generation) | `assets/concepts/logo/` |
+| Intro Song - 19 Seconds.mp3 → intro-19s.mp3 | Intro lyric video (1.11) | Andrew's own clip of his song | Andrew's | `assets/audio/` |
