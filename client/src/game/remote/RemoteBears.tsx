@@ -1,4 +1,3 @@
-import { Html } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
 import { CapsuleCollider, RigidBody, type RapierCollider, type RapierRigidBody, useRapier } from "@react-three/rapier";
 import { Suspense, useRef } from "react";
@@ -7,6 +6,7 @@ import { INTERP_DELAY_MS, sampleAt } from "../../net/interpolate.ts";
 import { usePartyStore } from "../../net/party.ts";
 import { remotes } from "../../net/remotes.ts";
 import { playAt } from "../audio/audio.ts";
+import { nameTagEls } from "./nameTags.ts";
 import { CAPSULE, CAPSULE_CENTER, JUMP_AIR_TIME } from "../config.ts";
 import { useBearModel } from "../player/useBearModel.ts";
 import { cameraState, playerState } from "../state.ts";
@@ -20,6 +20,7 @@ const TAG_HEIGHT = 2.45; // above the feet
 const ROAR_SHAKE_RADIUS = 6;
 
 const tagWorld = new Vector3();
+const screen = new Vector3();
 
 /** Every other bear in the party. */
 export function RemoteBears() {
@@ -40,10 +41,10 @@ function RemoteBearView({ id }: { id: string }) {
   const body = useRef<RapierRigidBody>(null);
   const collider = useRef<RapierCollider>(null);
   const visual = useRef<Group>(null);
-  const tag = useRef<HTMLDivElement>(null);
   const frame = useRef(0);
   const { world, rapier } = useRapier();
   const camera = useThree((s) => s.camera);
+  const size = useThree((s) => s.size);
   const bear = remotes.get(id);
   const start = bear?.current ?? { x: 0, y: 0, z: 0 };
 
@@ -66,8 +67,9 @@ function RemoteBearView({ id }: { id: string }) {
     animator.update(dt, s.action === "locomotion" ? s.speed : 0);
     b.current = { x: s.x, y: s.y, z: s.z, speed: s.speed, action: s.action, flashlight: s.flashlight, aimYaw: s.aimYaw, aimPitch: s.aimPitch };
 
-    // Name tag: fade with distance; hide behind walls (checked every 4th frame).
-    if (!tag.current) return;
+    // Name tag: over the head, fading with distance, hidden behind walls (checked every 4th frame).
+    const tag = nameTagEls.get(id);
+    if (!tag) return;
     tagWorld.set(s.x, s.y + TAG_HEIGHT, s.z);
     const dist = camera.position.distanceTo(tagWorld);
     let opacity = dist <= TAG_FULL ? 1 : Math.max(0, 1 - (dist - TAG_FULL) / (TAG_GONE - TAG_FULL));
@@ -75,10 +77,13 @@ function RemoteBearView({ id }: { id: string }) {
       const dir = tagWorld.clone().sub(camera.position).normalize();
       const hit = world.castRay(new rapier.Ray(camera.position, dir), dist, true, undefined, undefined, undefined, undefined,
         (c) => c.handle !== collider.current?.handle && c.handle !== playerState.colliderHandle && !invisibleColliders.has(c.handle));
-      tag.current.dataset.occluded = hit && hit.timeOfImpact < dist - 0.3 ? "1" : "";
+      tag.dataset.occluded = hit && hit.timeOfImpact < dist - 0.3 ? "1" : "";
     }
-    if (tag.current.dataset.occluded) opacity = 0;
-    tag.current.style.opacity = String(opacity);
+    if (tag.dataset.occluded) opacity = 0;
+    screen.copy(tagWorld).project(camera);
+    if (screen.z > 1) opacity = 0; // behind the camera
+    tag.style.transform = `translate(-50%, -50%) translate(${((screen.x + 1) / 2) * size.width}px, ${((1 - screen.y) / 2) * size.height}px)`;
+    tag.style.opacity = String(opacity);
     b.tagVisible = opacity > 0.05;
   });
 
@@ -88,11 +93,6 @@ function RemoteBearView({ id }: { id: string }) {
       <group ref={visual} position-y={-CAPSULE_CENTER}>
         <primitive object={model} />
       </group>
-      <Html position={[0, TAG_HEIGHT - CAPSULE_CENTER, 0]} center zIndexRange={[10, 0]}>
-        <div ref={tag} className={`name-tag${bear?.connected === false ? " away" : ""}`} data-testid={`tag-${id}`}>
-          {bear?.name}
-        </div>
-      </Html>
     </RigidBody>
   );
 }

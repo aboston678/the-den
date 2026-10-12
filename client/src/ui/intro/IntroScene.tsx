@@ -47,11 +47,12 @@ function CameraGlide() {
  * house briefly freezes the page; that should happen behind "Click to start", not mid-song).
  */
 function ReadyWatch({ onReady }: { onReady: () => void }) {
-  const { active, loaded } = useProgress();
   const smooth = useRef(0);
   const told = useRef(false);
   useFrame((_, dt) => {
     if (told.current) return;
+    // Read the loading store without subscribing: loaders update it mid-render.
+    const { active, loaded } = useProgress.getState();
     smooth.current = !active && loaded > 0 && dt < 0.1 ? smooth.current + 1 : 0;
     if (smooth.current > 20) {
       told.current = true;

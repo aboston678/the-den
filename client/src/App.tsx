@@ -5,6 +5,7 @@ import { tryRejoin, usePartyStore } from "./net/party.ts";
 import { ActionPrompt } from "./ui/ActionPrompt.tsx";
 import { ConnectionBadge, ControlsHint, PartyList } from "./ui/Hud.tsx";
 import { LoadingScreen } from "./ui/LoadingScreen.tsx";
+import { NameTags } from "./ui/NameTags.tsx";
 import { Pause } from "./ui/Pause.tsx";
 import { Intro } from "./ui/intro/Intro.tsx";
 import { IntroBackdrop } from "./ui/intro/IntroBackdrop.tsx";
@@ -51,6 +52,7 @@ export function App() {
       </Canvas>
       <ConnectionBadge />
       <ControlsHint />
+      <NameTags />
       <ActionPrompt />
       <PartyList />
       <Pause />
