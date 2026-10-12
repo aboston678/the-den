@@ -11,12 +11,12 @@ test.afterEach(closePlayers);
 const gr = houseToWorld(24, 8);
 type Spot = [string, string, number, number, number, number, number?];
 const SPOTS: Spot[] = [
-  ["driveway woods", "noon", -110, -86, -100, -66],
+  ["driveway woods", "noon", -92, -60, -80, -50],
   ["front lawn", "evening", 8, -34, 2, 0],
   ["back lawn night", "night", 8, 26, 4, 0],
   ["great room night", "night", gr.x, gr.z, gr.x + 5, gr.z, -0.5 * HOUSE.scale],
   ["dock", "noon", 106, 0, 125, 0],
-  ["map edge forest", "noon", -128, 10, -160, 10],
+  ["map edge forest", "noon", -96, 10, -130, 10],
 ];
 
 async function measure(page: Page, [, time, x, z, lx, lz, y]: Spot) {

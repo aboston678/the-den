@@ -5,10 +5,16 @@ import { Path, type PathPoint } from "./path.ts";
 // The house sits near the middle; the driveway comes in from the north-west corner and the
 // stream runs north→south along the east side.
 
-/** Half the map's width: the world spans −150…150 on both axes. */
-export const MAP_HALF = 150;
-/** Invisible boundary, about 10 m inside the map edge. */
-export const BOUNDARY_HALF = 140;
+/**
+ * The walkable area (the invisible boundary). Andrew asked for a smaller map (2026-10-12): the woods
+ * reach ~110 m from the house to the west and ~105 m north and south; on the east it runs on past the stream
+ * (which has its own wading wall).
+ */
+export const BOUNDS = { minX: -112, maxX: 140, minZ: -105, maxZ: 105 } as const;
+/** Ground, trees and stream carry on this far past the boundary, so the edge is lost in trees and fog. */
+export const SCENERY = { minX: BOUNDS.minX - 30, maxX: 170, minZ: BOUNDS.minZ - 30, maxZ: BOUNDS.maxZ + 30 } as const;
+/** Metres from (x, z) to the nearest boundary edge (negative outside). */
+export const distanceToEdge = (x: number, z: number) => Math.min(x - BOUNDS.minX, BOUNDS.maxX - x, z - BOUNDS.minZ, BOUNDS.maxZ - z);
 
 /**
  * The house (built in milestone 1.9 from docs/floorplan.json at 1.25×). Floorplan x/z (real
@@ -70,7 +76,7 @@ export const dockStartX = () => streamCenter(DOCK.z) + DOCK.startD;
 /** The bucket of fishing rods at the base of the dock. */
 export const rodBucket = () => ({ x: dockStartX() - 1.1, z: DOCK.z + 1.5 });
 
-// --- the driveway: from the NW map edge, ~170 m through the woods to the garage apron ---
+// --- the driveway: in from the west edge of the map, ~110 m through the woods to the garage apron ---
 export const DRIVEWAY_WIDTH = 4;
 export const DRIVEWAY = new Path([
   { x: -156, z: -152 }, // off the map: the road continues into the fog
@@ -116,7 +122,7 @@ export const STONE_WALLS: PathPoint[][] = [
   // An old boundary wall through the southern woods.
   [{ x: 24, z: 72 }, { x: 52, z: 68 }, { x: 80, z: 71 }, { x: 98, z: 66 }],
   // And one in the northern woods.
-  [{ x: -78, z: -96 }, { x: -40, z: -102 }, { x: 0, z: -98 }, { x: 46, z: -106 }],
+  [{ x: -72, z: -82 }, { x: -38, z: -88 }, { x: 0, z: -84 }, { x: 44, z: -90 }],
 ].map((w) => new Path(w, 0.5).points);
 export const WALL_PATHS = STONE_WALLS.map((w) => new Path(w, 0.5));
 

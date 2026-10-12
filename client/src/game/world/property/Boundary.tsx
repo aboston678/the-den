@@ -1,4 +1,4 @@
-import { BOUNDARY_HALF, DOCK, STREAM, streamCenter } from "@den/shared";
+import { BOUNDS, DOCK, STREAM, streamCenter } from "@den/shared";
 import { useRapier } from "@react-three/rapier";
 import { useEffect } from "react";
 import { invisibleColliders } from "../invisible.ts";
@@ -23,15 +23,16 @@ export function Boundary() {
       invisibleColliders.add(c.handle);
       handles.push(c.handle);
     };
-    const B = BOUNDARY_HALF;
-    box(B, HEIGHT, 0.5, 0, 0, -B - 0.5);
-    box(B, HEIGHT, 0.5, 0, 0, B + 0.5);
-    box(0.5, HEIGHT, B, -B - 0.5, 0, 0);
-    box(0.5, HEIGHT, B, B + 0.5, 0, 0);
+    const { minX, maxX, minZ, maxZ } = BOUNDS;
+    const cx = (minX + maxX) / 2, cz = (minZ + maxZ) / 2, hx = (maxX - minX) / 2, hz = (maxZ - minZ) / 2;
+    box(hx, HEIGHT, 0.5, cx, 0, minZ - 0.5);
+    box(hx, HEIGHT, 0.5, cx, 0, maxZ + 0.5);
+    box(0.5, HEIGHT, hz, minX - 0.5, 0, cz);
+    box(0.5, HEIGHT, hz, maxX + 0.5, 0, cz);
 
     // Along the stream, following its curve in 2 m pieces.
     const gap = DOCK.width / 2 + 0.1;
-    for (let z = -B; z < B; z += 2) {
+    for (let z = minZ; z < maxZ; z += 2) {
       const z1 = z + 2;
       if (z1 > DOCK.z - gap && z < DOCK.z + gap) continue;
       const x0 = streamCenter(z) + STREAM.wadeLimitD, x1 = streamCenter(z1) + STREAM.wadeLimitD;

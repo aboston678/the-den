@@ -22,7 +22,7 @@ const STOPS: Stop[] = [
   ["back", 8, 26, 4, 0, 0.12, 6],
   ["garage", -40, -4, -18, -2, 0.12, 5],
   ["dock", 106, 0, 125, 0, 0.25, 5],
-  ["woods", -110, -86, -100, -66],
+  ["woods", -92, -60, -80, -50],
 ];
 const TIMES = ["morning", "noon", "evening", "dusk", "night", "dawn"];
 

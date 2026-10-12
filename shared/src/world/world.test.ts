@@ -9,10 +9,10 @@ import { drivewayY, heightAt, isInBounds, isWild, lawnMask, surfaceAt } from "./
 // The property layout checked against GAME_SPEC §4.
 
 describe("the property", () => {
-  it("the driveway runs ~170 m from the spawn to the garage apron", () => {
+  it("the driveway runs ~110 m from the spawn to the garage apron (smaller map, Andrew 2026-10-12)", () => {
     const end = DRIVEWAY.closest(APRON.minX, (APRON.minZ + APRON.maxZ) / 2)!.s;
-    expect(end - SPAWN_S).toBeGreaterThan(155);
-    expect(end - SPAWN_S).toBeLessThan(190);
+    expect(end - SPAWN_S).toBeGreaterThan(95);
+    expect(end - SPAWN_S).toBeLessThan(130);
   });
 
   it("the driveway climbs gently (never steeper than 1 in 8)", () => {
@@ -55,7 +55,7 @@ describe("the property", () => {
   });
 
   it("there's a shallow wadeable strip, then the invisible wall, then deep water", () => {
-    for (const z of [-100, -20, 40, 110]) {
+    for (const z of [-95, -20, 40, 95]) {
       const c = streamCenter(z);
       const shelf = STREAM.waterY - heightAt(c + STREAM.wadeLimitD - 0.5, z);
       expect(shelf).toBeGreaterThan(0.3);
@@ -108,11 +108,11 @@ describe("the property", () => {
 });
 
 describe("spawnPoint", () => {
-  it("puts six bears on the driveway at the north-west edge, apart, facing down it", () => {
+  it("puts six bears on the driveway at the west edge, apart, facing down it", () => {
     const spots = Array.from({ length: MAX_PLAYERS }, (_, i) => spawnPoint(i));
     for (const [i, a] of spots.entries()) {
-      expect(a.x).toBeLessThan(-100);
-      expect(a.z).toBeLessThan(-100);
+      expect(a.x).toBeLessThan(-95);
+      expect(a.z).toBeLessThan(-60);
       expect(isInBounds(a.x, a.z)).toBe(true);
       expect(DRIVEWAY.closest(a.x, a.z)!.dist).toBeLessThan(DRIVEWAY_WIDTH / 2);
       expect(Math.abs(a.y - heightAt(a.x, a.z))).toBeLessThan(0.1);

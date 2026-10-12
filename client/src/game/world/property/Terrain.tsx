@@ -1,4 +1,4 @@
-import { BOUNDARY_HALF, fbm, heightAt, houseCutRects, lawnMask, surfaceAt } from "@den/shared";
+import { BOUNDS, SCENERY, fbm, heightAt, houseCutRects, lawnMask, surfaceAt } from "@den/shared";
 import { HeightfieldCollider, RigidBody, TrimeshCollider } from "@react-three/rapier";
 import { useMemo } from "react";
 import { BufferAttribute, BufferGeometry } from "three";
@@ -6,16 +6,16 @@ import { TERRAIN_LAYERS, createTerrainMaterial } from "./terrainMaterial.ts";
 import { buildLayerArrays, useLayerImages } from "./textures.ts";
 
 /** The visible ground reaches past the walkable area so the map's edge is lost in the trees and fog. */
-const VIEW_HALF = 170;
-/** Collision ground: the walkable area plus a margin, 1 m grid (same samples as the visible ground). */
-const PHYS_HALF = BOUNDARY_HALF + 6;
+const VIEW = SCENERY;
+/** Collision ground (a square round the origin, as Rapier's heightfield needs): the walkable area plus a margin. */
+const PHYS_HALF = Math.max(-BOUNDS.minX, BOUNDS.maxX, -BOUNDS.minZ, BOUNDS.maxZ) + 6;
 
-/** Heights on a 1 m grid from −half to +half, row by row (z outer, x inner). */
-function heightGrid(half: number) {
-  const n = half * 2 + 1;
-  const h = new Float32Array(n * n);
-  for (let iz = 0; iz < n; iz++) for (let ix = 0; ix < n; ix++) h[iz * n + ix] = heightAt(ix - half, iz - half);
-  return { n, h };
+/** Heights on a 1 m grid over a rectangle, row by row (z outer, x inner). */
+function heightGrid(r: { minX: number; maxX: number; minZ: number; maxZ: number }) {
+  const nx = r.maxX - r.minX + 1, nz = r.maxZ - r.minZ + 1;
+  const h = new Float32Array(nx * nz);
+  for (let iz = 0; iz < nz; iz++) for (let ix = 0; ix < nx; ix++) h[iz * nx + ix] = heightAt(r.minX + ix, r.minZ + iz);
+  return { nx, nz, h };
 }
 
 type WRect = { minX: number; maxX: number; minZ: number; maxZ: number };
@@ -47,9 +47,9 @@ const HOUSE_AREA = {
 const touches = (x0: number, z0: number) => CUTS.some((c) => c.maxX > x0 && c.minX < x0 + 1 && c.maxZ > z0 && c.minZ < z0 + 1);
 
 function buildGeometry() {
-  const { n, h } = heightGrid(VIEW_HALF);
+  const { nx: n, nz, h } = heightGrid(VIEW);
   const pos: number[] = [], nrm: number[] = [], splatA: number[] = [], splatB: number[] = [], index: number[] = [];
-  const at = (ix: number, iz: number) => h[Math.min(n - 1, Math.max(0, iz)) * n + Math.min(n - 1, Math.max(0, ix))]!;
+  const at = (ix: number, iz: number) => h[Math.min(nz - 1, Math.max(0, iz)) * n + Math.min(n - 1, Math.max(0, ix))]!;
   /** Add a vertex; grid points take their slope from the grid, extra points (round the house) work it out. */
   const vertex = (x: number, z: number, y = heightAt(x, z), grid?: [number, number]) => {
     const dx = grid ? at(grid[0] + 1, grid[1]) - at(grid[0] - 1, grid[1]) : heightAt(x + 1, z) - heightAt(x - 1, z);
@@ -64,11 +64,11 @@ function buildGeometry() {
     splatB.push(s.bed, 0.88 + 0.24 * fbm(x, z, 24, 3));
     return pos.length / 3 - 1;
   };
-  for (let iz = 0; iz < n; iz++) for (let ix = 0; ix < n; ix++) vertex(ix - VIEW_HALF, iz - VIEW_HALF, h[iz * n + ix]!, [ix, iz]);
+  for (let iz = 0; iz < nz; iz++) for (let ix = 0; ix < n; ix++) vertex(VIEW.minX + ix, VIEW.minZ + iz, h[iz * n + ix]!, [ix, iz]);
   const quadIdx = (a: number, b: number, c: number, d: number) => index.push(a, c, b, b, c, d); // a b on the near row, c d on the next
-  for (let iz = 0; iz < n - 1; iz++) {
+  for (let iz = 0; iz < nz - 1; iz++) {
     for (let ix = 0; ix < n - 1; ix++) {
-      const x0 = ix - VIEW_HALF, z0 = iz - VIEW_HALF;
+      const x0 = VIEW.minX + ix, z0 = VIEW.minZ + iz;
       if (!touches(x0, z0)) {
         const a = iz * n + ix;
         quadIdx(a, a + 1, a + n, a + n + 1);
@@ -96,7 +96,7 @@ function buildGeometry() {
  * (with the house cut out) takes over there.
  */
 function buildHeightfield() {
-  const { n, h } = heightGrid(PHYS_HALF);
+  const { nx: n, h } = heightGrid({ minX: -PHYS_HALF, maxX: PHYS_HALF, minZ: -PHYS_HALF, maxZ: PHYS_HALF });
   const heights = new Float32Array(n * n);
   for (let ix = 0; ix < n; ix++) {
     for (let iz = 0; iz < n; iz++) {

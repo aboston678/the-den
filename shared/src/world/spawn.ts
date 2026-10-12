@@ -1,5 +1,5 @@
 import { MAX_PLAYERS } from "../constants.ts";
-import { BOUNDARY_HALF, DRIVEWAY } from "./layout.ts";
+import { DRIVEWAY, distanceToEdge } from "./layout.ts";
 import { drivewayY } from "./terrain.ts";
 
 /** Which map a party plays on: the real property, or the 1.6 test field (dev/tests only). */
@@ -15,11 +15,11 @@ export interface SpawnSpot {
   yaw: number;
 }
 
-/** Metres along the driveway where the party starts: just inside the map's north-west boundary. */
+/** Metres along the driveway where the party starts: just inside the map's boundary. */
 export const SPAWN_S = (() => {
   for (let s = 0; s < DRIVEWAY.length; s += 0.5) {
     const p = DRIVEWAY.pointAt(s);
-    if (Math.abs(p.x) < BOUNDARY_HALF - 4 && Math.abs(p.z) < BOUNDARY_HALF - 4) return s + 4;
+    if (distanceToEdge(p.x, p.z) > 4) return s + 4;
   }
   return 0;
 })();

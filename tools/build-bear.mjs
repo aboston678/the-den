@@ -2,7 +2,7 @@
 //
 //   1. tools/fatten-bear.mjs     (torso +22%, belly +15%; Andrew's request)
 //   2. tools/retarget-clip.mjs   (every clip in assets/models/bear/clips/manifest.json)
-//   3. remove the jump's own lift (physics does the lifting)
+//   3. remove the jump's own lift and walks' own forward travel (the game does the moving)
 //   4. rename the built-in Idle, drop unused data, resample keyframes, meshopt + WebP
 //
 // Usage: node tools/build-bear.mjs   ->   client/public/models/bear.glb
@@ -16,11 +16,12 @@ import { ALL_EXTENSIONS } from "@gltf-transform/extensions";
 import { dedup, meshopt, prune, resample, textureCompress } from "@gltf-transform/functions";
 import { MeshoptDecoder, MeshoptEncoder } from "meshoptimizer";
 import sharp from "sharp";
+import { removeDrift } from "./lib/remove-drift.mjs";
 import { removeLift } from "./lib/remove-lift.mjs";
 
 const ORIGINAL = "assets/models/bear/bear-base-original.glb";
 const CLIPS = "assets/models/bear/clips";
-const OUT = "client/public/models/bear.glb";
+const OUT = process.env.BEAR_OUT ?? "client/public/models/bear.glb";
 const fat = join(tmpdir(), "den-bear-fat.glb");
 const animated = join(tmpdir(), "den-bear-animated.glb");
 
@@ -37,6 +38,12 @@ const io = new NodeIO()
   .registerDependencies({ "meshopt.encoder": MeshoptEncoder, "meshopt.decoder": MeshoptDecoder });
 const doc = await io.read(animated);
 console.log(`Jump: removed up to ${removeLift(doc, "Jump").toFixed(2)} m of built-in lift`);
+// Clips that walk forward on their own (root motion): the game moves the bear instead.
+for (const name of ["Walk2"]) {
+  if (!doc.getRoot().listAnimations().some((a) => a.getName() === name)) continue;
+  const d = removeDrift(doc, name);
+  console.log(`${name}: removed ${d.metres.toFixed(2)} m of built-in travel (natural speed ${d.speed.toFixed(2)} m/s)`);
+}
 for (const anim of doc.getRoot().listAnimations()) {
   if (anim.getName() === "Armature|Idle|baselayer") anim.setName("Idle"); // the base model's built-in clip
 }

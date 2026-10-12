@@ -84,6 +84,24 @@
       "job": "df8b6572-694e-47b5-ad16-f1783887eb13",
       "file": "bowl.glb",
       "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3KSfYE82xmSZSyzEC1rV4Jsxvlh/hf_20261011_203608_df8b6572-694e-47b5-ad16-f1783887eb13.glb"
+    },
+    "WalkOrc": {
+      "action": "Slow_Orc_Walk (119)",
+      "job": "36cff652-c4f4-4060-a2c8-bfa2d2ae270b",
+      "file": "walk-orc.glb",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3KSfYE82xmSZSyzEC1rV4Jsxvlh/hf_20261012_215524_36cff652-c4f4-4060-a2c8-bfa2d2ae270b.glb"
+    },
+    "WalkMonster": {
+      "action": "Monster_Walk (112)",
+      "job": "02e2371b-16fc-4790-9d0c-0a3fc3c70d29",
+      "file": "walk-monster.glb",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3KSfYE82xmSZSyzEC1rV4Jsxvlh/hf_20261012_215526_02e2371b-16fc-4790-9d0c-0a3fc3c70d29.glb"
+    },
+    "Walk2": {
+      "action": "walking_2 (566)",
+      "job": "fdb413de-cc46-44e7-b473-224ad0a239ce",
+      "file": "walk-2.glb",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3KSfYE82xmSZSyzEC1rV4Jsxvlh/hf_20261012_215527_fdb413de-cc46-44e7-b473-224ad0a239ce.glb"
     }
   }
 }

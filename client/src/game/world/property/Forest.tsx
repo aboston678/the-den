@@ -1,4 +1,4 @@
-import { BOUNDARY_HALF, STREAM, streamCenter } from "@den/shared";
+import { STREAM, distanceToEdge, streamCenter } from "@den/shared";
 import { useGLTF } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
 import { useRapier } from "@react-three/rapier";
@@ -73,7 +73,7 @@ function prepareFoliage(scene: Group) {
 
 /** Can a bear walk here? (Only make colliders for things inside the walkable area.) */
 const reachable = (x: number, z: number) =>
-  Math.abs(x) < BOUNDARY_HALF + 2 && Math.abs(z) < BOUNDARY_HALF + 2 && x - streamCenter(z) < STREAM.wadeLimitD + 2;
+  distanceToEdge(x, z) > -2 && x - streamCenter(z) < STREAM.wadeLimitD + 2;
 
 let scatterCache: Scatter | null = null;
 /** The forest layout is the same every time; work it out once (React may re-render while assets load). */

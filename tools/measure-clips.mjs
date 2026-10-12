@@ -22,7 +22,7 @@ function track(anim) {
   });
 }
 
-for (const name of ["Walk", "Run"]) {
+for (const name of (process.env.CLIPS ?? "Walk,Run").split(",")) {
   const anim = doc.getRoot().listAnimations().find((a) => a.getName() === name);
   const frames = track(anim);
   // The planted foot is the lower one; its backward speed (along -z, the bear faces +z) is ground speed.

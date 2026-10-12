@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { BOUNDARY_HALF, DOCK, STONE_WALLS, STREAM, dockStartX, spawnPoint, streamCenter } from "../shared/src/index.ts";
+import { BOUNDS, DOCK, STONE_WALLS, STREAM, dockStartX, spawnPoint, streamCenter } from "../shared/src/index.ts";
 import { failOnErrors, fps, hostGame } from "./helpers.ts";
 
 // Milestone 1.8: the outdoor map (GAME_SPEC §4).
@@ -46,9 +46,9 @@ test("you start on the driveway at the north-west edge, facing down it, and it r
 });
 
 test("an invisible boundary keeps you on the map", async ({ page }) => {
-  await placeFacing(page, -BOUNDARY_HALF + 6, 20, -200, 20);
+  await placeFacing(page, BOUNDS.minX + 6, 20, -200, 20);
   await hold(page, ["ShiftLeft", "KeyW"], 2500);
-  expect((await me(page)).x).toBeGreaterThan(-BOUNDARY_HALF);
+  expect((await me(page)).x).toBeGreaterThan(BOUNDS.minX);
 });
 
 test("you can wade into the stream's shallows, but not into deep water", async ({ page }) => {

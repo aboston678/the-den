@@ -27,7 +27,7 @@ test("screenshot tour of the property", async ({ page }) => {
     const p = d.player.position;
     return [
       ["01-spawn", p.x, p.z, p.x + 10, p.z + 10],
-      ["02-driveway-woods", -110, -86, -100, -66],
+      ["02-driveway-woods", -92, -60, -80, -50],
       ["03-driveway-reveal", -58, -26, -20, 0],
       ["04-garage-apron", -40, -4, -18, -2, 0.12, 5],
       ["05-front-lawn", 8, -34, 2, 0, 0.12, 5],
@@ -38,7 +38,7 @@ test("screenshot tour of the property", async ({ page }) => {
       ["10-dock-end-upstream", 117, 0, 117, -40, 0.15, 4],
       ["11-forest", -80, 40, -60, 60],
       ["12-stone-wall", -24, 32, -30, 30, 0.3, 4],
-      ["13-map-edge", -128, 10, -160, 10],
+      ["13-map-edge", -96, 10, -130, 10],
     ];
   });
   for (const stop of stops.filter((s) => !process.env.STOPS || process.env.STOPS.split(",").some((p) => s[0].startsWith(p)))) {

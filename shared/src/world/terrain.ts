@@ -1,5 +1,5 @@
 import {
-  APRON, BOUNDARY_HALF, BOWLING_ALLEY, CLEARING, DOCK, DRIVEWAY, DRIVEWAY_WIDTH, HOUSE, HOUSE_FOOTPRINT, RETAINING_WALL,
+  APRON, distanceToEdge, BOWLING_ALLEY, CLEARING, DOCK, DRIVEWAY, DRIVEWAY_WIDTH, HOUSE, HOUSE_FOOTPRINT, RETAINING_WALL,
   RETAINING_WALL_HEIGHT, STREAM, TRAIL, TRAIL_WIDTH, WALL_PATHS, streamCenter,
 } from "./layout.ts";
 import { clamp01, fbm, lerp, noise2, smoothstep } from "./noise.ts";
@@ -173,6 +173,6 @@ export function isOnDock(x: number, z: number) {
 
 /** True inside the walkable area (the invisible boundary and the stream's wading limit, plus the dock). */
 export function isInBounds(x: number, z: number) {
-  if (Math.abs(x) > BOUNDARY_HALF || Math.abs(z) > BOUNDARY_HALF) return false;
+  if (distanceToEdge(x, z) < 0) return false;
   return x - streamCenter(z) <= STREAM.wadeLimitD || isOnDock(x, z);
 }

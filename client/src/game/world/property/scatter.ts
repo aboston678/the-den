@@ -1,5 +1,5 @@
 import {
-  BOUNDARY_HALF, CLEARING, DRIVEWAY, DRIVEWAY_WIDTH, FRONT_BOULDER, TRAIL, TRAIL_WIDTH, HOUSE_FOOTPRINT, LAWN_PINES, fbm, heightAt, isWild, lawnMask, noise2, rng, smoothstep,
+  SCENERY, distanceToEdge, CLEARING, DRIVEWAY, DRIVEWAY_WIDTH, FRONT_BOULDER, TRAIL, TRAIL_WIDTH, HOUSE_FOOTPRINT, LAWN_PINES, fbm, heightAt, isWild, lawnMask, noise2, rng, smoothstep,
   streamCenter,
 } from "@den/shared";
 
@@ -23,12 +23,12 @@ export const FERNS = ["fern_a", "fern_b", "fern_c", "fern_d"] as const;
 export const ROCKS = Array.from({ length: 13 }, (_, i) => `rock_${i + 1}`);
 export const SHRUBS = ["shrub_a", "shrub_b", "shrub_c", "shrub_d"] as const;
 
-const EDGE = 170; // scenery reaches this far; the walkable area ends at BOUNDARY_HALF
-
-/** Walk a jittered grid of `cell`-metre squares, calling `place` with a seeded random source per cell. */
+/** Walk a jittered grid of `cell`-metre squares over the scenery (past the walkable area), calling `place` with a seeded random source per cell. */
 function grid(cell: number, seed: number, place: (x: number, z: number, rand: () => number) => void) {
-  for (let gz = -EDGE; gz < EDGE; gz += cell) {
-    for (let gx = -EDGE; gx < EDGE; gx += cell) {
+  // Cells stay aligned to the old ±170 grid so the forest keeps its layout where the map didn't shrink.
+  const start = (v: number) => -170 + Math.ceil((v + 170) / cell) * cell;
+  for (let gz = start(SCENERY.minZ); gz < SCENERY.maxZ; gz += cell) {
+    for (let gx = start(SCENERY.minX); gx < SCENERY.maxX; gx += cell) {
       const rand = rng(seed ^ Math.imul(Math.round(gx * 7 + 3001), 73856093) ^ Math.imul(Math.round(gz * 7 + 5003), 19349663));
       place(gx + rand() * cell, gz + rand() * cell, rand);
     }
@@ -44,7 +44,7 @@ const nearPath = (x: number, z: number, gap: number) =>
   !!DRIVEWAY.closest(x, z, DRIVEWAY_WIDTH / 2 + gap) || !!TRAIL.closest(x, z, TRAIL_WIDTH / 2 + gap);
 
 /** 0 inside the map, rising to 1 near the boundary (thicker woods there hide the edge). */
-const nearEdge = (x: number, z: number) => smoothstep(BOUNDARY_HALF - 18, BOUNDARY_HALF - 4, Math.max(Math.abs(x), Math.abs(z)));
+const nearEdge = (x: number, z: number) => 1 - smoothstep(4, 18, distanceToEdge(x, z));
 
 function pickTree(x: number, z: number, r: number): TreeKind {
   const damp = smoothstep(-60, -20, x - streamCenter(z)); // near the stream: hemlock and birch
