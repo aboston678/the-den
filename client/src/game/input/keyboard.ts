@@ -1,8 +1,13 @@
-// Keyboard state for the game. Held keys for movement, plus one-shot presses (Y, B, Space).
+// Keyboard state for the game. Held keys for movement, plus one-shot presses (Y, B, Space, E, F).
 // Uses KeyboardEvent.code so it works on any keyboard layout.
+//
+// Presses that arrive between frames are handed out together at the start of the next frame
+// (beginInputFrame) and forgotten at the start of the one after, so every part of the game sees
+// the same presses whichever order their per-frame code runs in.
 
 const held = new Set<string>();
-const presses = new Set<string>();
+let incoming = new Set<string>();
+let presses = new Set<string>();
 
 function isTyping(e: KeyboardEvent) {
   const el = e.target as HTMLElement | null;
@@ -12,7 +17,7 @@ function isTyping(e: KeyboardEvent) {
 export function attachKeyboard(target: Window = window) {
   const down = (e: KeyboardEvent) => {
     if (isTyping(e)) return;
-    if (!e.repeat) presses.add(e.code);
+    if (!e.repeat) incoming.add(e.code);
     held.add(e.code);
     if (e.code === "Space") e.preventDefault(); // don't scroll the page
   };
@@ -35,7 +40,8 @@ export function consumePress(code: string) {
   return presses.delete(code);
 }
 
-/** Forget presses nobody consumed this frame (e.g. Y while roar is on cooldown). */
-export function clearPresses() {
-  presses.clear();
+/** Start of a frame: this frame's presses are the ones since the last frame; unused older ones are dropped. */
+export function beginInputFrame() {
+  presses = incoming;
+  incoming = new Set();
 }

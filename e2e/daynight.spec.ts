@@ -96,3 +96,21 @@ test("keeps a good frame rate by day, at night, and indoors at night", async ({ 
   console.log("frame rates:", Object.entries(rates).map(([k, v]) => `${k} ${v.toFixed(0)}`).join(", "));
   for (const v of Object.values(rates)) expect(v).toBeGreaterThan(30);
 });
+
+test("sound starts after the first click: ambience loads, and a roar is heard", async ({ page }) => {
+  test.setTimeout(60_000);
+  failOnErrors(page);
+  const sounds: string[] = [];
+  page.on("response", (r) => {
+    if (r.url().includes("/audio/")) sounds.push(`${r.status()} ${r.url().split("/audio/")[1]}`);
+  });
+  await hostGame(page, "Loud");
+  // The lobby's Create and Play clicks count as the first click that browsers require.
+  await expect.poll(() => page.evaluate(() => window.__den!.audio().state)).toBe("running");
+  await expect.poll(() => sounds.length).toBeGreaterThanOrEqual(5); // day birds, dawn chorus, crickets, frogs, stream
+  expect(sounds.every((s) => s.startsWith("200"))).toBe(true);
+  // The morning birds and wind are actually coming out (not silent).
+  await expect.poll(() => page.evaluate(() => window.__den!.audioLevel().rms), { timeout: 15_000 }).toBeGreaterThan(-40);
+  await page.keyboard.press("KeyY");
+  await expect.poll(() => page.evaluate(() => window.__den!.audio().recent)).toContain("roar");
+});

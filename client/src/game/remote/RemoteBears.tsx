@@ -6,6 +6,7 @@ import { type Group, Vector3 } from "three";
 import { INTERP_DELAY_MS, sampleAt } from "../../net/interpolate.ts";
 import { usePartyStore } from "../../net/party.ts";
 import { remotes } from "../../net/remotes.ts";
+import { playAt } from "../audio/audio.ts";
 import { CAPSULE, CAPSULE_CENTER, JUMP_AIR_TIME } from "../config.ts";
 import { useBearModel } from "../player/useBearModel.ts";
 import { cameraState, playerState } from "../state.ts";
@@ -60,6 +61,7 @@ function RemoteBearView({ id }: { id: string }) {
       animator.start(s.action, JUMP_AIR_TIME);
       const near = Math.hypot(s.x - playerState.position.x, s.z - playerState.position.z) < ROAR_SHAKE_RADIUS;
       if (s.action === "roar" && near) cameraState.shake = Math.max(cameraState.shake, 0.5);
+      if (s.action === "roar") void playAt("roar", s.x, s.y + 1.6, s.z, 1.8, 8);
     }
     animator.update(dt, s.action === "locomotion" ? s.speed : 0);
     b.current = { x: s.x, y: s.y, z: s.z, speed: s.speed, action: s.action, flashlight: s.flashlight, aimYaw: s.aimYaw, aimPitch: s.aimPitch };

@@ -7,7 +7,8 @@ import { NET_TICK_HZ } from "@den/shared";
 import { CAPSULE, CAPSULE_CENTER, CONTROLLER_OFFSET, JUMP_AIR_TIME, MOVE } from "../config.ts";
 import { sendPose } from "../../net/party.ts";
 import { remotes } from "../../net/remotes.ts";
-import { clearPresses, consumePress, isHeld } from "../input/keyboard.ts";
+import { consumePress, isHeld } from "../input/keyboard.ts";
+import { playAt } from "../audio/audio.ts";
 import { flashlightAim } from "./Flashlight.tsx";
 import { cameraState, playerState } from "../state.ts";
 import { groundY } from "../world/ground.ts";
@@ -111,6 +112,7 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
     if (consumePress("KeyY") && grounded && now >= st.roarReadyAt && (action === "locomotion" || action === "dance")) {
       start("roar");
       st.roarReadyAt = now + MOVE.roarCooldown;
+      void playAt("roar", playerState.position.x, playerState.position.y + 1.6, playerState.position.z, 1.8, 8);
     }
     action = animator.action;
     if (moving && (action === "dance" || action === "roar")) start("locomotion"); // moving cancels
@@ -243,7 +245,6 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
           .add(playerState.position);
       });
     }
-    clearPresses();
   });
 
   return (
