@@ -3,7 +3,7 @@
 Claude Code updates this file after every milestone: tick the box, add a short note, and say what's next.
 **[ANDREW APPROVES]** = stop, show Andrew, and wait for his OK.
 
-**Current status:** 1.7 done. Next: 1.8 outdoor map (300 × 300 m terrain, driveway, forest, stream, dock; ends with a screenshot tour for Andrew's approval).
+**Current status:** 1.8 outdoor map built and tested; **waiting for Andrew's approval** of the screenshot tour (`docs/screenshots/1.8/`). Open question for Andrew: the deck sits ~3.4 m above the back lawn (spec says ~2 m), see decision log. Next after approval: 1.9 house shell.
 
 ---
 
@@ -25,6 +25,7 @@ Goal: Andrew sends friends a link; everyone makes or joins a party, loads in at 
 - [x] **1.7 Multiplayer.** Colyseus party rooms, 5-character codes, create/join, max 6, host hand-off, synced movement/animations, interpolation, name tags, bumping, reconnect. Two-browser test.
   - Done 2026-10-11. Lobby (create/join by code, party list, host-only Play), server-clamped 20 Hz poses, interpolated remote bears with animations, name tags (fade by 30 m, hidden behind walls), solid bumping + shove, roar shakes nearby cameras, page reload rejoins within 30 s (retries for a few seconds), host hand-off. Tests: 39 unit + 14 browser, full suite green twice in a row. Earlier flaky tests were test timing (code read before it arrived; 0.5 s shake missed between polls), now fixed. Screenshots: `docs/screenshots/1.7/`.
 - [ ] **1.8 Outdoor map.** 300 × 300 m terrain with the slope, lawn clearing, forest, driveway from the NW spawn, stone walls, boulder, stream, dock with the rod bucket (static for now), trail, perimeter. Screenshot tour. **[ANDREW APPROVES]**
+  - Built 2026-10-11 (awaiting approval). Layout + ground math in `shared/src/world/` (unit-tested): driveway 166 m from the NW spawn to the garage apron, trail 96 m, stream ~105 m east with a 3 m wadeable shelf, dock + rod bucket, lawn clearing, front lawn level / back lawn at basement level. Client in `client/src/game/world/property/`: textured terrain (5 CC0 textures) + Rapier heightfield, asphalt driveway, moving water, dock with invisible rails, dry-stone walls + apron retaining wall, ~2,500 EZ-Tree trees in 6 kinds × 3 detail levels plus saplings, ferns, mossy rocks, logs, stumps, rhododendrons, the front boulder; invisible boundary; white placeholder block for the house. Sun shadows follow the bear. 60 fps here; ~13 MB of new assets. `?world=test` keeps the 1.6 test field for the controller/multiplayer tests. Tests: `e2e/property.spec.ts` (spawn, boundary, wading, dock, walls) + `e2e/tour.spec.ts` (screenshots).
 - [ ] **1.9 House shell.** From `docs/floorplan.json` at 1.25×: exterior matching the photos, every room, stairs, railings, windows, base materials per room, porch, deck, greenhouse shell, garage, basement den + bowling room shell. All doors open/close with E (synced); garage doors roll up. Screenshot tour of every room. **[ANDREW APPROVES]**
 - [ ] **1.10 Day/night + lights + audio.** 68-minute synced cycle, sky/sun/moon, exterior lights at dusk, interior lights always on, flashlight (F), ambient sound by time of day, positional stream audio.
 - [ ] **1.11 Menus.** Click-to-enter splash, loading screen (keyframe image + `kling3_0` video, ~20 credits per try; ask first) with the song, Fortnite-style home screen (rotating bear, party lineup, create/join, code display), settings, pause menu, HUD prompts. **[ANDREW APPROVES]** the loading video and home screen.
@@ -94,10 +95,15 @@ Starting balance: 1,210 (2026-10-11)
 | 2026-10-11 | Bear made fatter in code (torso +22%, belly +15%) instead of regenerating | Andrew wanted it a little fatter; reshaping the mesh keeps the same skeleton and costs no credits |
 | 2026-10-11 | Every extra animation clip is retargeted onto the base bear's skeleton (`tools/retarget-clip.mjs`) | Higgsfield re-rigs per clip with different joint placement; straight copying bends the wrong spots. GAME_SPEC §5.1 updated |
 | 2026-10-11 | Bear textures shipped as WebP for now; KTX2 deferred to 1.12 | KTX2 encoder (toktx) isn't installed on this Mac and the bear is one shared 3-texture set; revisit with the house's many textures |
+| 2026-10-11 | Trees are EZ-Tree (MIT) baked offline into 3 detail levels; ground/rock/fern assets are CC0 Poly Haven, kept out of git and re-downloadable (`npm run build:outdoor`) | Poly Haven's trees are 8–17 million triangles each; EZ-Tree gives ~7k / 3k / 800-triangle versions of the same tree |
+| 2026-10-11 | Scenery (ground, trees, stream) continues ~30 m past the 300 m map edge, outside the invisible boundary | Hides the edge of the world in trees and haze |
+| 2026-10-11 | **Pending Andrew:** deck ~3.4 m above the back lawn, not ~2 m (GAME_SPEC §4) | At 1.25× scale the basement floor is 3.4 m below the main floor and must open onto the back lawn, so the lawn under the deck is 3.4 m down. Options: accept, or let the lawn rise under the deck's east end |
 | 2026-10-11 | Basement stairs moved under the main staircase; new basement stair landing; bowling lanes shifted ~6 m east (x 22→28); back hall became a pantry | Andrew: the real stairs start under the stairs going up. Lanes had to move so the stairs don't land on the approach |
 
 ## Session notes
 (Newest first. 1–3 lines per session: what got done, what's next, anything Andrew needs to do.)
+
+- **2026-10-11 · Session 2 (cont.).** 1.8 outdoor map built (CC0 downloads approved by Andrew, no credits spent). Waiting on Andrew: approve the tour, and the deck-height question. Next: 1.9 house shell.
 
 - **2026-10-11 · Session 2.** Finished 1.7 multiplayer: fixed two flaky browser tests and a hanging server-test shutdown, made reload-rejoin retry, two-browser screenshots in `docs/screenshots/1.7/`. Next: 1.8 outdoor map.
 

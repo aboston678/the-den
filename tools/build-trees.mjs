@@ -36,7 +36,7 @@ const KINDS = {
   } },
   // Hemlock: dense dark cone with branches nearly to the ground.
   hemlock: { preset: "Pine Medium", height: 17, seed: 431, tweak: (o) => {
-    o.branch.start[1] = 0.12; o.branch.angle[1] = 118; o.leaves.size *= 1.3; o.leaves.count = 36; o.leaves.tint = 0xa0b89c;
+    o.branch.start[1] = 0.15; o.branch.angle[1] = 112; o.branch.length[1] *= 0.55; o.leaves.size *= 1.1; o.leaves.count = 30; o.leaves.tint = 0xa0b89c;
   } },
   // Red maple: rounded crown, smooth grey bark.
   maple: { preset: "Oak Medium", height: 17, seed: 2290, tweak: (o) => {

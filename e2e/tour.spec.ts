@@ -41,7 +41,7 @@ test("screenshot tour of the property", async ({ page }) => {
       ["13-map-edge", -128, 10, -160, 10],
     ];
   });
-  for (const stop of stops) {
+  for (const stop of stops.filter((s) => !process.env.STOPS || process.env.STOPS.split(",").some((p) => s[0].startsWith(p)))) {
     await stopAt(page, stop);
     await page.screenshot({ path: `test-results/tour/${stop[0]}.png` });
   }

@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
-import { failOnErrors, hostGame, joinGame, newPlayer, waitForBear } from "./helpers.ts";
+import { closePlayers, failOnErrors, hostGame, joinGame, newPlayer, waitForBear } from "./helpers.ts";
+
+test.afterEach(closePlayers);
 
 test("lobby loads, a party starts, the 3D world renders", async ({ page }) => {
   const errors: string[] = [];

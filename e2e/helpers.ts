@@ -1,4 +1,4 @@
-import { type Browser, expect, type Page } from "@playwright/test";
+import { type Browser, type BrowserContext, expect, type Page } from "@playwright/test";
 
 /** Fail on browser errors (ignoring the expected one when a server connection drops). */
 export function failOnErrors(page: Page) {
@@ -42,9 +42,12 @@ export async function waitForBear(page: Page) {
   await page.locator("canvas").focus();
 }
 
-/** A page in its own browser context (separate session, like a second computer). */
+const openContexts = new Set<BrowserContext>();
+
+/** A page in its own browser context (separate session, like a second computer). Close with closePlayers(). */
 export async function newPlayer(browser: Browser) {
   const context = await browser.newContext();
+  openContexts.add(context);
   const page = await context.newPage();
   failOnErrors(page);
   return page;
@@ -58,4 +61,10 @@ export async function fps(page: Page, ms = 2000) {
     const tick = () => (performance.now() - start < ms ? (n++, requestAnimationFrame(tick)) : done((n * 1000) / ms));
     requestAnimationFrame(tick);
   }), ms);
+}
+
+/** Close every newPlayer() context, so finished tests don't keep rendering in the background. */
+export async function closePlayers() {
+  await Promise.all([...openContexts].map((c) => c.close()));
+  openContexts.clear();
 }

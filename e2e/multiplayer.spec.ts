@@ -1,5 +1,7 @@
 import { expect, type Page, test } from "@playwright/test";
-import { hostGame, joinGame, newPlayer, waitForBear } from "./helpers.ts";
+import { closePlayers, hostGame, joinGame, newPlayer, waitForBear } from "./helpers.ts";
+
+test.afterEach(closePlayers);
 
 // Milestone 1.7: two "computers" (separate browser contexts) in one party, on the flat test field.
 
