@@ -17,6 +17,7 @@ interface Window {
     camera: { yaw: number; pitch: number; distance: number; current: number; shake: number };
     teleport: (x: number, z: number, y?: number) => void;
     ground: (x: number, z: number) => number;
+    doors: () => Record<string, boolean>;
     remotes: () => { id: string; name: string; x: number; z: number; action: string; tagVisible: boolean; connected: boolean }[];
   };
 }

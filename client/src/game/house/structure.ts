@@ -27,6 +27,18 @@ export interface Structure {
   railings: Railing[];
   /** Sloped railings (stairs): from/to points. */
   stairRails: { from: [number, number, number]; to: [number, number, number] }[];
+  /** Smooth invisible ramps for steep stairs (floorplan metres). */
+  ramps: Ramp[];
+}
+
+export interface Ramp {
+  axis: "x" | "z";
+  uLow: number;
+  uHigh: number;
+  yLow: number;
+  yHigh: number;
+  w0: number;
+  w1: number;
 }
 
 /** Floor holes: the stairwells. */
@@ -111,21 +123,33 @@ function upperCeiling(s: Structure, cell: Cell) {
   }
 }
 
-/** A run of steps: n treads between two heights, laid out from (u0) to (u1) along an axis. */
-function steps(s: Structure, axis: "x" | "z", u0: number, u1: number, w0: number, w1: number, yStart: number, yEnd: number, n: number, key: string) {
+/**
+ * A run of steps: n treads between two heights, laid out from (u0) to (u1) along an axis.
+ * `ramp`: the house's main and basement stairs are too steep for a bear to climb step by step, so
+ * they get a smooth invisible ramp along the tread edges instead of a box per step.
+ */
+function steps(s: Structure, axis: "x" | "z", u0: number, u1: number, w0: number, w1: number, yStart: number, yEnd: number, n: number, key: string, ramp = false) {
   const run = (u1 - u0) / n;
   for (let i = 0; i < n; i++) {
     const top = yStart + ((yEnd - yStart) * (i + 1)) / n;
     const a = u0 + run * i, b = u0 + run * (i + 1);
     const lo = Math.min(a, b), hi = Math.max(a, b);
     const r = axis === "z" ? { x0: w0, x1: w1, z0: lo, z1: hi } : { x0: lo, x1: hi, z0: w0, z1: w1 };
-    slab(s, r, top, top - STEP_T, key, "trim");
+    boxFaces([r.x0, top - STEP_T, r.z0], [r.x1, top, r.z1], { top: key, bottom: "trim", sides: "trim" }, s.buckets);
+    if (!ramp) s.solids.push({ min: [r.x0, top - STEP_T, r.z0], max: [r.x1, top, r.z1] });
+  }
+  if (ramp) {
+    // From the floor at the bottom step's edge to the top tread's far edge, just under the tread tops.
+    const rise = (yEnd - yStart) / n;
+    const lowU = yEnd > yStart ? u0 : u1, highU = yEnd > yStart ? u1 : u0;
+    const lowY = Math.min(yStart, yEnd), highY = Math.max(yStart, yEnd);
+    s.ramps.push({ axis, uLow: lowU, uHigh: highU, yLow: lowY + rise * 0.15, yHigh: highY, w0, w1 });
   }
 }
 
 function stairs(s: Structure) {
   const m = MAIN_STAIRS;
-  steps(s, "z", m.z0, m.z1, m.x0, m.x1, 0, UPPER_FLOOR, m.risers, "oak_trim");
+  steps(s, "z", m.z0, m.z1, m.x0, m.x1, 0, UPPER_FLOOR, m.risers, "oak_trim", true);
   // Rail along the open side, starting a few steps up so you can walk on from the side at the bottom.
   const railStart = m.z0 + 0.9;
   s.stairRails.push({ from: [m.x1 - 0.05, (UPPER_FLOOR * (railStart - m.z0)) / (m.z1 - m.z0), railStart], to: [m.x1 - 0.05, UPPER_FLOOR, m.z1] });
@@ -141,7 +165,7 @@ function stairs(s: Structure) {
 
   const b = BASEMENT_STAIRS;
   slab(s, { x0: b.x0, x1: b.x1, z0: b.zLanding, z1: b.zTop }, GREAT_ROOM_FLOOR, GREAT_ROOM_FLOOR - 0.3, floorKey("stair_landing"));
-  steps(s, "z", b.zLanding, b.z1, b.x0, b.x1, GREAT_ROOM_FLOOR, level("basement").floorY, b.risers, "oak_trim");
+  steps(s, "z", b.zLanding, b.z1, b.x0, b.x1, GREAT_ROOM_FLOOR, level("basement").floorY, b.risers, "oak_trim", true);
   s.stairRails.push({ from: [b.x1 + 0.05, GREAT_ROOM_FLOOR, b.zLanding], to: [b.x1 + 0.05, level("basement").floorY, b.z1] });
   s.stairRails.push({ from: [b.x0 - 0.05, GREAT_ROOM_FLOOR, b.zLanding], to: [b.x0 - 0.05, level("basement").floorY, b.z1] });
 
@@ -208,7 +232,7 @@ function deck(s: Structure) {
 }
 
 export function buildStructure(): Structure {
-  const s: Structure = { buckets: new Map(), solids: [], railings: [], stairRails: [] };
+  const s: Structure = { buckets: new Map(), solids: [], railings: [], stairRails: [], ramps: [] };
   floorsAndCeilings(s);
   stairs(s);
   greatRoomSteps(s);

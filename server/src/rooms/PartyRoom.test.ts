@@ -1,5 +1,5 @@
 import { Client, type Room } from "@colyseus/sdk";
-import { MAX_PLAYERS, MSG, PARTY_ROOM, isValidRoomCode, spawnPoint } from "@den/shared";
+import { MAX_PLAYERS, MSG, PARTY_ROOM, doorById, isValidRoomCode, spawnPoint } from "@den/shared";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createGameServer } from "../app.ts";
 
@@ -89,6 +89,30 @@ describe("party room", () => {
     await until(() => c.state.code !== undefined && c.state.code !== "");
     expect(c.state.world).toBe("property"); // unknown worlds are ignored
   });
+
+  it("opens and closes doors for everyone, only for bears next to them, never locked ones", async () => {
+    const a = track(await client().create(PARTY_ROOM, { name: "Alpha" }));
+    const b = track(await client().joinById(a.roomId, { name: "Bravo" }));
+    a.send(MSG.start);
+    await until(() => b.state.phase === "playing" && b.state.doors.size > 0);
+    const front = doorById("main:foyer-porch")!;
+    // From the spawn (far away): nothing happens.
+    a.send(MSG.door, { id: front.id });
+    await new Promise((r) => setTimeout(r, 150));
+    expect(b.state.doors.get(front.id)).toBe(false);
+    // Walk up to it (server clamps speed, so step there over a few poses), then open it.
+    const me = () => a.state.players.get(a.sessionId);
+    for (let i = 0; i < 400 && Math.hypot(me().x - front.world.x, me().z - (front.world.z - 1)) > 0.5; i++) {
+      a.send(MSG.pose, { x: front.world.x, y: 0, z: front.world.z - 1, yaw: 0, speed: 6, action: "locomotion" });
+      await new Promise((r) => setTimeout(r, 10));
+    }
+    a.send(MSG.door, { id: front.id });
+    await until(() => b.state.doors.get(front.id) === true);
+    a.send(MSG.door, { id: front.id });
+    await until(() => b.state.doors.get(front.id) === false);
+    // The utility room is locked.
+    expect(b.state.doors.has("basement:den-utility")).toBe(false);
+  }, 15_000);
 
   it("clamps impossible movement", async () => {
     const a = track(await client().create(PARTY_ROOM, { name: "Alpha" }));

@@ -2,6 +2,7 @@ import { Canvas } from "@react-three/fiber";
 import { useEffect } from "react";
 import { GameScene } from "./game/GameScene.tsx";
 import { tryRejoin, usePartyStore } from "./net/party.ts";
+import { ActionPrompt } from "./ui/ActionPrompt.tsx";
 import { ConnectionBadge } from "./ui/ConnectionBadge.tsx";
 import { ControlsHint } from "./ui/ControlsHint.tsx";
 import { Lobby } from "./ui/Lobby.tsx";
@@ -20,6 +21,7 @@ export function App() {
       </Canvas>
       <ConnectionBadge />
       <ControlsHint />
+      <ActionPrompt />
     </>
   ) : (
     <Lobby />

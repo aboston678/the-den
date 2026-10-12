@@ -162,7 +162,9 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
     const moved = controller.computedMovement();
     const nowGrounded = controller.computedGrounded();
     if (st.vy > 0 && moved.y < desired.y * 0.5) st.vy = 0; // bumped our head
-    if (nowGrounded && st.vy < 0) st.vy = -1; // stay pressed onto slopes and steps
+    // Stay lightly pressed onto the ground (snap-to-ground does the rest). Pressing harder slowed
+    // the bear to a crawl on the house's steep stairs, since the push is projected along the slope.
+    if (nowGrounded && st.vy < 0) st.vy = -0.1;
 
     const p = body.current.translation();
 

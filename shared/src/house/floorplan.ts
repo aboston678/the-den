@@ -91,10 +91,13 @@ function edgeAxis(r: Rect, x: number, z: number): "x" | "z" | null {
 /**
  * Small corrections to the draft floorplan so it can be built (logged in PROGRESS.md):
  * the foyer → great room opening starts east of the stairs (which need that wall for the
- * basement door), and the basement door under the stairs is added from the great room.
+ * basement door), the basement door under the stairs is added from the great room, and the
+ * landing → balcony opening is widened to where the stairs arrive.
  */
 const DOOR_FIXES: Record<string, Partial<DoorSpec>> = {
   "main:great_room-foyer": { x: 28.2, width: 2.4 },
+  // Upstairs, the landing opens onto the balcony hall right where the stairs arrive.
+  "upper:landing-balcony_hall": { x: 27.05, width: 2.9 },
 };
 const EXTRA_DOORS: { level: LevelId; door: DoorSpec }[] = [
   { level: "main", door: { a: "great_room", b: "basement_stairs", x: 26.2, z: 3.5, width: 0.9, type: "hinged" } },
@@ -120,7 +123,7 @@ export const DOORS: Door[] = (() => {
 })();
 
 /** Doors you can open and close (not plain openings). */
-export const INTERACTIVE_DOORS = DOORS.filter((d) => d.type !== "opening");
+export const INTERACTIVE_DOORS = DOORS.filter((d) => d.type !== "opening" && !d.locked);
 export const doorById = (id: string) => DOORS.find((d) => d.id === id);
 
 /** How close (world metres, door centre to bear) you must be to open a door. */

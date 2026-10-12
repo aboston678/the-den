@@ -8,7 +8,7 @@ test("house probe", async ({ page }) => {
   page.on("pageerror", (e) => errors.push(String(e)));
   page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
   await hostGame(page, "Probe");
-  for (const [name, x, z, lx, lz, pitch, dist, y] of STOPS) {
+  for (const [name, x, z, lx, lz, pitch, dist, y, key] of STOPS) {
     await page.evaluate(([x, z, lx, lz, pitch, dist, y]) => {
       const d = window.__den!;
       d.teleport(+x!, +z!, y ? +y : undefined);
@@ -17,6 +17,12 @@ test("house probe", async ({ page }) => {
       d.camera.distance = +(dist ?? 4);
     }, [x, z, lx, lz, pitch, dist, y]);
     await page.waitForTimeout(1500);
+    if (key) {
+      const pr = page.getByTestId("action-prompt");
+      console.log(name, "prompt:", (await pr.count()) ? await pr.textContent() : "none");
+      await page.keyboard.press(key);
+      await page.waitForTimeout(1500);
+    }
     const p = await page.evaluate(() => window.__den!.player.position);
     console.log(name, "bear at", p.x.toFixed(1), p.y.toFixed(2), p.z.toFixed(1));
     await page.screenshot({ path: `${process.env.OUT}/h-${name}.png` });

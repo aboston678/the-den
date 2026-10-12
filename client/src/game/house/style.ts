@@ -177,6 +177,7 @@ export class HouseMaterials {
       case "shutter": return new MeshStandardMaterial({ color: "#1d2228", roughness: 0.6 });
       case "frame": return new MeshStandardMaterial({ color: "#f4f3ef", roughness: 0.4, metalness: 0.2 });
       case "attic": return new MeshStandardMaterial({ color: "#8c7556", roughness: 1 });
+      case "brass": return new MeshStandardMaterial({ color: "#c8a24a", roughness: 0.3, metalness: 0.9 });
       default: return new MeshStandardMaterial({ color: new Color(arg ?? "#ff00ff") });
     }
   }

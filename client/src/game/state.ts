@@ -3,6 +3,7 @@
 import { Vector3 } from "three";
 import { CLIP } from "./config.ts";
 import { remotes } from "../net/remotes.ts";
+import { usePartyStore } from "../net/party.ts";
 import { groundY } from "./world/ground.ts";
 
 export const playerState = {
@@ -47,6 +48,8 @@ declare global {
       teleport: (x: number, z: number, y?: number) => void;
       /** Ground height at (x, z) on the current map. */
       ground: (x: number, z: number) => number;
+      /** Door id -> open, as this client sees it. */
+      doors: () => Record<string, boolean>;
       /** Clip timing constants, writable for live tuning in dev tools. */
       clip: typeof CLIP;
       /** Other bears as this client sees them. */
@@ -72,4 +75,5 @@ window.__den = {
     playerState.teleportTo = { x, y, z }; // NaN height: the player drops onto whatever is there
   },
   ground: groundY,
+  doors: () => ({ ...usePartyStore.getState().doors }),
 };

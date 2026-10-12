@@ -1,11 +1,14 @@
 import { type Client, Room, matchMaker } from "@colyseus/core";
 import {
+  DOOR_REACH,
+  INTERACTIVE_DOORS,
   MAX_PLAYERS,
   MSG,
   NET_TICK_HZ,
   type Pose,
   RECONNECT_WINDOW_S,
   type WorldName,
+  doorById,
   generateRoomCode,
   isWorldName,
   sanitizeNickname,
@@ -36,6 +39,7 @@ export class PartyRoom extends Room<{ state: PartyState }> {
     this.roomId = await uniqueRoomCode();
     this.state.code = this.roomId;
     if (isWorldName(options?.world)) this.state.world = options.world;
+    if (this.state.world === "property") for (const d of INTERACTIVE_DOORS) this.state.doors.set(d.id, false);
     this.patchRate = 1000 / NET_TICK_HZ;
 
     this.onMessage(MSG.pose, (client, message) => {
@@ -46,6 +50,15 @@ export class PartyRoom extends Room<{ state: PartyState }> {
       this.lastPoseAt.set(client.sessionId, now);
       const pose = sanitizePose(message, poseOf(player), seconds);
       Object.assign(player, pose);
+    });
+
+    this.onMessage(MSG.door, (client, message: { id?: unknown }) => {
+      const player = this.state.players.get(client.sessionId);
+      const door = typeof message?.id === "string" ? doorById(message.id) : undefined;
+      if (!player || !door || door.locked || !this.state.doors.has(door.id) || this.state.phase !== "playing") return;
+      // Only bears standing next to the door can open it.
+      const near = Math.hypot(player.x - door.world.x, player.z - door.world.z) <= DOOR_REACH + 1.5 && Math.abs(player.y - door.world.y) < 2.5;
+      if (near) this.state.doors.set(door.id, !this.state.doors.get(door.id));
     });
 
     this.onMessage(MSG.start, (client) => {

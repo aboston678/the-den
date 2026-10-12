@@ -26,6 +26,7 @@ export const PartyState = schema(
     hostId: t.string(),
     world: t.string().default("property"), // "property" | "test" (the 1.6 test field, for dev and tests)
     players: t.map(Player),
+    doors: t.map("boolean"), // door id -> open (GAME_SPEC §8.2: every door opens for everyone)
   },
   "PartyState",
 );

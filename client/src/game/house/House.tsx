@@ -1,8 +1,9 @@
 import { HOUSE } from "@den/shared";
 import { useRapier } from "@react-three/rapier";
 import { useEffect, useMemo } from "react";
-import { type BufferGeometry, Mesh } from "three";
+import { type BufferGeometry, Mesh, Quaternion, Vector3 } from "three";
 import { useOutdoorMaps } from "../world/property/textures.ts";
+import { Doors } from "./Doors.tsx";
 import { type GeoBuckets, type SolidBox, mergeBucket } from "./geometry.ts";
 import { type RailRun, Railings } from "./Railings.tsx";
 import { S, toWorld } from "./space.ts";
@@ -65,7 +66,7 @@ function buildHouse(materials: HouseMaterials) {
     })),
     ...structure.stairRails,
   ];
-  return { meshes, solids, runs };
+  return { meshes, solids, runs, ramps: structure.ramps };
 }
 
 export function House() {
@@ -83,6 +84,26 @@ export function House() {
         body,
       );
     }
+    // Stair ramps: a thin box from the bottom edge to the top, tilted to the stair's slope.
+    for (const r of house.ramps) {
+      const lowP = toWorld(r.axis === "z" ? [r.w0, r.yLow, r.uLow] : [r.uLow, r.yLow, r.w0]);
+      const highP = toWorld(r.axis === "z" ? [r.w1, r.yHigh, r.uHigh] : [r.uHigh, r.yHigh, r.w1]);
+      const run = Math.abs(r.axis === "z" ? highP[2] - lowP[2] : highP[0] - lowP[0]);
+      const rise = highP[1] - lowP[1], len = Math.hypot(run, rise), width = Math.abs(r.axis === "z" ? highP[0] - lowP[0] : highP[2] - lowP[2]);
+      const dirSign = Math.sign(r.uHigh - r.uLow);
+      const angle = Math.atan2(rise, run);
+      const t = 0.1;
+      // Tilt about the axis across the stairs; centre sits t/2 below the slope line.
+      const q = r.axis === "z"
+        ? new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), -dirSign * angle)
+        : new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), dirSign * angle);
+      const mid = [(lowP[0] + highP[0]) / 2, (lowP[1] + highP[1]) / 2 - t / 2, (lowP[2] + highP[2]) / 2];
+      const half = r.axis === "z" ? [width / 2, t / 2, len / 2] : [len / 2, t / 2, width / 2];
+      world.createCollider(
+        rapier.ColliderDesc.cuboid(half[0]!, half[1]!, half[2]!).setTranslation(mid[0]!, mid[1]!, mid[2]!).setRotation({ x: q.x, y: q.y, z: q.z, w: q.w }),
+        body,
+      );
+    }
     return () => world.removeRigidBody(body);
   }, [world, rapier, house]);
   useEffect(() => () => house.meshes.forEach((m) => m.geometry.dispose()), [house]);
@@ -91,6 +112,7 @@ export function House() {
     <group name="house" position={[HOUSE.originX, 0, HOUSE.originZ]} scale={S}>
       {house.meshes.map((m) => <primitive key={m.uuid} object={m} />)}
       <Railings runs={house.runs} materials={{ rail: materials.get("oak_trim"), post: materials.get("trim") }} />
+      <Doors materials={materials} />
     </group>
   );
 }

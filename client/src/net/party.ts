@@ -45,6 +45,8 @@ interface PartyStore {
   players: LobbyPlayer[];
   /** Other bears' session ids (for rendering them). */
   remoteIds: string[];
+  /** Door id -> open, synced for the whole party. */
+  doors: Record<string, boolean>;
 }
 
 export const usePartyStore = create<PartyStore>(() => ({
@@ -57,6 +59,7 @@ export const usePartyStore = create<PartyStore>(() => ({
   world: "property",
   players: [],
   remoteIds: [],
+  doors: {},
 }));
 
 let client: Client | null = null;
@@ -169,6 +172,11 @@ export function startGame() {
   room?.send(MSG.start);
 }
 
+/** Ask the server to open or close a door (it checks we're next to it). */
+export function toggleDoor(id: string) {
+  if (room && usePartyStore.getState().phase === "playing") room.send(MSG.door, { id });
+}
+
 export function sendPose(pose: Pose) {
   if (room && usePartyStore.getState().phase === "playing") room.send(MSG.pose, pose);
 }
@@ -254,6 +262,10 @@ function bind(r: Room) {
     sync();
   });
 
+  const setDoor = (open: boolean, id: string) => usePartyStore.setState((st) => ({ doors: { ...st.doors, [id]: open } }));
+  $.onAdd("doors", (open: unknown, id: unknown) => setDoor(open as boolean, id as string));
+  $.onChange("doors", (id: unknown, open: unknown) => setDoor(open as boolean, id as string));
+
   r.onDrop(() => usePartyStore.setState({ status: "reconnecting" }));
   r.onReconnect(() => {
     saveToken(r);
@@ -263,7 +275,7 @@ function bind(r: Room) {
     room = null;
     remotes.clear();
     forgetToken();
-    usePartyStore.setState({ status: "idle", code: "", hostId: "", phase: "lobby", players: [], remoteIds: [], sessionId: "" });
+    usePartyStore.setState({ status: "idle", code: "", hostId: "", phase: "lobby", players: [], remoteIds: [], sessionId: "", doors: {} });
   });
 
   usePartyStore.setState({ status: "in-party", sessionId: r.sessionId, error: null });
