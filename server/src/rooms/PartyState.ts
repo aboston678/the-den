@@ -27,6 +27,7 @@ export const PartyState = schema(
     world: t.string().default("property"), // "property" | "test" (the 1.6 test field, for dev and tests)
     players: t.map(Player),
     doors: t.map("boolean"), // door id -> open (GAME_SPEC §8.2: every door opens for everyone)
+    clock: t.float32(), // seconds into the 68-minute day/night cycle (GAME_SPEC §9); ticks once a second
   },
   "PartyState",
 );

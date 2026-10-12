@@ -9,3 +9,6 @@ export const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? "http://localhost
   .split(",")
   .map((origin) => origin.trim())
   .filter(Boolean);
+
+/** Dev-only helpers (jumping the day/night clock) are switched off in production. */
+export const devToolsOn = () => process.env.NODE_ENV !== "production";

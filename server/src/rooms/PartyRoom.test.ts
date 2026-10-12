@@ -1,5 +1,5 @@
 import { Client, type Room } from "@colyseus/sdk";
-import { MAX_PLAYERS, MSG, PARTY_ROOM, doorById, isValidRoomCode, spawnPoint } from "@den/shared";
+import { MAX_PLAYERS, MSG, PARTY_ROOM, START_TIME, TIME_PRESETS, doorById, isValidRoomCode, spawnPoint } from "@den/shared";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createGameServer } from "../app.ts";
 
@@ -123,5 +123,37 @@ describe("party room", () => {
     a.send(MSG.pose, { x: startX + 100, y: 0, z: me().z, yaw: 0, speed: 6, action: "locomotion" });
     await until(() => me().x !== startX);
     expect(me().x - startX).toBeLessThan(3);
+  });
+
+  it("runs one day/night clock per party, starting mid-morning and ticking every second", async () => {
+    const a = track(await client().create(PARTY_ROOM, { name: "Alpha" }));
+    const b = track(await client().joinById(a.roomId, { name: "Bravo" }));
+    await until(() => b.state.clock > 0);
+    expect(a.state.clock).toBeGreaterThanOrEqual(START_TIME);
+    expect(a.state.clock).toBeLessThan(START_TIME + 2);
+    const before = b.state.clock;
+    await until(() => b.state.clock > before, 2500);
+    expect(b.state.clock - before).toBeCloseTo(1, 3);
+  });
+
+  it("dev tools can set the time (?time=dusk), but not in production", async () => {
+    const a = track(await client().create(PARTY_ROOM, { name: "Alpha", time: "dusk" }));
+    await until(() => a.state.clock > 0);
+    expect(a.state.clock).toBeGreaterThanOrEqual(TIME_PRESETS.dusk);
+    a.send(MSG.devTime, { time: "night" });
+    await until(() => a.state.clock >= TIME_PRESETS.night && a.state.clock < TIME_PRESETS.night + 2);
+
+    const env = process.env.NODE_ENV;
+    process.env.NODE_ENV = "production";
+    try {
+      const c = track(await client().create(PARTY_ROOM, { name: "Charlie", time: "dusk" }));
+      await until(() => c.state.clock > 0);
+      expect(c.state.clock).toBeLessThan(START_TIME + 2);
+      c.send(MSG.devTime, { time: "night" });
+      await new Promise((r) => setTimeout(r, 150));
+      expect(c.state.clock).toBeLessThan(START_TIME + 2);
+    } finally {
+      process.env.NODE_ENV = env;
+    }
   });
 });

@@ -1,10 +1,12 @@
-// Tile screenshots into one image for a quick look: node tools/contact-sheet.mjs out.png a.png b.png ...
+// Tile screenshots into one image for quick review: node tools/contact-sheet.mjs out.png cols a.png b.png …
 import sharp from "sharp";
 
-const [out, ...files] = process.argv.slice(2);
-const W = 640, H = 360, COLS = 3;
-const tiles = await Promise.all(files.map(async (f, i) => ({
-  input: await sharp(f).resize(W, H).toBuffer(), left: (i % COLS) * W, top: Math.floor(i / COLS) * H,
-})));
-await sharp({ create: { width: W * COLS, height: H * Math.ceil(files.length / COLS), channels: 3, background: "#fff" } })
-  .composite(tiles).png().toFile(out);
+const [out, colsArg, ...files] = process.argv.slice(2);
+const cols = Number(colsArg) || 2;
+const W = 640, H = 360;
+const tiles = await Promise.all(files.map((f) => sharp(f).resize(W, H).toBuffer()));
+const rows = Math.ceil(tiles.length / cols);
+await sharp({ create: { width: W * cols, height: H * rows, channels: 3, background: "#000" } })
+  .composite(tiles.map((input, i) => ({ input, left: (i % cols) * W, top: Math.floor(i / cols) * H })))
+  .png()
+  .toFile(out);

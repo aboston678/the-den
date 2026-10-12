@@ -7,6 +7,7 @@ export const MSG = {
   pose: "pose", // 20 Hz: where my bear is and what it's doing
   start: "start", // host only: lobby -> playing
   door: "door", // { id }: open or close a door you're standing next to
+  devTime: "devTime", // { time }: jump the day/night clock (dev and tests only; ignored in production)
 } as const;
 
 export const BEAR_ACTIONS = ["locomotion", "jump", "fall", "roar", "dance"] as const;

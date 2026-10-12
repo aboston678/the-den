@@ -3,6 +3,7 @@ import {
   type BearAction, MSG, PARTY_ROOM, type Pose, type WorldName, isValidRoomCode, isWorldName, normalizeRoomCode, sanitizeNickname,
 } from "@den/shared";
 import { create } from "zustand";
+import { setServerClock } from "../game/sky/clock.ts";
 import { playerState } from "../game/state.ts";
 import { addSnapshot, remotes } from "./remotes.ts";
 
@@ -94,9 +95,11 @@ function friendlyError(err: unknown, code?: string) {
 
 /** ?world=test starts a party on the 1.6 test field (dev and controller tests). */
 const requestedWorld = () => new URLSearchParams(location.search).get("world") ?? undefined;
+/** ?time=dusk (or night, noon, … or seconds) starts the party at that time of day (dev only). */
+const requestedTime = () => new URLSearchParams(location.search).get("time") ?? undefined;
 
 export async function createParty(name: string) {
-  return enter(() => getClient().create(PARTY_ROOM, { name: sanitizeNickname(name), world: requestedWorld() }), name);
+  return enter(() => getClient().create(PARTY_ROOM, { name: sanitizeNickname(name), world: requestedWorld(), time: requestedTime() }), name);
 }
 
 export async function joinParty(rawCode: string, name: string) {
@@ -177,6 +180,11 @@ export function toggleDoor(id: string) {
   if (room && usePartyStore.getState().phase === "playing") room.send(MSG.door, { id });
 }
 
+/** Jump the party's clock (dev and tests; the server ignores it in production). */
+export function setDevTime(time: number | string) {
+  room?.send(MSG.devTime, { time });
+}
+
 export function sendPose(pose: Pose) {
   if (room && usePartyStore.getState().phase === "playing") room.send(MSG.pose, pose);
 }
@@ -230,6 +238,7 @@ function bind(r: Room) {
   $.listen("hostId", sync);
   $.listen("code", sync);
   $.listen("world", sync);
+  $.listen("clock", (time: number) => setServerClock(time));
 
   $.onAdd("players", (value: unknown, key: unknown) => {
     const p = value as NetPlayer;

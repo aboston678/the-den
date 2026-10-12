@@ -7,14 +7,18 @@ import {
   NET_TICK_HZ,
   type Pose,
   RECONNECT_WINDOW_S,
+  START_TIME,
   type WorldName,
   doorById,
   generateRoomCode,
   isWorldName,
+  parseTime,
   sanitizeNickname,
   sanitizePose,
   spawnPoint,
+  wrapTime,
 } from "@den/shared";
+import { devToolsOn } from "../config.ts";
 import { PartyState, Player } from "./PartyState.ts";
 
 /** A party code no other live room is using. */
@@ -35,12 +39,19 @@ export class PartyRoom extends Room<{ state: PartyState }> {
   state = new PartyState();
   private lastPoseAt = new Map<string, number>();
 
-  async onCreate(options?: { world?: unknown }) {
+  async onCreate(options?: { world?: unknown; time?: unknown }) {
     this.roomId = await uniqueRoomCode();
     this.state.code = this.roomId;
     if (isWorldName(options?.world)) this.state.world = options.world;
     if (this.state.world === "property") for (const d of INTERACTIVE_DOORS) this.state.doors.set(d.id, false);
     this.patchRate = 1000 / NET_TICK_HZ;
+
+    // The party's day/night clock (GAME_SPEC §9). Ticking once a second keeps the patches tiny;
+    // browsers fill in the time between ticks themselves.
+    this.state.clock = (devToolsOn() ? parseTime(options?.time) : undefined) ?? START_TIME;
+    this.clock.setInterval(() => {
+      this.state.clock = wrapTime(this.state.clock + 1);
+    }, 1000);
 
     this.onMessage(MSG.pose, (client, message) => {
       const player = this.state.players.get(client.sessionId);
@@ -59,6 +70,11 @@ export class PartyRoom extends Room<{ state: PartyState }> {
       // Only bears standing next to the door can open it.
       const near = Math.hypot(player.x - door.world.x, player.z - door.world.z) <= DOOR_REACH + 1.5 && Math.abs(player.y - door.world.y) < 2.5;
       if (near) this.state.doors.set(door.id, !this.state.doors.get(door.id));
+    });
+
+    this.onMessage(MSG.devTime, (_client, message: { time?: unknown }) => {
+      const time = parseTime(message?.time);
+      if (devToolsOn() && time !== undefined) this.state.clock = time;
     });
 
     this.onMessage(MSG.start, (client) => {
