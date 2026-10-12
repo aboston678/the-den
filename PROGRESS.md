@@ -88,6 +88,9 @@ Starting balance: 1,210 (2026-10-11)
 | 2026-10-11 | 1.5 clip Reel: Pull_Radish (283), job b6aded48-d6b0-4187-9ef8-eda9e3c01b80 | `meshy_rigging` | 8 | 1,057.5 |
 | 2026-10-11 | 1.5 clip Bowl: Crouch_Charge_and_Throw (398), job df8b6572-694e-47b5-ad16-f1783887eb13 | `meshy_rigging` | 8 | 1,049.5 |
 | 2026-10-12 | 1.11 logo options ×4 (price check 0.25 per image); Andrew picked #2, job c848d826-bbe9-40af-a19f-33d544f50d6c | `gpt_image_2_5` | 1 | 1,048.5 |
+| 2026-10-12 | Walk retry (Andrew: walk looks funny): Slow_Orc_Walk (119), job 36cff652-c4f4-4060-a2c8-bfa2d2ae270b | `meshy_rigging` | 8 | 1,040.5 |
+| 2026-10-12 | Walk retry: Monster_Walk (112), job 02e2371b-16fc-4790-9d0c-0a3fc3c70d29 | `meshy_rigging` | 8 | 1,032.5 |
+| 2026-10-12 | Walk retry: walking_2 (566), job fdb413de-cc46-44e7-b473-224ad0a239ce | `meshy_rigging` | 8 | 1,024.5 |
 
 ## Decision log
 | Date | Decision | Why |
