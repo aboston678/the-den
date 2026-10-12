@@ -5,6 +5,7 @@ import { useEffect, useMemo } from "react";
 import { Box3, DoubleSide, type Group, type Mesh, MeshStandardMaterial, Quaternion, Euler, Vector3 } from "three";
 import { InstancedLod, type LodLevel, type LodPart } from "./InstancedLod.tsx";
 import { FERNS, ROCKS, SAPLING_KINDS, SHRUBS, TREE_KINDS, type Placement, type Scatter, scatterAll } from "./scatter.ts";
+import { removeBody } from "../physics.ts";
 
 // The forest and everything on its floor (GAME_SPEC §4): EZ-Tree trees (tools/build-trees.mjs) and
 // CC0 Poly Haven rocks, ferns, logs, stumps and shrubs (tools/build-outdoor-props.mjs).
@@ -68,10 +69,14 @@ function prepareFoliage(scene: Group) {
 const reachable = (x: number, z: number) =>
   Math.abs(x) < BOUNDARY_HALF + 2 && Math.abs(z) < BOUNDARY_HALF + 2 && x - streamCenter(z) < STREAM.wadeLimitD + 2;
 
+let scatterCache: Scatter | null = null;
+/** The forest layout is the same every time; work it out once (React may re-render while assets load). */
+const scatter_ = () => (scatterCache ??= scatterAll());
+
 export function Forest() {
   const trees = useGLTF(TREES_URL).scene as Group;
   const props = useGLTF(PROPS_URL).scene as Group;
-  const scatter = useMemo(scatterAll, []);
+  const scatter = useMemo(scatter_, []);
 
   const kinds = useMemo(() => {
     prepareFoliage(trees);
@@ -129,7 +134,7 @@ function useForestColliders(scatter: Scatter, kinds: { name: string; items: Plac
         else add(rapier.ColliderDesc.cuboid((size.x / 2) * s * 0.85, (size.y / 2) * s, (size.z / 2) * s * 0.85), it, centre.y * s);
       }
     }
-    return () => world.removeRigidBody(body);
+    return () => removeBody(world, body);
   }, [world, rapier, kinds, scatter]);
 }
 

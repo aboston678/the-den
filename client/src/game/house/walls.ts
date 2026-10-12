@@ -139,12 +139,25 @@ export function wallPieces(lv: LevelId): { walls: WallPiece[]; railings: Railing
 function makePiece(lv: LevelId, axis: "x" | "z", c: number, u0: number, u1: number, a: Cell | null, b: Cell | null): WallPiece {
   const exterior = !a || !b || a.kind !== "room" || b.kind !== "room";
   const at = (u: number) => (axis === "x" ? { x: u, z: c } : { x: c, z: u });
-  let bottom = Math.min(floorOf(lv, a?.id ?? null), floorOf(lv, b?.id ?? null));
+  // Interior walls stand on the higher floor; the sunken great room's step is covered by a riser
+  // (structure.ts), so nothing hangs down through the floor into the basement.
+  let bottom = Math.max(floorOf(lv, a?.id ?? null), floorOf(lv, b?.id ?? null));
   let top: (u: number) => number;
-  if (lv === "basement") top = exterior ? () => 0 : (u) => interiorTop(lv, at(u).x, at(u).z);
+  if (lv === "basement") {
+    // Up to the main floor (less under the sunken great room, so the wall doesn't poke through its floor).
+    top = exterior ? (u) => (contains(GREAT_ROOM, at(u).x, at(u).z) ? GREAT_ROOM_FLOOR - 0.3 : 0) : (u) => interiorTop(lv, at(u).x, at(u).z);
+  }
   else if (lv === "main") {
     top = () => UPPER_FLOOR;
-    if (!a || !b) bottom = GREAT_ROOM_FLOOR - 0.3; // outside walls go down past the sunken great room
+    if (!a || !b) {
+      // Outside walls stand on the basement's wall where there is one; elsewhere they go down past the
+      // floor (and the sunken great room's) so you can't see under the house.
+      const inside = (a ?? b)!;
+      const m = (u0 + u1) / 2, sideOff = a ? -0.15 : 0.15;
+      const p = axis === "x" ? { x: m, z: c + sideOff } : { x: c + sideOff, z: m };
+      const overBasement = cellsOf("basement").some((cell) => contains(cell.box, p.x, p.z));
+      bottom = overBasement ? (inside.id === "great_room" ? GREAT_ROOM_FLOOR : 0) : GREAT_ROOM_FLOOR - 0.3;
+    }
   } else {
     // Upstairs: partitions stop at the ceiling; walls on the outside, the attic or the great room reach the roof.
     top = exterior

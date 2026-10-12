@@ -5,6 +5,7 @@ import { useRapier } from "@react-three/rapier";
 import { useEffect, useMemo } from "react";
 import { BufferAttribute, BufferGeometry, MeshStandardMaterial } from "three";
 import { useOutdoorMaps } from "./textures.ts";
+import { removeBody } from "../physics.ts";
 
 // Dry-stacked stone walls (GAME_SPEC §4): old field walls along the woodline and in the woods,
 // and the retaining wall beside the driveway and apron. Each wall is a tapered, slightly uneven
@@ -131,7 +132,7 @@ function useWallColliders(walls: WallSpec[]) {
         }
       }
     }
-    return () => world.removeRigidBody(body);
+    return () => removeBody(world, body);
   }, [world, rapier, walls]);
 }
 

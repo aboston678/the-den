@@ -10,6 +10,7 @@ import { playerState } from "../state.ts";
 import { S } from "./space.ts";
 import type { HouseMaterials } from "./style.ts";
 import { floorOf } from "./walls.ts";
+import { removeBody } from "../world/physics.ts";
 
 // Every door in the house opens and closes with E, for the whole party (GAME_SPEC §8.2). Hinged and
 // French doors swing, the patio door slides, garage doors tilt up into the garage. The utility room is
@@ -115,7 +116,7 @@ function DoorView({ door, m }: { door: Door; m: HouseMaterials }) {
       world.createCollider(door.axis === "x" ? rapier.ColliderDesc.cuboid(hx, hy, hz) : rapier.ColliderDesc.cuboid(hz, hy, hx), body);
       return body;
     });
-    return () => bodies.current.forEach((b) => world.removeRigidBody(b));
+    return () => bodies.current.forEach((b) => removeBody(world, b));
   }, [world, rapier, leaves, door.axis, h]);
 
   const tmp = useMemo(() => ({ p: new Vector3(), q: new Quaternion() }), []);

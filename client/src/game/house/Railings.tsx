@@ -2,6 +2,7 @@ import { useRapier } from "@react-three/rapier";
 import { useEffect, useMemo } from "react";
 import { BoxGeometry, InstancedMesh, type Material, Matrix4, Quaternion, Vector3 } from "three";
 import { toWorld } from "./space.ts";
+import { removeBody } from "../world/physics.ts";
 
 // Oak handrail on white balusters (foyer stairs, balcony, landing photos), also used for the deck.
 // Railings are given in floorplan metres as straight runs from one point to another.
@@ -73,7 +74,7 @@ export function Railings({ runs, materials }: { runs: RailRun[]; materials: { ra
         body,
       );
     }
-    return () => world.removeRigidBody(body);
+    return () => removeBody(world, body);
   }, [world, rapier, runs]);
 
   return (

@@ -16,7 +16,7 @@ type V3 = [number, number, number];
 /** Roof surface heights for one gable: outer (shingles) and underside, by distance from the eave line. */
 const under = (g: Gable, fromEave: number) => g.eaveY + g.pitch * fromEave;
 
-function gableRoof(g: Gable, out: GeoBuckets) {
+function gableRoof(g: Gable, out: GeoBuckets, solids?: SolidBox[]) {
   const ov = (end: "start" | "end" | "sideStart" | "sideEnd") => (g.noOverhang?.includes(end) ? 0 : OVERHANG);
   const half = (g.ridge === "x" ? g.z1 - g.z0 : g.x1 - g.x0) / 2;
   const T = ROOF_THICKNESS;
@@ -46,6 +46,20 @@ function gableRoof(g: Gable, out: GeoBuckets) {
       };
       surf(true, "shingles");
       surf(false, "ceiling");
+      if (solids) {
+        // A tilted box along this piece of slope (so the camera stops at the ceiling indoors).
+        const mid = corner((l0 + l1) / 2, (c0 + c1) / 2, false);
+        const ang = Math.atan(g.pitch) * slope;
+        const halfAcross = ((c1 - c0) / 2) * Math.hypot(1, g.pitch);
+        const centre: V3 = [mid[0], mid[1] + (T / 2) * Math.cos(ang), mid[2]];
+        solids.push({
+          min: centre, max: centre,
+          tilted: g.ridge === "x"
+            // Rotating about x by −a lifts +z; rotating about z by +a lifts +x.
+            ? { centre, half: [(l1 - l0) / 2, T / 2, halfAcross], axis: "x", angle: -ang }
+            : { centre, half: [halfAcross, T / 2, (l1 - l0) / 2], axis: "z", angle: ang },
+        });
+      }
       // Edges (fascia) on the outside edges of this piece.
       const edge = (a: V3, b: V3, c: V3, d: V3) => add(out, "trim", quad([a, b, c, d], (p) => [p[0] + p[2], p[1]]));
       for (const [pa, pb] of [[[l0, c0], [l1, c0]], [[l1, c0], [l1, c1]], [[l1, c1], [l0, c1]], [[l0, c1], [l0, c0]]] as const) {
@@ -250,8 +264,9 @@ function porch(out: GeoBuckets, solids: SolidBox[]) {
 }
 
 function chimney(out: GeoBuckets) {
-  boxFaces([29.0, 4.2, 6.6], [29.9, 8.3, 7.6], { top: "paint:#3a3533", sides: "brick" }, out);
-  boxFaces([28.95, 8.1, 6.55], [29.95, 8.22, 7.65], { top: "foundation", sides: "foundation", bottom: "foundation" }, out);
+  // Straight up from the great room's fireplace (inside the great room's wall line, clear of the yellow bedroom).
+  boxFaces([28.8, 4.2, 6.6], [29.45, 8.3, 7.6], { top: "paint:#3a3533", sides: "brick" }, out);
+  boxFaces([28.75, 8.1, 6.55], [29.5, 8.22, 7.65], { top: "foundation", sides: "foundation", bottom: "foundation" }, out);
 }
 
 // --- greenhouse ---
@@ -322,7 +337,7 @@ function greenhouse(out: GeoBuckets, solids: SolidBox[]) {
 export function buildExterior(pieces: WallPiece[]) {
   const out: GeoBuckets = new Map();
   const solids: SolidBox[] = [];
-  for (const g of ROOFS) gableRoof(g, out);
+  for (const g of ROOFS) gableRoof(g, out, solids);
   for (const d of DORMERS) dormer(d, out);
   windows(pieces, out);
   porch(out, solids);

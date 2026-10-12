@@ -3,7 +3,7 @@
 Claude Code updates this file after every milestone: tick the box, add a short note, and say what's next.
 **[ANDREW APPROVES]** = stop, show Andrew, and wait for his OK.
 
-**Current status:** 1.8 done (Andrew approved, with denser woods and the lawn raised under the deck's east end). Now: 1.9 house shell.
+**Current status:** 1.9 house shell built and tested; **waiting for Andrew's approval** of the tour (`docs/screenshots/1.9/`). Next after approval: 1.10 day/night, lights, audio.
 
 ---
 
@@ -27,6 +27,7 @@ Goal: Andrew sends friends a link; everyone makes or joins a party, loads in at 
 - [x] **1.8 Outdoor map.** 300 × 300 m terrain with the slope, lawn clearing, forest, driveway from the NW spawn, stone walls, boulder, stream, dock with the rod bucket (static for now), trail, perimeter. Screenshot tour. **[ANDREW APPROVES]**
   - Done 2026-10-11; Andrew approved after two changes: denser woods, and the lawn rising to ~2 m under the deck's east end. Layout + ground math in `shared/src/world/` (unit-tested): driveway 166 m from the NW spawn to the garage apron, trail 96 m, stream ~105 m east with a 3 m wadeable shelf, dock + rod bucket, lawn clearing, front lawn level / back lawn at basement level. Client in `client/src/game/world/property/`: textured terrain (5 CC0 textures) + Rapier heightfield, asphalt driveway, moving water, dock with invisible rails, dry-stone walls + apron retaining wall, ~2,500 EZ-Tree trees in 6 kinds × 3 detail levels plus saplings, ferns, mossy rocks, logs, stumps, rhododendrons, the front boulder; invisible boundary; white placeholder block for the house. Sun shadows follow the bear. 60 fps here; ~13 MB of new assets. `?world=test` keeps the 1.6 test field for the controller/multiplayer tests. Tests: `e2e/property.spec.ts` (spawn, boundary, wading, dock, walls) + `e2e/tour.spec.ts` (screenshots).
 - [ ] **1.9 House shell.** From `docs/floorplan.json` at 1.25×: exterior matching the photos, every room, stairs, railings, windows, base materials per room, porch, deck, greenhouse shell, garage, basement den + bowling room shell. All doors open/close with E (synced); garage doors roll up. Screenshot tour of every room. **[ANDREW APPROVES]**
+  - Built 2026-10-11 (awaiting approval). Generated from `docs/floorplan.json` (`client/src/game/house/`): walls worked out from the room rectangles (each side painted for its room, clapboard/foundation outside, door + window openings), floors, ceilings (sloped under the Cape roof upstairs, cathedral great room), main + basement stairs, sunken great room steps, railings, fireplace, Cape roofs with 3+2 dormers and the front/rear cross gables, porch on columns, deck with stairs, curved-glass greenhouse, chimney, shuttered windows with 6-over-6 muntins, arched great-room windows. All 20 doors open/close with E for the whole party (server checks you're next to it); garage doors tilt up; utility locked. Ground cut exactly round the house. Loads in ~4.8 s, 53–60 fps. Tests: `e2e/house.spec.ts`, tour `e2e/house-tour.spec.ts` (every room + outside).
 - [ ] **1.10 Day/night + lights + audio.** 68-minute synced cycle, sky/sun/moon, exterior lights at dusk, interior lights always on, flashlight (F), ambient sound by time of day, positional stream audio.
 - [ ] **1.11 Menus.** Click-to-enter splash, loading screen (keyframe image + `kling3_0` video, ~20 credits per try; ask first) with the song, Fortnite-style home screen (rotating bear, party lineup, create/join, code display), settings, pause menu, HUD prompts. **[ANDREW APPROVES]** the loading video and home screen.
 - [ ] **1.12 Performance.** Graphics presets (Auto/Low/Medium/High), budgets from GAME_SPEC §17, check frame times.
@@ -99,10 +100,16 @@ Starting balance: 1,210 (2026-10-11)
 | 2026-10-11 | Scenery (ground, trees, stream) continues ~30 m past the 300 m map edge, outside the invisible boundary | Hides the edge of the world in trees and haze |
 | 2026-10-11 | Back lawn at basement level by the den's doors, rising to ~2 m below the deck at its east end (GAME_SPEC §4 updated) | At 1.25× the basement floor is 3.4 m down and must open onto the lawn; Andrew chose to bring the lawn up under the deck's east end (option b) |
 | 2026-10-11 | Woods made denser (~1 tree per 22 m², up from ~40) | Andrew: "more dense"; still 60 fps |
+| 2026-10-11 | House build details (1.9): main stairs rise from the front door south to the balcony, basement stairs run underneath going the other way, entered by a door from the great room; foyer→great room opening moved east of the stairs (x 27–29.4); landing→balcony opening widened to where the stairs arrive | The draft plan had no room for both staircases plus the opening; this keeps the photo's layout (door under the stairs, steps up to the foyer) |
+| 2026-10-11 | Cape roof: eaves 1 m above the upstairs floor, 35° pitch, peak ~7.2 m over the great room; sloped ceilings in the upstairs front and back rooms; dormers give the front rooms windows | Matches the exterior photos (low eaves, dormers) and GAME_SPEC's ~7 m great-room peak |
+| 2026-10-11 | Steep house stairs use an invisible smooth ramp for walking; the bear presses less hard into the ground | At 1.25× the treads are 27 cm, too shallow for step-by-step climbing; the old ground press slowed climbing to a crawl |
+| 2026-10-11 | Doors are server-checked (you must be next to a door to open it) | Stops a modified client opening doors from across the map |
 | 2026-10-11 | Basement stairs moved under the main staircase; new basement stair landing; bowling lanes shifted ~6 m east (x 22→28); back hall became a pantry | Andrew: the real stairs start under the stairs going up. Lanes had to move so the stairs don't land on the approach |
 
 ## Session notes
 (Newest first. 1–3 lines per session: what got done, what's next, anything Andrew needs to do.)
+
+- **2026-10-11 · Session 2 (cont. 2).** 1.9 house built (6 more CC0 textures approved by Andrew; no credits). Waiting on Andrew to approve the house tour. Next: 1.10 day/night + lights + audio.
 
 - **2026-10-11 · Session 2 (cont.).** 1.8 outdoor map built (CC0 downloads approved by Andrew, no credits spent). Andrew approved with denser woods + deck option (b), both done. Next: 1.9 house shell.
 

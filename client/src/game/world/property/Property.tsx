@@ -8,6 +8,7 @@ import { Stream } from "./Stream.tsx";
 import { Terrain } from "./Terrain.tsx";
 
 /** The whole property: the outdoor map (milestone 1.8, GAME_SPEC §4) and the house (1.9). */
+/** Everything here loads together under World's single Suspense boundary (see world/physics.ts). */
 export function Property() {
   return (
     <>

@@ -2,6 +2,7 @@ import { BOUNDARY_HALF, DOCK, STREAM, streamCenter } from "@den/shared";
 import { useRapier } from "@react-three/rapier";
 import { useEffect } from "react";
 import { invisibleColliders } from "../invisible.ts";
+import { removeBody } from "../physics.ts";
 
 // Invisible walls (GAME_SPEC §4): around the map ~10 m inside its edge (hidden by thick woods and
 // fog), and in the stream 3 m out from our shore so only the shallow strip is wadeable. The
@@ -45,7 +46,7 @@ export function Boundary() {
     }
     return () => {
       for (const h of handles) invisibleColliders.delete(h);
-      world.removeRigidBody(body);
+      removeBody(world, body);
     };
   }, [world, rapier]);
   return null;

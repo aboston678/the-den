@@ -11,6 +11,7 @@ import { buildStructure } from "./structure.ts";
 import { HouseMaterials } from "./style.ts";
 import { buildExterior } from "./exterior.ts";
 import { type Railing, type WallPiece, wallColliders, wallGeometry, wallPieces } from "./walls.ts";
+import { removeBody } from "../world/physics.ts";
 
 // The house (milestone 1.9), built from docs/floorplan.json: every room's walls, floors, ceilings,
 // stairs and railings. Built in floorplan metres inside a group scaled 1.25× (GAME_SPEC §4).
@@ -43,7 +44,7 @@ function buildHouse(materials: HouseMaterials) {
     pieces.push(...walls);
     flatRails.push(...railings);
   }
-  const structure = buildStructure();
+  const structure = buildStructure(pieces);
   const exterior = buildExterior(pieces);
   for (const part of [structure, exterior]) {
     for (const [k, list] of part.buckets) buckets.set(k, [...(buckets.get(k) ?? []), ...list]);
@@ -77,6 +78,16 @@ export function House() {
   useEffect(() => {
     const body = world.createRigidBody(rapier.RigidBodyDesc.fixed());
     for (const b of house.solids) {
+      if (b.tilted) {
+        const c = toWorld(b.tilted.centre);
+        const q = new Quaternion().setFromAxisAngle(b.tilted.axis === "x" ? new Vector3(1, 0, 0) : new Vector3(0, 0, 1), b.tilted.angle);
+        world.createCollider(
+          rapier.ColliderDesc.cuboid(b.tilted.half[0] * S, b.tilted.half[1] * S, b.tilted.half[2] * S)
+            .setTranslation(c[0], c[1], c[2]).setRotation({ x: q.x, y: q.y, z: q.z, w: q.w }),
+          body,
+        );
+        continue;
+      }
       const lo = toWorld(b.min), hi = toWorld(b.max);
       world.createCollider(
         rapier.ColliderDesc.cuboid((hi[0] - lo[0]) / 2, (hi[1] - lo[1]) / 2, (hi[2] - lo[2]) / 2)
@@ -104,7 +115,7 @@ export function House() {
         body,
       );
     }
-    return () => world.removeRigidBody(body);
+    return () => removeBody(world, body);
   }, [world, rapier, house]);
   useEffect(() => () => house.meshes.forEach((m) => m.geometry.dispose()), [house]);
 

@@ -3,7 +3,7 @@ import { type GeoBuckets, type SolidBox, add, boxFaces, quad } from "./geometry.
 import { type Box2, box, subtractAll } from "./rects.ts";
 import { UPPER_CEILING, UPPER_FLOOR, DORMERS, dormerBox, roofUnder } from "./roof.ts";
 import { floorKey, styleOf } from "./style.ts";
-import { type Cell, GREAT_ROOM, GREAT_ROOM_FLOOR, type Railing, cellsOf, floorOf } from "./walls.ts";
+import { type Cell, GREAT_ROOM, GREAT_ROOM_FLOOR, type Railing, type WallPiece, cellsOf, floorOf } from "./walls.ts";
 
 // Floors, ceilings, stairs, steps, the porch and deck floors, the fireplace (floorplan metres).
 
@@ -56,6 +56,7 @@ function slab(s: Structure, r: Box2, top: number, bottom: number, topKey: string
 /** A flat ceiling (facing down) over a rectangle. */
 function ceiling(s: Structure, r: Box2, y: number, key: string) {
   add(s.buckets, key, quad([[r.x0, y, r.z0], [r.x1, y, r.z0], [r.x1, y, r.z1], [r.x0, y, r.z1]], (p) => [p[0], p[2]]));
+  s.solids.push({ min: [r.x0, y, r.z0], max: [r.x1, y + 0.05, r.z1] }); // keeps the camera inside
 }
 
 function floorsAndCeilings(s: Structure) {
@@ -70,7 +71,16 @@ function floorsAndCeilings(s: Structure) {
       if (lv === "upper" && cell.kind === "room") upperCeiling(s, cell);
     }
   }
-  slab(s, TERRACE, 0, -0.3, "deck", "ceiling");
+  // Wherever the basement reaches past the rooms above it, cap it at main-floor level (the strip
+  // between the den and the deck becomes a little terrace).
+  const mainRooms = cellsOf("main").map((c) => c.box);
+  for (const cell of cellsOf("basement")) {
+    const b = cell.id === "bowling_alley" ? { ...cell.box, x1: 34 } : cell.box;
+    for (const part of subtractAll(b, mainRooms)) {
+      const terrace = part.z0 >= TERRACE.z0 - 1e-6;
+      slab(s, part, 0, -0.3, terrace ? "deck" : "foundation", "ceiling");
+    }
+  }
   slab(s, ALLEY_ROOF, -0.3, -0.5, "foundation", "paint:#3d424c");
   // Under the deck's posts the basement den walks out; the deck itself sits on the main floor.
   for (const part of subtractAll(DECK, [{ x0: GREAT_ROOM.x0, x1: GREAT_ROOM.x1, z0: DECK.z0, z1: GREAT_ROOM.z1 }])) slab(s, part, 0, -0.12, "deck", "deck");
@@ -187,6 +197,20 @@ function greatRoomSteps(s: Structure) {
   }
 }
 
+/** Where the sunken great room meets a room (or the outside) one step up: a riser on its side. */
+function greatRoomRisers(s: Structure, pieces: WallPiece[]) {
+  for (const p of pieces) {
+    if (p.level !== "main") continue;
+    const inA = p.a?.id === "great_room", inB = p.b?.id === "great_room";
+    if (inA === inB || (!p.a || !p.b)) continue; // only interior walls between the great room and a higher room
+    const side = inA ? -1 : 1, t = p.thickness / 2;
+    const near = p.c + side * t, far = p.c + side * (t + 0.03);
+    const [c0, c1] = [Math.min(near, far), Math.max(near, far)];
+    const r = p.axis === "x" ? { x0: p.u0, x1: p.u1, z0: c0, z1: c1 } : { x0: c0, x1: c1, z0: p.u0, z1: p.u1 };
+    slab(s, r, 0, GREAT_ROOM_FLOOR, `paint:${styleOf("great_room").wall}`, `paint:${styleOf("great_room").wall}`);
+  }
+}
+
 function fireplace(s: Structure) {
   const f = FIREPLACE;
   const top = roofUnder(f.x0, (f.z0 + f.z1) / 2) ?? 4.4;
@@ -231,9 +255,10 @@ function deck(s: Structure) {
   s.railings.push({ axis: "x", c: TERRACE.z1, u0: TERRACE.x0, u1: TERRACE.x1, y: 0 });
 }
 
-export function buildStructure(): Structure {
+export function buildStructure(pieces: WallPiece[]): Structure {
   const s: Structure = { buckets: new Map(), solids: [], railings: [], stairRails: [], ramps: [] };
   floorsAndCeilings(s);
+  greatRoomRisers(s, pieces);
   stairs(s);
   greatRoomSteps(s);
   fireplace(s);

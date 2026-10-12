@@ -1,6 +1,6 @@
 import { BOUNDARY_HALF, fbm, heightAt, houseCutRects, lawnMask, surfaceAt } from "@den/shared";
 import { HeightfieldCollider, RigidBody, TrimeshCollider } from "@react-three/rapier";
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { BufferAttribute, BufferGeometry } from "three";
 import { TERRAIN_LAYERS, createTerrainMaterial } from "./terrainMaterial.ts";
 import { buildLayerArrays, useLayerImages } from "./textures.ts";
@@ -49,8 +49,11 @@ const touches = (x0: number, z0: number) => CUTS.some((c) => c.maxX > x0 && c.mi
 function buildGeometry() {
   const { n, h } = heightGrid(VIEW_HALF);
   const pos: number[] = [], nrm: number[] = [], splatA: number[] = [], splatB: number[] = [], index: number[] = [];
-  const vertex = (x: number, z: number, y = heightAt(x, z)) => {
-    const dx = heightAt(x + 1, z) - heightAt(x - 1, z), dz = heightAt(x, z + 1) - heightAt(x, z - 1);
+  const at = (ix: number, iz: number) => h[Math.min(n - 1, Math.max(0, iz)) * n + Math.min(n - 1, Math.max(0, ix))]!;
+  /** Add a vertex; grid points take their slope from the grid, extra points (round the house) work it out. */
+  const vertex = (x: number, z: number, y = heightAt(x, z), grid?: [number, number]) => {
+    const dx = grid ? at(grid[0] + 1, grid[1]) - at(grid[0] - 1, grid[1]) : heightAt(x + 1, z) - heightAt(x - 1, z);
+    const dz = grid ? at(grid[0], grid[1] + 1) - at(grid[0], grid[1] - 1) : heightAt(x, z + 1) - heightAt(x, z - 1);
     const len = Math.hypot(dx, 2, dz);
     pos.push(x, y, z);
     nrm.push(-dx / len, 2 / len, -dz / len);
@@ -61,7 +64,7 @@ function buildGeometry() {
     splatB.push(s.bed, 0.88 + 0.24 * fbm(x, z, 24, 3));
     return pos.length / 3 - 1;
   };
-  for (let iz = 0; iz < n; iz++) for (let ix = 0; ix < n; ix++) vertex(ix - VIEW_HALF, iz - VIEW_HALF, h[iz * n + ix]!);
+  for (let iz = 0; iz < n; iz++) for (let ix = 0; ix < n; ix++) vertex(ix - VIEW_HALF, iz - VIEW_HALF, h[iz * n + ix]!, [ix, iz]);
   const quadIdx = (a: number, b: number, c: number, d: number) => index.push(a, c, b, b, c, d); // a b on the near row, c d on the next
   for (let iz = 0; iz < n - 1; iz++) {
     for (let ix = 0; ix < n - 1; ix++) {
@@ -120,16 +123,24 @@ function buildHousePatch() {
   return { verts: new Float32Array(verts), idx: new Uint32Array(idx) };
 }
 
+/** Run a builder once and keep the result (React may re-render this many times while assets load). */
+const once = <T,>(build: () => T) => {
+  let value: T | undefined;
+  return () => (value ??= build());
+};
+const terrainGeometry = once(buildGeometry);
+const heightfield = once(buildHeightfield);
+const housePatch = once(buildHousePatch);
+
 export function Terrain() {
   const images = useLayerImages([...TERRAIN_LAYERS]);
-  const geometry = useMemo(buildGeometry, []);
-  const field = useMemo(buildHeightfield, []);
-  const patch = useMemo(buildHousePatch, []);
+  const geometry = useMemo(terrainGeometry, []);
+  const field = useMemo(heightfield, []);
+  const patch = useMemo(housePatch, []);
   const material = useMemo(() => {
     const arrays = buildLayerArrays(images);
     return createTerrainMaterial(arrays.colour, arrays.normal);
   }, [images]);
-  useEffect(() => () => geometry.dispose(), [geometry]);
 
   return (
     <>

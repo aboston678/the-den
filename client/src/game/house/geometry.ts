@@ -70,6 +70,6 @@ export function mergeBucket(list: BufferGeometry[]): BufferGeometry {
 export interface SolidBox {
   min: V3;
   max: V3;
-  /** Rotation about y (radians) around the box centre, for the odd sloped/rotated piece. */
-  rotX?: number;
+  /** A tilted box instead: centre, half sizes and a rotation about the x or z axis (roof slopes). */
+  tilted?: { centre: V3; half: V3; axis: "x" | "z"; angle: number };
 }
