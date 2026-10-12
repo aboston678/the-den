@@ -3,7 +3,7 @@
 Claude Code updates this file after every milestone: tick the box, add a short note, and say what's next.
 **[ANDREW APPROVES]** = stop, show Andrew, and wait for his OK.
 
-**Current status:** 1.12 done (graphics presets, 60 fps on Medium at 1080p on an M1). Next: 1.13 deploy: Andrew sets up Vercel + Railway with step-by-step help.
+**Current status:** 1.13: the game is online at https://the-den-pwg7.vercel.app (server: Railway). All smoke/multiplayer/menu/house tests pass against the live site. **Waiting for Andrew + a friend** to test from two computers.
 
 ---
 
@@ -35,6 +35,7 @@ Goal: Andrew sends friends a link; everyone makes or joins a party, loads in at 
 - [x] **1.12 Performance.** Graphics presets (Auto/Low/Medium/High), budgets from GAME_SPEC §17, check frame times.
   - Done 2026-10-12. Measured first at full 1080p on this M1 (same chip as the spec's MacBook Air): only 33–45 fps, 3.4–7M triangles, up to 640 draw calls. Now: graphics presets Low/Medium/High + Auto (`client/src/game/quality.ts`, chosen in Settings; Auto guesses from the graphics chip and steps down if the first 10 s are slow). Far trees are impostor cards (`world/property/impostor.ts`); indoors the forest drops to cheap levels; door pieces merged (212 → 86 draws). Medium @1080p: 60 fps everywhere except ~50 at the deepest forest edge, ≤353 draw calls, ~320 MB textures, ~25–35 MB download. Low: 60 everywhere. High (bloom, AO, indoor shadow lamp, 4096 shadows) ~18 fps on an M1, meant for stronger GPUs. `e2e/perf.spec.ts` checks Medium's budgets + Auto stepping down. Lesson: a game left running in the browser pane halves test frame rates; close it before measuring.
 - [ ] **1.13 Deploy.** Walk Andrew through Vercel + Railway setup, deploy, then Andrew and one friend test from two different computers. **[ANDREW APPROVES]** 🎉
+  - 2026-10-12: Live. Website: https://the-den-pwg7.vercel.app (Vercel Hobby, project the-den-pwg7, Root Directory `client`, settings in `client/vercel.json`, deploys on every push to main). Game server: https://the-den-production-2d98.up.railway.app (Railway trial: 30 days or $5, then the ~$5/month Hobby plan; Andrew adds a card himself; `railway.json`, starts in production mode, health check /health). The online build talks to Railway automatically (`client/src/net/party.ts`); the server accepts the-den*.vercel.app. `BASE_URL=https://the-den-pwg7.vercel.app npx playwright test …` runs the tests against the live site (the dev-only time controls are off online, so day/night and perf specs can't run there). Railway skipped the first two pushes, then deployed normally.
 
 ## Phase 2: The house comes alive
 - [ ] **2.1 Furnish the main floor** from the photos. **[ANDREW APPROVES]**
@@ -123,6 +124,7 @@ Starting balance: 1,210 (2026-10-11)
 ## Session notes
 (Newest first. 1–3 lines per session: what got done, what's next, anything Andrew needs to do.)
 
+- **2026-10-12 · Session 3 (cont. 3).** 1.13: Andrew set up Railway + Vercel; game online, tests pass live. Next: Andrew + a friend play from two computers ([ANDREW APPROVES]). Remind Andrew before Railway's 30-day trial ends.
 - **2026-10-12 · Session 3 (cont. 2).** 1.12 done: presets + impostor trees; Medium 60 fps at 1080p on the M1. No credits. Next: 1.13 deploy (Andrew will need to create Vercel + Railway accounts; step-by-step).
 - **2026-10-12 · Session 3 (cont.).** 1.11 built: lyric intro, home screen, settings, loading, pause, HUD. Logo #2 picked (1 credit). Andrew approved. Next: 1.12 performance.
 - **2026-10-12 · Session 3.** Andrew approved the 1.9 house tour. 1.10 done: day/night, house + outdoor lights, flashlight, sound (Andrew OK'd the free NPS/OpenGameArt downloads and tree frogs instead of peepers; no credits spent). Fixed along the way: key presses could be lost depending on frame order; house tests now wait for the server instead of a fixed delay. Next: 1.11 menus.

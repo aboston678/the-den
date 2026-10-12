@@ -99,6 +99,9 @@ test("the host role passes on when the host leaves", async ({ browser }) => {
   const b = await newPlayer(browser);
   const code = await hostGame(a, "Alpha", { play: false });
   await joinGame(b, code, "Bravo");
+  // Over the internet joining takes a moment: make sure Bravo is in before the host leaves.
+  await expect(b.getByTestId("party-list")).toContainText("Alpha");
+  await expect(a.getByTestId("party-list")).toContainText("Bravo");
   await expect(b.getByTestId("play")).toHaveCount(0);
   await a.getByTestId("leave").click();
   await expect(b.getByTestId("play")).toBeVisible();
