@@ -5,6 +5,7 @@ import { CLIP } from "./config.ts";
 import { remotes } from "../net/remotes.ts";
 import { setDevTime, usePartyStore } from "../net/party.ts";
 import { gameClock } from "./sky/clock.ts";
+import { current as currentLook } from "./sky/look.ts";
 import { groundY } from "./world/ground.ts";
 
 export const playerState = {
@@ -53,6 +54,8 @@ declare global {
       time: () => number;
       /** Jump the party's clock to a time or a preset name ("dusk", "night", …). Dev only. */
       setTime: (time: number | string) => void;
+      /** The sky as this client last drew it. */
+      sky: () => { phase: string; daylight: number; exteriorLights: number };
       /** Door id -> open, as this client sees it. */
       doors: () => Record<string, boolean>;
       /** Clip timing constants, writable for live tuning in dev tools. */
@@ -82,5 +85,9 @@ window.__den = {
   ground: groundY,
   time: gameClock,
   setTime: setDevTime,
+  sky: () => {
+    const { phase, daylight, exteriorLights } = currentLook.sky;
+    return { phase, daylight, exteriorLights };
+  },
   doors: () => ({ ...usePartyStore.getState().doors }),
 };

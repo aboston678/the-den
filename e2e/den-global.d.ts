@@ -18,6 +18,9 @@ interface Window {
     teleport: (x: number, z: number, y?: number) => void;
     ground: (x: number, z: number) => number;
     doors: () => Record<string, boolean>;
+    time: () => number;
+    setTime: (time: number | string) => void;
+    sky: () => { phase: string; daylight: number; exteriorLights: number };
     remotes: () => { id: string; name: string; x: number; z: number; action: string; tagVisible: boolean; connected: boolean }[];
   };
 }
