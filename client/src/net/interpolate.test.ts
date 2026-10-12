@@ -3,7 +3,7 @@ import { lerpAngle, sampleAt } from "./interpolate.ts";
 import type { Snapshot } from "./remotes.ts";
 
 const snap = (t: number, x: number, yaw = 0, action: Snapshot["action"] = "locomotion"): Snapshot =>
-  ({ t, x, y: 0, z: 0, yaw, speed: 2, action });
+  ({ t, x, y: 0, z: 0, yaw, speed: 2, action, flashlight: false, aimYaw: 0, aimPitch: 0 });
 
 describe("sampleAt", () => {
   const snaps = [snap(0, 0), snap(50, 1), snap(100, 3, 0, "jump")];

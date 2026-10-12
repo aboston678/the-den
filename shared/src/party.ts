@@ -20,6 +20,10 @@ export interface Pose {
   yaw: number;
   speed: number;
   action: BearAction;
+  /** Flashlight on (F), and where it points: compass angle and up/down angle, radians (GAME_SPEC §9). */
+  flashlight: boolean;
+  aimYaw: number;
+  aimPitch: number;
 }
 
 /** Map bounds the server accepts (the world is 300 m × 300 m around the origin). */
@@ -56,5 +60,8 @@ export function sanitizePose(input: unknown, prev: Pose, seconds: number): Pose 
     yaw: num(raw.yaw, prev.yaw) % (Math.PI * 2),
     speed: clampN(num(raw.speed, 0), 0, BEAR.sprintSpeed * 1.2),
     action,
+    flashlight: typeof raw.flashlight === "boolean" ? raw.flashlight : prev.flashlight,
+    aimYaw: num(raw.aimYaw, prev.aimYaw) % (Math.PI * 2),
+    aimPitch: clampN(num(raw.aimPitch, prev.aimPitch), -1.4, 1.4),
   };
 }

@@ -62,7 +62,7 @@ function RemoteBearView({ id }: { id: string }) {
       if (s.action === "roar" && near) cameraState.shake = Math.max(cameraState.shake, 0.5);
     }
     animator.update(dt, s.action === "locomotion" ? s.speed : 0);
-    b.current = { x: s.x, y: s.y, z: s.z, speed: s.speed, action: s.action };
+    b.current = { x: s.x, y: s.y, z: s.z, speed: s.speed, action: s.action, flashlight: s.flashlight, aimYaw: s.aimYaw, aimPitch: s.aimPitch };
 
     // Name tag: fade with distance; hide behind walls (checked every 4th frame).
     if (!tag.current) return;

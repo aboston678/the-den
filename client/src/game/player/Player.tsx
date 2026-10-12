@@ -8,6 +8,7 @@ import { CAPSULE, CAPSULE_CENTER, CONTROLLER_OFFSET, JUMP_AIR_TIME, MOVE } from 
 import { sendPose } from "../../net/party.ts";
 import { remotes } from "../../net/remotes.ts";
 import { clearPresses, consumePress, isHeld } from "../input/keyboard.ts";
+import { flashlightAim } from "./Flashlight.tsx";
 import { cameraState, playerState } from "../state.ts";
 import { groundY } from "../world/ground.ts";
 import { invisibleColliders } from "../world/invisible.ts";
@@ -102,6 +103,7 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
 
     // --- actions: dance (B), roar (Y), jump (Space) ---
     let action = animator.action;
+    if (consumePress("KeyF")) playerState.flashlight = !playerState.flashlight;
     if (consumePress("KeyB") && grounded) {
       if (action === "dance") start("locomotion");
       else if (action === "locomotion") start("dance");
@@ -224,7 +226,11 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
     if (st.sendTimer >= 1 / NET_TICK_HZ) {
       st.sendTimer = 0;
       const pos = playerState.position;
-      sendPose({ x: pos.x, y: pos.y, z: pos.z, yaw: st.yaw, speed: playerState.speed, action: animator.action });
+      const aim = flashlightAim();
+      sendPose({
+        x: pos.x, y: pos.y, z: pos.z, yaw: st.yaw, speed: playerState.speed, action: animator.action,
+        flashlight: playerState.flashlight, aimYaw: aim.yaw, aimPitch: aim.pitch,
+      });
     }
     if (playerState.trackFeet && visual.current) {
       // Test helper only: toe positions relative to the bear, placed with this frame's

@@ -13,8 +13,8 @@ import { EXTERIOR_FIXTURES, FIRE_POS, type Fixture, INTERIOR_FIXTURES, indoor, i
 // means three.js never rebuilds its shaders (no stutter) and the cost stays flat.
 
 const WARM = new Color("#ffcf9a"); // ~2700 K
-const INTERIOR_POOL = 6;
-const EXTERIOR_POOL = 3;
+const INTERIOR_POOL = 4;
+const EXTERIOR_POOL = 2;
 const REASSIGN_S = 0.25;
 const FADE_S = 0.35;
 /** Lights on another floor count as this many metres further away. */
@@ -57,7 +57,7 @@ class LightPool {
         s.fixture = missing.shift()!;
         s.light.position.set(...s.fixture.pos);
       }
-      s.light.intensity = this.intensity * s.level * strength;
+      s.light.intensity = this.intensity * (s.fixture?.power ?? 1) * s.level * strength;
     }
   }
 }
@@ -148,7 +148,7 @@ export function HouseLights({ windowGlow }: { windowGlow: MeshBasicMaterial }) {
     for (const s of parts.fire.flames) {
       const ph = s.userData.phase as number;
       const k = 0.8 + 0.2 * Math.sin(t * 9 + ph) + 0.1 * Math.sin(t * 17 + ph * 2);
-      s.scale.set(0.38 * k, 0.62 * k * (0.9 + 0.1 * Math.sin(t * 6 + ph)), 1);
+      s.scale.set(0.26 * k, 0.72 * k * (0.85 + 0.15 * Math.sin(t * 6 + ph)), 1);
       (s.material as SpriteMaterial).opacity = lit * (0.75 + 0.25 * Math.sin(t * 11 + ph));
     }
     // Hide only the sprites: hiding a light would change the light count and make three.js rebuild shaders.

@@ -17,6 +17,8 @@ export const playerState = {
   gameTime: 0,
   grounded: true,
   action: "locomotion" as BearAction,
+  /** Flashlight on (F). */
+  flashlight: false,
   /** Rapier handle of the player's capsule, so the camera's wall check can ignore it. */
   colliderHandle: -1,
   /**
@@ -61,7 +63,7 @@ declare global {
       /** Clip timing constants, writable for live tuning in dev tools. */
       clip: typeof CLIP;
       /** Other bears as this client sees them. */
-      remotes: () => { id: string; name: string; x: number; z: number; action: string; tagVisible: boolean; connected: boolean }[];
+      remotes: () => { id: string; name: string; x: number; z: number; action: string; flashlight: boolean; tagVisible: boolean; connected: boolean }[];
     };
   }
 }
@@ -76,6 +78,7 @@ window.__den = {
       x: r.current.x,
       z: r.current.z,
       action: r.current.action,
+      flashlight: r.current.flashlight,
       tagVisible: r.tagVisible,
       connected: r.connected,
     })),

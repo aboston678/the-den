@@ -14,6 +14,9 @@ export const Player = schema(
     yaw: t.float32(),
     speed: t.float32(),
     action: t.string().default("locomotion"),
+    flashlight: t.boolean().default(false),
+    aimYaw: t.float32(),
+    aimPitch: t.float32(),
   },
   "Player",
 );

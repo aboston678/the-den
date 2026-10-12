@@ -12,6 +12,9 @@ export interface Snapshot {
   yaw: number;
   speed: number;
   action: BearAction;
+  flashlight: boolean;
+  aimYaw: number;
+  aimPitch: number;
 }
 
 export interface RemoteBear {
@@ -20,7 +23,7 @@ export interface RemoteBear {
   connected: boolean;
   snapshots: Snapshot[];
   /** Where the bear is drawn this frame (interpolated), written by RemoteBears. */
-  current: { x: number; y: number; z: number; speed: number; action: BearAction };
+  current: { x: number; y: number; z: number; speed: number; action: BearAction; flashlight: boolean; aimYaw: number; aimPitch: number };
   tagVisible: boolean;
 }
 

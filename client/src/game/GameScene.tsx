@@ -2,6 +2,7 @@ import { Physics } from "@react-three/rapier";
 import { Suspense, useEffect } from "react";
 import { ThirdPersonCamera } from "./camera/ThirdPersonCamera.tsx";
 import { attachKeyboard } from "./input/keyboard.ts";
+import { Flashlights } from "./player/Flashlight.tsx";
 import { Player } from "./player/Player.tsx";
 import { RemoteBears } from "./remote/RemoteBears.tsx";
 import { DayNightSky } from "./sky/Sky.tsx";
@@ -22,6 +23,7 @@ export function GameScene() {
           <Player />
         </Suspense>
         <RemoteBears />
+        <Flashlights />
         <ThirdPersonCamera />
       </Physics>
     </>

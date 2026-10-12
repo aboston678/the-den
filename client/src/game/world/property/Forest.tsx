@@ -5,7 +5,7 @@ import { useEffect, useMemo } from "react";
 import { Box3, DoubleSide, type Group, type Mesh, MeshStandardMaterial, Quaternion, Euler, Vector3 } from "three";
 import { InstancedLod, type LodLevel, type LodPart } from "./InstancedLod.tsx";
 import { FERNS, ROCKS, SAPLING_KINDS, SHRUBS, TREE_KINDS, type Placement, type Scatter, scatterAll } from "./scatter.ts";
-import { ignorePointLights } from "../lighting.ts";
+import { ignoreLampsAndFlashlights, ignorePointLights } from "../lighting.ts";
 import { removeBody } from "../physics.ts";
 
 // The forest and everything on its floor (GAME_SPEC §4): EZ-Tree trees (tools/build-trees.mjs) and
@@ -59,7 +59,8 @@ function trunkRadius(parts: LodPart[]) {
 function prepareFoliage(scene: Group) {
   scene.traverse((o) => {
     const m = (o as Mesh).material as MeshStandardMaterial | undefined;
-    if (m) ignorePointLights(m);
+    if (m && m.alphaTest > 0) ignoreLampsAndFlashlights(m);
+    else if (m) ignorePointLights(m);
     if (m && m.alphaTest > 0) {
       m.side = DoubleSide;
       m.alphaToCoverage = true;

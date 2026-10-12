@@ -25,6 +25,9 @@ interface NetPlayer {
   yaw: number;
   speed: number;
   action: BearAction;
+  flashlight: boolean;
+  aimYaw: number;
+  aimPitch: number;
 }
 
 export interface LobbyPlayer {
@@ -249,13 +252,15 @@ function bind(r: Room) {
         name: p.name,
         connected: p.connected,
         snapshots: [],
-        current: { x: p.x, y: p.y, z: p.z, speed: 0, action: "locomotion" as BearAction },
+        current: { x: p.x, y: p.y, z: p.z, speed: 0, action: "locomotion" as BearAction, flashlight: false, aimYaw: 0, aimPitch: 0 },
         tagVisible: false,
       };
       remotes.set(id, bear);
       const snap = () => {
         bear.connected = p.connected;
-        addSnapshot(bear, { x: p.x, y: p.y, z: p.z, yaw: p.yaw, speed: p.speed, action: p.action });
+        addSnapshot(bear, {
+          x: p.x, y: p.y, z: p.z, yaw: p.yaw, speed: p.speed, action: p.action, flashlight: p.flashlight, aimYaw: p.aimYaw, aimPitch: p.aimPitch,
+        });
       };
       snap();
       $.onChange(p, () => {

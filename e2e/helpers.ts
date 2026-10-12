@@ -1,9 +1,13 @@
 import { type Browser, type BrowserContext, expect, type Page } from "@playwright/test";
 
-/** Fail on browser errors (ignoring the expected one when a server connection drops). */
+/** Fail on browser errors (ignoring the expected one when a server connection drops), including WebGL draw errors. */
 export function failOnErrors(page: Page) {
   page.on("pageerror", (e) => {
     throw e;
+  });
+  page.on("console", (m) => {
+    // A failed draw call (e.g. a shadow map that was never rendered) leaves the screen blank without throwing.
+    if (m.text().includes("GL_INVALID")) throw new Error(`WebGL error: ${m.text()}`);
   });
 }
 

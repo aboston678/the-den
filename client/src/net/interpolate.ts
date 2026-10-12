@@ -11,6 +11,9 @@ export interface Sample {
   yaw: number;
   speed: number;
   action: BearAction;
+  flashlight: boolean;
+  aimYaw: number;
+  aimPitch: number;
 }
 
 /** Blend between angles the short way round. */
@@ -39,5 +42,8 @@ export function sampleAt(snaps: readonly Snapshot[], t: number): Sample | null {
     yaw: lerpAngle(a.yaw, b.yaw, f),
     speed: a.speed + (b.speed - a.speed) * f,
     action: a.action, // switch actions only once the newer snapshot is reached
+    flashlight: a.flashlight,
+    aimYaw: lerpAngle(a.aimYaw, b.aimYaw, f),
+    aimPitch: a.aimPitch + (b.aimPitch - a.aimPitch) * f,
   };
 }

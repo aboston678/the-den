@@ -10,6 +10,7 @@ interface Window {
       gameTime: number;
       grounded: boolean;
       action: string;
+      flashlight: boolean;
       colliderHandle: number;
       trackFeet: boolean;
       feet: [{ x: number; y: number; z: number }, { x: number; y: number; z: number }];
@@ -21,6 +22,6 @@ interface Window {
     time: () => number;
     setTime: (time: number | string) => void;
     sky: () => { phase: string; daylight: number; exteriorLights: number };
-    remotes: () => { id: string; name: string; x: number; z: number; action: string; tagVisible: boolean; connected: boolean }[];
+    remotes: () => { id: string; name: string; x: number; z: number; action: string; flashlight: boolean; tagVisible: boolean; connected: boolean }[];
   };
 }
