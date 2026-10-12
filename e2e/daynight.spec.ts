@@ -60,14 +60,19 @@ test("a flashlight is seen by the rest of the party", async ({ browser }) => {
   const { a, b } = await twoBears(browser);
   await a.evaluate(() => window.__den!.setTime("night"));
   await expect.poll(async () => (await sky(b)).phase).toBe("night");
-  // Alpha on the back lawn shining at the house; Bravo behind and to the side, watching.
-  await stand(a, 6, 30, 6, 10, 0.1);
-  await stand(b, 15, 33, 6, 26, 0.12, 3);
+  // Alpha on the back lawn shining at the house; Bravo off to the side, watching the beam cross in front.
+  await stand(a, 4, 28, 4, 8, 0.1);
+  await stand(b, 12, 22, -4, 31, 0.25, 4);
   await a.locator("canvas").focus();
   await a.keyboard.press("KeyF");
   await expect.poll(() => a.evaluate(() => window.__den!.player.flashlight)).toBe(true);
   await expect.poll(async () => (await b.evaluate(() => window.__den!.remotes()))[0]?.flashlight).toBe(true);
-  await b.waitForTimeout(1500);
+  // The server walks its copy of Alpha over from the spawn at sprint speed; wait until Bravo sees Alpha in place.
+  await expect.poll(async () => {
+    const seen = (await b.evaluate(() => window.__den!.remotes()))[0]!;
+    return Math.hypot(seen.x - 4, seen.z - 28);
+  }, { timeout: 20_000 }).toBeLessThan(1);
+  await b.waitForTimeout(800);
   await b.screenshot({ path: "test-results/daynight/flashlight-seen-by-bravo.png" });
   await a.screenshot({ path: "test-results/daynight/flashlight-alpha.png" });
   await a.keyboard.press("KeyF");

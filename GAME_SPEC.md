@@ -172,7 +172,7 @@ White clapboard siding, black shutters, dark gray architectural shingle roof, **
 - Materials per room come from the photos: honey-oak floors, cream carpet, burgundy carpet (office), terracotta tile + knotty pine + exposed timber beams (kitchen/mudroom), red brick fireplace, painted walls in each room's color, speckled and swirl wallpapers.
 - **Doors:** every hinged, french, exterior and garage door opens and closes with E, synced for everyone. The utility-room door is locked (prompt: "Locked"). Garage doors roll up.
 - **Furniture (Phase 2):** recreate what's in each photo (piano, harp, wingback chairs, camelback sofas, dining sets, four-poster bed, bookshelves, leather Chesterfield, recliner, pot rack, etc.). Source order: CC0 models (Poly Haven) → Higgsfield image→3D (`tripo_h3_1_image_to_3d`, verified **9 credits** each) for specific hero pieces → simple code-built pieces for boxes, shelves, books, frames, rugs, curtains.
-- **Lights:** always on inside, warm (~2700K). A few shadow-casting lights per floor plus many non-shadow lights and emissive fixtures. Fireplace has a real-looking fire at night (flicker + glow + crackle).
+- **Lights:** always on inside, warm (~2700K). A glowing fixture in every room plus a small pool of real lights that follow the fixtures nearest you. Indoor lights don't cast shadows for now (too slow); the sun, moon and your own flashlight do. Revisit with the graphics presets in 1.12 (Andrew, 2026-10-12). Fireplace has a real-looking fire at night (flicker + glow + crackle).
 - **Windows** glow warmly from outside at night.
 - **Catan room = formal dining room:** table with exactly 4 chairs.
 - **Bowling alley:** basement, see §15. It extends past the house footprint underground.
@@ -205,9 +205,9 @@ TVs in the basement den and the common area. Each shows a slow crossfading slide
 ## 10. Audio
 
 - **Menu/loading music:** `assets/audio/allen-weiss.mp3` (3:13, original Suno track Andrew made). Starts after the "Click to enter" splash (browsers block sound until the first click), plays through the loading screen and home screen (loops), fades out over ~3 s when the match loads.
-- **Ambience:** day: birds, wind in the pines, distant woodpecker. Night: crickets, spring peepers, the occasional loon call from the stream. Positional stream water near the stream. Inside: quiet room tone, fireplace crackle.
+- **Ambience:** day: birds, wind in the pines, distant woodpecker (northern flicker), hermit thrush; dawn chorus at sunrise. Night: crickets, tree frogs (no free spring-peeper recording exists; Andrew chose tree frogs, 2026-10-12), the occasional loon call from the stream. Positional stream water near the stream. Inside: quiet room tone, fireplace crackle.
 - **Sound effects:** footsteps by surface (grass, dirt, asphalt, wood, carpet, tile), roar, doors, garage door, dog barks/panting, cast whoosh, reel clicks, splash, line snap, bowling roll/pin crash/ball return, dice, UI clicks.
-- Sources: CC0 libraries first; Higgsfield `generate_audio` for anything missing (check cost first).
+- Sources: public-domain (US National Park Service) and CC0 libraries first; simple sounds (wind, room hum, fire crackle) made in code. Higgsfield's sound-effect model only works inside its own website builder, so it isn't an option for loose sound files; anything else missing goes to Andrew.
 - Settings: Music, Effects, Ambience volume sliders.
 
 ---

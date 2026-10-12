@@ -14,7 +14,8 @@ import { cameraState, playerState } from "../state.ts";
 /** Spot lights shared by every beam: yours plus the nearest other bears' that are switched on. */
 const LIGHTS = 2;
 const MAX_BEAMS = 6;
-const RANGE = 32;
+const RANGE = 40;
+const INTENSITY = 900; // candela: a strong hand torch (it has to show up against moonlight)
 const ANGLE = 0.38; // radians, half the cone
 const BEAM_LENGTH = 9; // the visible shaft
 const CHEST_HEIGHT = 1.45;
@@ -34,9 +35,10 @@ function beamTexture() {
   c.height = 128;
   const ctx = c.getContext("2d")!;
   const g = ctx.createLinearGradient(0, 0, 0, 128);
-  g.addColorStop(0, "#000");
-  g.addColorStop(0.6, "#555");
-  g.addColorStop(1, "#fff"); // bright at the lamp end (the top of the cylinder)
+  // The canvas's top row lands on the cylinder's top (the narrow lamp end): bright there, gone by the far end.
+  g.addColorStop(0, "#fff");
+  g.addColorStop(0.35, "#666");
+  g.addColorStop(1, "#000");
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, 4, 128);
   return new CanvasTexture(c);
@@ -95,26 +97,27 @@ export function Flashlights() {
     const me = playerState.position;
     const beams = parts.beams;
     let n = 0;
-    const add = (on: boolean, x: number, y: number, z: number, bodyYaw: number, aimYaw: number, aimPitch: number, mine: boolean) => {
+    const add = (on: boolean, x: number, y: number, z: number, aimYaw: number, aimPitch: number, mine: boolean) => {
       if (!on || n >= MAX_BEAMS) return;
       const b = beams[n++]!;
       b.on = true;
       b.mine = mine;
-      b.origin.set(x + Math.sin(bodyYaw) * CHEST_FORWARD, y + CHEST_HEIGHT, z + Math.cos(bodyYaw) * CHEST_FORWARD);
+      // Held out in front, on the side it's shining (so the bear's own body never blocks it).
+      b.origin.set(x + Math.sin(aimYaw) * CHEST_FORWARD, y + CHEST_HEIGHT, z + Math.cos(aimYaw) * CHEST_FORWARD);
       dirOf(aimYaw, aimPitch, b.dir);
       b.dist = mine ? -1 : Math.hypot(x - me.x, z - me.z);
     };
     const aim = flashlightAim();
-    add(playerState.flashlight, me.x, me.y, me.z, playerState.yaw, aim.yaw, aim.pitch, true);
+    add(playerState.flashlight, me.x, me.y, me.z, aim.yaw, aim.pitch, true);
     for (const r of remotes.values()) {
       const c = r.current;
-      // Remote bears face where they last moved; their beam points where their camera looks.
-      add(c.flashlight, c.x, c.y, c.z, c.aimYaw, c.aimYaw, c.aimPitch, false);
+      // Their beam points where their camera looks.
+      add(c.flashlight, c.x, c.y, c.z, c.aimYaw, c.aimPitch, false);
     }
     for (let i = n; i < MAX_BEAMS; i++) beams[i]!.on = false;
 
     // Visible shafts for every beam; stronger at night (you can't see a beam in daylight).
-    const shaftOpacity = 0.03 + 0.12 * current.night;
+    const shaftOpacity = 0.03 + 0.22 * current.night;
     parts.shafts.forEach((s, i) => {
       const b = beams[i]!;
       // Your own shaft would fill the screen from behind; you see your beam on what it lights.
@@ -131,7 +134,7 @@ export function Flashlights() {
     const others = active.filter((b) => !b.mine).sort((a, b) => a.dist - b.dist);
     parts.lights.forEach(({ light, target }, i) => {
       const b = i === 0 ? mine : others[i - 1];
-      light.intensity = b ? 90 : 0;
+      light.intensity = b ? INTENSITY : 0;
       // Only redraw the shadow map while your beam is on (it would otherwise redraw the forest every frame).
       if (i === 0) light.shadow.autoUpdate = !!b;
       if (!b) return;
