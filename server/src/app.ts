@@ -1,6 +1,7 @@
 import { Server, matchMaker } from "@colyseus/core";
 import { WebSocketTransport } from "@colyseus/ws-transport";
 import { PARTY_ROOM } from "@den/shared";
+import { isAllowedOrigin } from "./config.ts";
 import { PartyRoom } from "./rooms/PartyRoom.ts";
 
 /** Build the game server (rooms, routes, CORS) without starting it. */
@@ -10,7 +11,7 @@ export function createGameServer(allowedOrigins: string[]) {
   // browser blocks them.
   matchMaker.controller.getCorsHeaders = (headers: Headers): Record<string, string> => {
     const origin = headers.get("origin");
-    const allowed = origin && allowedOrigins.includes(origin) ? origin : (allowedOrigins[0] ?? "null");
+    const allowed = origin && isAllowedOrigin(origin, allowedOrigins) ? origin : (allowedOrigins[0] ?? "null");
     return { "Access-Control-Allow-Origin": allowed, Vary: "Origin" };
   };
 

@@ -10,7 +10,9 @@ import { addSnapshot, remotes } from "./remotes.ts";
 // Party networking (GAME_SPEC §7): create/join with a 5-character code, lobby list, host
 // starts the game, 20 Hz poses, and rejoining after a page reload.
 
-const SERVER_URL = import.meta.env.VITE_SERVER_URL ?? "http://localhost:2567";
+/** The game server: on Railway when the site is online, on this computer during development. */
+const PRODUCTION_SERVER = "https://the-den-production-2d98.up.railway.app";
+const SERVER_URL = import.meta.env.VITE_SERVER_URL ?? (import.meta.env.PROD ? PRODUCTION_SERVER : "http://localhost:2567");
 const TOKEN_KEY = "den.rejoin"; // sessionStorage: survives a reload of this tab only
 const NAME_KEY = "den.nickname"; // localStorage: remembered between visits
 
