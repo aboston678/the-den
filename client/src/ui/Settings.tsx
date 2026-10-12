@@ -1,3 +1,4 @@
+import { useQuality } from "../game/quality.ts";
 import { type GraphicsPreset, updateSettings, useSettings } from "./settings.ts";
 
 // The settings panel (GAME_SPEC §11.4), from the home screen or the pause menu.
@@ -16,6 +17,7 @@ function Slider({ label, value, onChange, testId, min = 0, max = 1, step = 0.05,
 
 export function SettingsPanel({ onClose }: { onClose: () => void }) {
   const s = useSettings();
+  const tier = useQuality().tier;
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div className="panel settings" data-testid="settings" onClick={(e) => e.stopPropagation()}>
@@ -23,13 +25,14 @@ export function SettingsPanel({ onClose }: { onClose: () => void }) {
         <label className="setting">
           <span>Graphics</span>
           <select value={s.graphics} data-testid="setting-graphics" onChange={(e) => updateSettings({ graphics: e.target.value as GraphicsPreset })}>
-            <option value="auto">Auto</option>
+            <option value="auto">Auto ({tier[0]!.toUpperCase() + tier.slice(1)})</option>
             <option value="low">Low</option>
             <option value="medium">Medium</option>
             <option value="high">High</option>
           </select>
           <output />
         </label>
+        <p className="note setting-note">Low runs on older laptops; High adds glow and soft shadows for strong graphics cards.</p>
         <Slider label="Music" value={s.music} testId="setting-music" onChange={(music) => updateSettings({ music })} />
         <Slider label="Effects" value={s.effects} testId="setting-effects" onChange={(effects) => updateSettings({ effects })} />
         <Slider label="Ambience" value={s.ambience} testId="setting-ambience" onChange={(ambience) => updateSettings({ ambience })} />

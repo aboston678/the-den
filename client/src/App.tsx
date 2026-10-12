@@ -1,6 +1,7 @@
 import { Canvas } from "@react-three/fiber";
 import { useCallback, useEffect, useState } from "react";
 import { GameScene } from "./game/GameScene.tsx";
+import { useQuality } from "./game/quality.ts";
 import { tryRejoin, usePartyStore } from "./net/party.ts";
 import { ActionPrompt } from "./ui/ActionPrompt.tsx";
 import { ConnectionBadge, ControlsHint, PartyList } from "./ui/Hud.tsx";
@@ -21,6 +22,7 @@ export function App() {
   const [backdropReady, setBackdropReady] = useState(false);
   const inGame = usePartyStore((s) => (s.status === "in-party" || s.status === "reconnecting") && s.phase === "playing");
   const playing = stage === "menus" && inGame;
+  const dpr = Math.min(window.devicePixelRatio, useQuality().dpr); // render resolution (GAME_SPEC §17)
 
   useEffect(() => {
     tryRejoin(); // back into the party after a page reload (keeps your seat while the intro plays)
@@ -47,7 +49,7 @@ export function App() {
   }
   return playing ? (
     <>
-      <Canvas shadows="percentage" camera={{ position: [0, 3, 6], fov: 70 }}>
+      <Canvas dpr={dpr} shadows="percentage" camera={{ position: [0, 3, 6], fov: 70 }}>
         <GameScene />
       </Canvas>
       <ConnectionBadge />

@@ -24,6 +24,8 @@ interface Window {
     setTime: (time: number | string) => void;
     audio: () => { state: string; recent: string[] };
     audioLevel: () => { rms: number; peak: number };
+    perf: () => { fps: number; p95ms: number; calls: number; triangles: number; textureMB: number; programs: number; pixelRatio: number; size: string };
+    perfBreakdown: () => string[];
     sky: () => { phase: string; daylight: number; exteriorLights: number };
     remotes: () => { id: string; name: string; x: number; z: number; action: string; flashlight: boolean; tagVisible: boolean; connected: boolean }[];
   };

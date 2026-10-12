@@ -4,6 +4,7 @@ import {
   AdditiveBlending, CanvasTexture, CylinderGeometry, DoubleSide, Mesh, MeshBasicMaterial, Object3D, SpotLight, Vector3,
 } from "three";
 import { remotes } from "../../net/remotes.ts";
+import { useQuality } from "../quality.ts";
 import { current } from "../sky/look.ts";
 import { cameraState, playerState } from "../state.ts";
 
@@ -54,10 +55,11 @@ interface Beam {
 }
 
 export function Flashlights() {
+  const q = useQuality();
   const parts = useMemo(() => {
     const lights = Array.from({ length: LIGHTS }, (_, i) => {
       const l = new SpotLight("#fff2dc", 0, RANGE, ANGLE, 0.45, 2);
-      if (i === 0) {
+      if (i === 0 && q.flashlightShadow) {
         l.castShadow = true;
         l.shadow.mapSize.set(512, 512);
         l.shadow.camera.near = 0.3;
@@ -87,7 +89,7 @@ export function Flashlights() {
     });
     const beams: Beam[] = Array.from({ length: MAX_BEAMS }, () => ({ on: false, origin: new Vector3(), dir: new Vector3(), dist: 0, mine: false }));
     return { lights, shafts, beams, geo, tex };
-  }, []);
+  }, [q]);
   useEffect(() => () => {
     parts.geo.dispose();
     parts.tex.dispose();
@@ -136,7 +138,7 @@ export function Flashlights() {
       const b = i === 0 ? mine : others[i - 1];
       light.intensity = b ? INTENSITY : 0;
       // Only redraw the shadow map while your beam is on (it would otherwise redraw the forest every frame).
-      if (i === 0) light.shadow.autoUpdate = !!b;
+      if (i === 0 && light.castShadow) light.shadow.autoUpdate = !!b;
       if (!b) return;
       light.position.copy(b.origin);
       target.position.copy(b.origin).addScaledVector(b.dir, 5);

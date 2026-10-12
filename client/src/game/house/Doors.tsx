@@ -2,7 +2,8 @@ import { DOORS, DOOR_REACH, type Door, GARAGE_DOOR_HEIGHT, DOOR_HEIGHT, roomById
 import { useFrame } from "@react-three/fiber";
 import { type RapierRigidBody, useRapier } from "@react-three/rapier";
 import { useEffect, useMemo, useRef } from "react";
-import { type Group, type Material, type Mesh, Quaternion, Vector3 } from "three";
+import { BoxGeometry, type BufferGeometry, type Group, type Material, type Mesh, Quaternion, Vector3 } from "three";
+import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import { create } from "zustand";
 import { toggleDoor, usePartyStore } from "../../net/party.ts";
 import { consumePress } from "../input/keyboard.ts";
@@ -85,12 +86,24 @@ function LeafLook({ leaf, h, axis, m }: { leaf: Leaf; h: number; axis: "x" | "z"
       parts.push({ pos: place(leaf.dir * (w - 0.08), y0 + 0.95, 0), size: size(0.05, 0.05, LEAF_T + 0.11), mat: "brass" });
     }
   }
+  // One mesh per material (a door is ~10 boxes; drawn separately they cost ~200 draw calls for the house).
+  const merged = useMemo(() => {
+    const byMat = new Map<string, BufferGeometry[]>();
+    for (const p of parts) {
+      const g = new BoxGeometry(...p.size).toNonIndexed().translate(...p.pos);
+      byMat.set(p.mat, [...(byMat.get(p.mat) ?? []), g]);
+    }
+    return [...byMat].map(([mat, geos]) => {
+      const g = mergeGeometries(geos)!;
+      geos.forEach((x) => x.dispose());
+      return { mat, g };
+    });
+  }, [leaf, h, axis]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => () => merged.forEach(({ g }) => g.dispose()), [merged]);
   return (
     <>
-      {parts.map((p, i) => (
-        <mesh key={i} position={p.pos} material={m.get(p.mat) as Material} castShadow receiveShadow>
-          <boxGeometry args={p.size} />
-        </mesh>
+      {merged.map(({ mat, g }) => (
+        <mesh key={mat} geometry={g} material={m.get(mat) as Material} castShadow={mat !== "glass"} receiveShadow />
       ))}
     </>
   );

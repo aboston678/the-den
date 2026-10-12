@@ -532,3 +532,8 @@ button:disabled {
   letter-spacing: 0.04em;
   color: rgb(239 230 210 / 0.75);
 }
+.setting-note {
+  margin-top: -6px;
+  text-transform: none;
+  letter-spacing: 0.02em;
+}

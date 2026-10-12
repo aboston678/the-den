@@ -21,6 +21,12 @@ export interface LodLevel {
   castShadow?: boolean;
 }
 
+/**
+ * Distances are multiplied by this before picking a detail level. Indoors it goes up (house/Lights.tsx):
+ * the forest is only seen through windows, 25 m+ away, so the cheap levels are plenty.
+ */
+export const lodBias = { value: 1 };
+
 const KEEP_FOR_SHADOWS = 30; // copies this close stay even when off-screen, so their shadows still fall into view
 const REFRESH_S = 0.25;
 
@@ -51,22 +57,23 @@ export function InstancedLod({ items, levels, radius, name }: { items: Placement
   })), [levels, items, name]);
   useEffect(() => () => meshes.flat().forEach((m) => m.dispose()), [meshes]);
 
-  const state = useMemo(() => ({ timer: REFRESH_S, lastPos: new Vector3(1e9, 0, 0), lastQuat: new Quaternion() }), []);
+  const state = useMemo(() => ({ timer: REFRESH_S, lastPos: new Vector3(1e9, 0, 0), lastQuat: new Quaternion(), lastBias: 1 }), []);
 
   useFrame((_, dt) => {
     state.timer += dt;
-    const moved = camera.position.distanceToSquared(state.lastPos) > 1.5 * 1.5 || Math.abs(camera.quaternion.dot(state.lastQuat)) < 0.9995;
+    const moved = camera.position.distanceToSquared(state.lastPos) > 1.5 * 1.5 || Math.abs(camera.quaternion.dot(state.lastQuat)) < 0.9995 || lodBias.value !== state.lastBias;
     if (!moved && state.timer < REFRESH_S) return;
     state.timer = 0;
     state.lastPos.copy(camera.position);
     state.lastQuat.copy(camera.quaternion);
+    state.lastBias = lodBias.value;
 
     tmp.frustum.setFromProjectionMatrix(tmp.pv.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse));
     const counts = levels.map(() => 0);
     const cx = camera.position.x, cy = camera.position.y, cz = camera.position.z;
     for (let i = 0; i < items.length; i++) {
       const it = items[i]!;
-      const d = Math.hypot(it.x - cx, it.y - cy, it.z - cz);
+      const d = Math.hypot(it.x - cx, it.y - cy, it.z - cz) * lodBias.value;
       let lod = 0;
       while (lod < levels.length && d > levels[lod]!.maxDist) lod++;
       if (lod === levels.length) continue;

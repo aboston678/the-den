@@ -7,6 +7,7 @@ import {
 } from "three";
 import { Sky as SkyMesh } from "three/addons/objects/Sky.js";
 import { indoor } from "../house/lights.ts";
+import { useQuality } from "../quality.ts";
 import { playerState } from "../state.ts";
 import { gameClock } from "./clock.ts";
 import { current, lookAt } from "./look.ts";
@@ -14,8 +15,6 @@ import { current, lookAt } from "./look.ts";
 // The day/night sky (GAME_SPEC §9): moving sun and moon, sunset colours, a night sky with stars,
 // fog and soft sky light that follow the time of day. The server owns the clock (sky/clock.ts).
 
-const SHADOW_HALF = 45; // metres of crisp shadows around the bear
-const SHADOW_MAP = 2048;
 const DOME_R = 600; // night dome, stars and moon sit this far out, centred on the camera
 const ENV_REFRESH_S = 3; // re-light the scene from the sky this often (1 s around sunset/sunrise)
 
@@ -117,6 +116,9 @@ function makeSky() {
 /** Everything in the sky, plus the fog, sky light and exposure that go with the time of day. */
 export function DayNightSky() {
   const { scene, gl, camera } = useThree();
+  const q = useQuality();
+  const SHADOW_HALF = q.shadowHalf; // metres of crisp shadows around the bear
+  const SHADOW_MAP = q.shadowMap;
   const parts = useMemo(() => {
     const sky = makeSky();
     const dome = nightDome();
@@ -135,18 +137,20 @@ export function DayNightSky() {
   const envTimer = useRef(Infinity);
 
   useEffect(() => {
-    const fog = new Fog(current.fog.clone(), 35, 185);
-    const background = current.fog.clone();
-    scene.fog = fog;
-    scene.background = background;
+    scene.background = current.fog.clone();
     scene.environment = parts.target.texture;
     return () => {
-      scene.fog = null;
       scene.background = null;
       scene.environment = null;
       parts.target.dispose();
     };
   }, [scene, parts]);
+  useEffect(() => {
+    scene.fog = new Fog(current.fog.clone(), q.fog[0], q.fog[1]);
+    return () => {
+      scene.fog = null;
+    };
+  }, [scene, q]);
 
   useFrame((_, dt) => {
     const look = lookAt(gameClock(), current, indoor.amount);
@@ -210,6 +214,7 @@ export function DayNightSky() {
       <hemisphereLight ref={hemi} />
       <primitive object={shadowTarget} />
       <directionalLight
+        key={q.tier} // a new shadow map when the preset changes
         ref={light}
         target={shadowTarget}
         castShadow

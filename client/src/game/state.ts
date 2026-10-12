@@ -69,6 +69,9 @@ declare global {
       doors: () => Record<string, boolean>;
       /** Clip timing constants, writable for live tuning in dev tools. */
       clip: typeof CLIP;
+      /** Frame rate, draw calls, triangles, texture memory (set by PerfProbe). */
+      perf?: () => { fps: number; p95ms: number; calls: number; triangles: number; textureMB: number; programs: number; pixelRatio: number; size: string };
+      perfBreakdown?: () => string[];
       /** Other bears as this client sees them. */
       remotes: () => { id: string; name: string; x: number; z: number; action: string; flashlight: boolean; tagVisible: boolean; connected: boolean }[];
     };

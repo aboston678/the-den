@@ -1,8 +1,12 @@
 import { BOUNDARY_HALF, STREAM, streamCenter } from "@den/shared";
 import { useGLTF } from "@react-three/drei";
+import { useFrame, useThree } from "@react-three/fiber";
 import { useRapier } from "@react-three/rapier";
 import { useEffect, useMemo } from "react";
-import { Box3, DoubleSide, type Group, type Mesh, MeshStandardMaterial, Quaternion, Euler, Vector3 } from "three";
+import { Box3, Color, DoubleSide, type Group, Matrix4, type Mesh, MeshStandardMaterial, Quaternion, Euler, Vector3 } from "three";
+import { useQuality } from "../../quality.ts";
+import { current } from "../../sky/look.ts";
+import { bakeImpostor } from "./impostor.ts";
 import { InstancedLod, type LodLevel, type LodPart } from "./InstancedLod.tsx";
 import { FERNS, ROCKS, SAPLING_KINDS, SHRUBS, TREE_KINDS, type Placement, type Scatter, scatterAll } from "./scatter.ts";
 import { ignoreLampsAndFlashlights, ignorePointLights } from "../lighting.ts";
@@ -14,9 +18,8 @@ import { removeBody } from "../physics.ts";
 const TREES_URL = "/models/trees.glb";
 const PROPS_URL = "/models/outdoor-props.glb";
 
-/** How far each kind of thing is drawn, per detail level (metres from the camera). */
-const TREE_LODS = [40, 85, 175];
-const SAPLING_LODS = [25, 55, 100];
+/** Rocks, logs, stumps and shrubs are drawn this far (they're low and few). */
+const PROP_FAR = 110;
 
 /** Every mesh under the named node, with its transform inside the file. */
 function partsOf(scene: Group, name: string): LodPart[] {
@@ -80,20 +83,40 @@ export function Forest() {
   const trees = useGLTF(TREES_URL).scene as Group;
   const props = useGLTF(PROPS_URL).scene as Group;
   const scatter = useMemo(scatter_, []);
+  const gl = useThree((st) => st.gl);
+  const q = useQuality();
 
-  const kinds = useMemo(() => {
+  // Far trees are drawn as impostor cards, photographed once per kind from the medium-detail tree.
+  const impostors = useMemo(() => {
     prepareFoliage(trees);
     prepareFoliage(props);
-    const lodsOf = (kind: string, dists: number[], shadowLevels: number): LodLevel[] =>
-      dists.map((maxDist, n) => ({ maxDist, castShadow: n < shadowLevels, parts: [...partsOf(trees, `${kind}_lod${n}_bark`), ...partsOf(trees, `${kind}_lod${n}_leaves`)] }));
+    return new Map<string, ReturnType<typeof bakeImpostor>>(TREE_KINDS.map((k) => [k, bakeImpostor(gl, [...partsOf(trees, `${k}_lod1_bark`), ...partsOf(trees, `${k}_lod1_leaves`)])]));
+  }, [trees, props, gl]);
+  useEffect(() => () => impostors.forEach((i) => {
+    i.geometry.dispose();
+    (i.material.uniforms.map!.value as { dispose(): void }).dispose();
+    i.material.dispose();
+  }), [impostors]);
+
+  const kinds = useMemo(() => {
+    const [near, mid, far] = q.treeLods;
+    const treeLevels = (kind: string): LodLevel[] => [
+      { maxDist: near, castShadow: true, parts: [...partsOf(trees, `${kind}_lod0_bark`), ...partsOf(trees, `${kind}_lod0_leaves`)] },
+      { maxDist: mid, castShadow: q.treeShadowLevels > 1, parts: [...partsOf(trees, `${kind}_lod1_bark`), ...partsOf(trees, `${kind}_lod1_leaves`)] },
+      { maxDist: far, castShadow: false, parts: [{ ...impostors.get(kind)!, matrix: new Matrix4() }] },
+    ];
+    const saplingLevels = (kind: string): LodLevel[] => [
+      { maxDist: q.smallFar * 0.55, castShadow: true, parts: [...partsOf(trees, `${kind}_lod0_bark`), ...partsOf(trees, `${kind}_lod0_leaves`)] },
+      { maxDist: q.smallFar, castShadow: false, parts: [...partsOf(trees, `${kind}_lod1_bark`), ...partsOf(trees, `${kind}_lod1_leaves`)] },
+    ];
     const single = (name: string, maxDist: number, castShadow: boolean): LodLevel[] => [{ maxDist, castShadow, parts: partsOf(props, name) }];
 
     const list: { name: string; items: Placement[]; levels: LodLevel[] }[] = [
-      ...TREE_KINDS.map((k) => ({ name: k, items: scatter.trees[k], levels: lodsOf(k, TREE_LODS, 2) })),
-      ...SAPLING_KINDS.map((k) => ({ name: k, items: scatter.saplings[k], levels: lodsOf(k, SAPLING_LODS, 1) })),
-      ...FERNS.map((k) => ({ name: k, items: scatter.ferns[k]!, levels: single(k, 45, false) })),
-      ...ROCKS.map((k) => ({ name: k, items: scatter.rocks[k]!, levels: single(k, 120, true) })),
-      ...SHRUBS.map((k) => ({ name: k, items: scatter.shrubs[k]!, levels: single(k, 120, true) })),
+      ...TREE_KINDS.map((k) => ({ name: k, items: scatter.trees[k], levels: treeLevels(k) })),
+      ...SAPLING_KINDS.map((k) => ({ name: k, items: scatter.saplings[k], levels: saplingLevels(k) })),
+      ...FERNS.map((k) => ({ name: k, items: scatter.ferns[k]!, levels: single(k, q.smallFar, false) })),
+      ...ROCKS.map((k) => ({ name: k, items: scatter.rocks[k]!, levels: single(k, PROP_FAR, true) })),
+      ...SHRUBS.map((k) => ({ name: k, items: scatter.shrubs[k]!, levels: single(k, PROP_FAR, true) })),
       { name: "log", items: scatter.logs, levels: single("log", 90, true) },
       { name: "stump", items: scatter.stumps, levels: single("stump", 90, true) },
       { name: "boulder", items: scatter.boulder, levels: single("boulder", 200, true) },
@@ -102,16 +125,26 @@ export function Forest() {
       const box = boundsOf(k.levels[0]!.parts);
       return { ...k, box, radius: box.getSize(new Vector3()).length() / 2 };
     });
-  }, [trees, props, scatter]);
+  }, [trees, props, scatter, impostors, q]);
+
+  // Impostor cards are lit like the trees around them: sky light plus some sun.
+  useFrame(() => {
+    const l = current.light, h = current.hemi;
+    impostorLight.copy(h.sky).multiplyScalar(h.intensity * 1.1).add(tmpColor.copy(l.color).multiplyScalar(l.intensity * 0.28 * Math.max(0.2, l.dir.y)));
+    for (const i of impostors.values()) (i.material.uniforms.light!.value as Color).copy(impostorLight);
+  });
 
   useForestColliders(scatter, kinds);
 
   return (
     <group name="forest">
-      {kinds.map((k) => k.items.length > 0 && <InstancedLod key={k.name} name={k.name} items={k.items} levels={k.levels} radius={k.radius} />)}
+      {kinds.map((k) => k.items.length > 0 && <InstancedLod key={`${k.name}:${q.tier}`} name={k.name} items={k.items} levels={k.levels} radius={k.radius} />)}
     </group>
   );
 }
+
+const impostorLight = new Color();
+const tmpColor = new Color();
 
 /** Trunks, rocks, logs, stumps, shrubs and the boulder are solid; ferns and saplings aren't. */
 function useForestColliders(scatter: Scatter, kinds: { name: string; items: Placement[]; levels: LodLevel[]; box: Box3 }[]) {

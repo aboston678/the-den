@@ -4,6 +4,8 @@ import { Suspense, useEffect } from "react";
 import { GameAudio } from "./audio/GameAudio.tsx";
 import { ThirdPersonCamera } from "./camera/ThirdPersonCamera.tsx";
 import { attachKeyboard, beginInputFrame } from "./input/keyboard.ts";
+import { PerfProbe } from "./PerfProbe.tsx";
+import { PostFx } from "./PostFx.tsx";
 import { Flashlights } from "./player/Flashlight.tsx";
 import { Player } from "./player/Player.tsx";
 import { RemoteBears } from "./remote/RemoteBears.tsx";
@@ -19,6 +21,8 @@ export function GameScene() {
   return (
     <>
       <DayNightSky />
+      <PerfProbe />
+      <PostFx />
       <GameAudio />
       {/* Step physics once per rendered frame: the bear's controller moves it every frame, and a
           fixed 60 Hz step sometimes skipped a frame and lost that frame's movement. */}

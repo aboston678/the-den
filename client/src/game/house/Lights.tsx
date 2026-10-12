@@ -2,8 +2,10 @@ import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo } from "react";
 import {
   AdditiveBlending, BoxGeometry, CanvasTexture, Color, CylinderGeometry, Group, InstancedMesh, MeshStandardMaterial, Object3D,
-  type MeshBasicMaterial, PointLight, Sprite, SpriteMaterial, type Material,
+  type MeshBasicMaterial, PointLight, SpotLight, Sprite, SpriteMaterial, type Material,
 } from "three";
+import { useQuality } from "../quality.ts";
+import { lodBias } from "../world/property/InstancedLod.tsx";
 import { current } from "../sky/look.ts";
 import { playerState } from "../state.ts";
 import { EXTERIOR_FIXTURES, FIRE_POS, type Fixture, INTERIOR_FIXTURES, indoor, insideHouse } from "./lights.ts";
@@ -13,8 +15,6 @@ import { EXTERIOR_FIXTURES, FIRE_POS, type Fixture, INTERIOR_FIXTURES, indoor, i
 // means three.js never rebuilds its shaders (no stutter) and the cost stays flat.
 
 const WARM = new Color("#ffcf9a"); // ~2700 K
-const INTERIOR_POOL = 4;
-const EXTERIOR_POOL = 2;
 const REASSIGN_S = 0.25;
 const FADE_S = 0.35;
 /** Lights on another floor count as this many metres further away. */
@@ -111,17 +111,28 @@ function makeFire() {
 }
 
 export function HouseLights({ windowGlow }: { windowGlow: MeshBasicMaterial }) {
+  const q = useQuality(); // how many real lights (GAME_SPEC §17)
   const parts = useMemo(() => {
-    const interior = new LightPool(INTERIOR_POOL, INTERIOR_FIXTURES, 7, 10);
-    const exterior = new LightPool(EXTERIOR_POOL, EXTERIOR_FIXTURES, 5, 10);
+    const interior = new LightPool(q.interiorLights, INTERIOR_FIXTURES, 7, 10);
+    const exterior = new LightPool(q.exteriorLights, EXTERIOR_FIXTURES, 5, 10);
     const glowMat = new MeshStandardMaterial({ color: "#fff6e8", emissive: WARM, emissiveIntensity: 2.2, roughness: 0.6 });
     const lanternMat = new MeshStandardMaterial({ color: "#2a2620", emissive: WARM, emissiveIntensity: 0, roughness: 0.5 });
     const ceilingLamps = fixtureMeshes(INTERIOR_FIXTURES, new CylinderGeometry(0.2, 0.24, 0.08, 16), glowMat, 0.0);
     const lanterns = fixtureMeshes(EXTERIOR_FIXTURES, new BoxGeometry(0.2, 0.32, 0.2), lanternMat, 0);
     ceilingLamps.name = "house:ceiling-lamps";
     lanterns.name = "house:lanterns";
-    return { interior, exterior, glowMat, lanternMat, ceilingLamps, lanterns, fire: makeFire() };
-  }, []);
+    // High: the lamp in the room you're in casts real shadows (a wide spot light pointing down).
+    const shadowLamp = q.indoorShadow ? new SpotLight(WARM, 0, 11, 1.25, 0.8, 2) : null;
+    if (shadowLamp) {
+      shadowLamp.castShadow = true;
+      shadowLamp.shadow.mapSize.set(1024, 1024);
+      shadowLamp.shadow.camera.near = 0.2;
+      shadowLamp.shadow.bias = -0.0006;
+      shadowLamp.shadow.normalBias = 0.02;
+      shadowLamp.shadow.needsUpdate = true; // draw it once now: a never-drawn shadow map blanks the screen (see Flashlight.tsx)
+    }
+    return { interior, exterior, glowMat, lanternMat, ceilingLamps, lanterns, fire: makeFire(), shadowLamp };
+  }, [q]);
   useEffect(() => () => {
     parts.ceilingLamps.dispose();
     parts.lanterns.dispose();
@@ -133,8 +144,28 @@ export function HouseLights({ windowGlow }: { windowGlow: MeshBasicMaterial }) {
     const floor = insideHouse(p.x, p.y + 0.5, p.z);
     indoor.level = floor;
     indoor.amount += ((floor ? 1 : 0) - indoor.amount) * Math.min(1, dt * 2.5);
+    lodBias.value = floor ? 2.5 : 1; // inside, the forest is only glimpsed through windows
 
     const outside = current.sky.exteriorLights;
+    const lamp = parts.shadowLamp;
+    if (lamp) {
+      // The nearest ceiling light on your floor, while you're inside.
+      let best: (typeof INTERIOR_FIXTURES)[number] | null = null, bestD = Infinity;
+      if (floor) {
+        for (const f of INTERIOR_FIXTURES) {
+          if (f.level !== floor) continue;
+          const d = Math.hypot(f.pos[0] - p.x, f.pos[2] - p.z);
+          if (d < bestD) (best = f), (bestD = d);
+        }
+      }
+      lamp.intensity = best ? 3.5 * best.power * indoor.amount : 0; // on top of the ordinary lamp light there
+      if (best) {
+        lamp.position.set(best.pos[0], best.pos[1] - 0.1, best.pos[2]);
+        lamp.target.position.set(best.pos[0], best.pos[1] - 5, best.pos[2]);
+        lamp.target.updateMatrixWorld();
+      }
+      lamp.shadow.autoUpdate = !!best; // no shadow redraws outdoors
+    }
     parts.interior.update(dt, p.x, head, p.z, floor, 1);
     parts.exterior.update(dt, p.x, head, p.z, null, outside);
     parts.lanternMat.emissiveIntensity = 3 * outside;
@@ -162,6 +193,8 @@ export function HouseLights({ windowGlow }: { windowGlow: MeshBasicMaterial }) {
       <primitive object={parts.ceilingLamps} />
       <primitive object={parts.lanterns} />
       <primitive object={parts.fire.group} />
+      {parts.shadowLamp && <primitive object={parts.shadowLamp} />}
+      {parts.shadowLamp && <primitive object={parts.shadowLamp.target} />}
     </>
   );
 }
