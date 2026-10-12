@@ -3,7 +3,7 @@
 import { Vector3 } from "three";
 import { CLIP } from "./config.ts";
 import { remotes } from "../net/remotes.ts";
-import { setDevTime, usePartyStore } from "../net/party.ts";
+import { serverPosition, setDevTime, usePartyStore } from "../net/party.ts";
 import { audioLevel, audioState, recent as recentSounds } from "./audio/audio.ts";
 import { gameClock } from "./sky/clock.ts";
 import { current as currentLook } from "./sky/look.ts";
@@ -53,6 +53,8 @@ declare global {
       teleport: (x: number, z: number, y?: number) => void;
       /** Ground height at (x, z) on the current map. */
       ground: (x: number, z: number) => number;
+      /** Where the server has our bear. */
+      serverPosition: () => { x: number; y: number; z: number } | null;
       /** Seconds into the day/night cycle, as this client sees it. */
       time: () => number;
       /** Jump the party's clock to a time or a preset name ("dusk", "night", …). Dev only. */
@@ -91,6 +93,7 @@ window.__den = {
     playerState.teleportTo = { x, y, z }; // NaN height: the player drops onto whatever is there
   },
   ground: groundY,
+  serverPosition,
   time: gameClock,
   setTime: setDevTime,
   audio: () => ({ state: audioState(), recent: recentSounds.map((s) => s.name) }),

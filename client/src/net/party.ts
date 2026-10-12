@@ -183,6 +183,12 @@ export function toggleDoor(id: string) {
   if (room && usePartyStore.getState().phase === "playing") room.send(MSG.door, { id });
 }
 
+/** Where the server thinks our bear is (it moves its copy at sprint speed; tests wait for it). */
+export function serverPosition() {
+  const me = room?.state?.players?.get(room.sessionId) as NetPlayer | undefined;
+  return me ? { x: me.x, y: me.y, z: me.z } : null;
+}
+
 /** Jump the party's clock (dev and tests; the server ignores it in production). */
 export function setDevTime(time: number | string) {
   room?.send(MSG.devTime, { time });

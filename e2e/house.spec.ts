@@ -11,10 +11,10 @@ const UPPER_Y = 2.7 * HOUSE.scale;
 
 /**
  * Stand at floorplan (x, z) on floor height y (world), with W walking toward floorplan (tx, tz).
- * (The server only moves its copy of a bear at sprint speed, so after a long teleport it takes a
- * few seconds to catch up; tests that need the server to agree wait for that.)
+ * The server only moves its copy of a bear at sprint speed (and only opens doors for bears next to
+ * them), so with `settle` wait until the server has the bear there too.
  */
-async function standAt(p: Page, [x, z]: [number, number], [tx, tz]: [number, number], y?: number) {
+async function standAt(p: Page, [x, z]: [number, number], [tx, tz]: [number, number], y?: number, settle = false) {
   const a = houseToWorld(x, z), b = houseToWorld(tx, tz);
   await p.evaluate(([ax, az, bx, bz, y]) => {
     const d = window.__den!;
@@ -22,6 +22,11 @@ async function standAt(p: Page, [x, z]: [number, number], [tx, tz]: [number, num
     d.camera.yaw = Math.atan2(-(bx! - ax!), -(bz! - az!));
   }, [a.x, a.z, b.x, b.z, y ?? null] as const);
   await p.waitForTimeout(600);
+  if (!settle) return;
+  await expect.poll(async () => {
+    const s = await p.evaluate(() => window.__den!.serverPosition());
+    return s ? Math.hypot(s.x - a.x, s.z - a.z) : 999;
+  }, { timeout: 20_000 }).toBeLessThan(1);
 }
 
 async function walk(p: Page, ms: number, keys = ["KeyW"]) {
@@ -39,12 +44,7 @@ test("the front door opens with E for everyone, and you can walk in", async ({ b
   await waitForBear(b);
   const door = doorById("main:foyer-porch")!;
 
-  await standAt(a, [27.5, -1], [27.5, 2]); // on the porch, facing the front door
-  // Wait until the server has Alpha at the door too (it moves its copy at sprint speed): Bravo sees it there.
-  await expect.poll(async () => {
-    const seen = (await b.evaluate(() => window.__den!.remotes()))[0];
-    return seen ? Math.hypot(seen.x - door.world.x, seen.z - door.world.z) : 999;
-  }, { timeout: 20_000 }).toBeLessThan(2.5);
+  await standAt(a, [27.5, -1], [27.5, 2], undefined, true); // on the porch, facing the front door
   await expect(a.getByTestId("action-prompt")).toContainText("Open door");
   await a.keyboard.press("KeyE");
   await expect.poll(() => b.evaluate((id) => window.__den!.doors()[id], door.id)).toBe(true); // Bravo sees it open

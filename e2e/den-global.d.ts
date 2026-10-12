@@ -19,6 +19,7 @@ interface Window {
     teleport: (x: number, z: number, y?: number) => void;
     ground: (x: number, z: number) => number;
     doors: () => Record<string, boolean>;
+    serverPosition: () => { x: number; y: number; z: number } | null;
     time: () => number;
     setTime: (time: number | string) => void;
     audio: () => { state: string; recent: string[] };
