@@ -28,6 +28,12 @@ describe("the property", () => {
     expect(heightAt(denDoor.x, denDoor.z)).toBeCloseTo(HOUSE.basementFloorY, 0);
   });
 
+  it("the deck is ~2 m above the lawn at its east end (Andrew's choice)", () => {
+    const eastEnd = houseToWorld(29, 12.5); // under the deck, near its east end
+    expect(HOUSE.mainFloorY - heightAt(eastEnd.x, eastEnd.z)).toBeGreaterThan(1.7);
+    expect(HOUSE.mainFloorY - heightAt(eastEnd.x, eastEnd.z)).toBeLessThan(2.3);
+  });
+
   it("the ground covers the underground bowling alley", () => {
     for (let x = BOWLING_ALLEY.minX; x <= BOWLING_ALLEY.maxX; x += 2) {
       for (let z = BOWLING_ALLEY.minZ; z <= BOWLING_ALLEY.maxZ; z += 1) {

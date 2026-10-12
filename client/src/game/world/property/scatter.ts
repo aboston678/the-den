@@ -67,12 +67,12 @@ export function scatterAll() {
   const shrubs = Object.fromEntries(SHRUBS.map((k) => [k, [] as Placement[]])) as Record<string, Placement[]>;
 
   // Trees: a mixed Maine forest, thicker at the edge of the map.
-  grid(5, 101, (x, z, rand) => {
+  grid(4, 101, (x, z, rand) => {
     const edge = nearEdge(x, z);
     const tries = edge > 0.5 ? 2 : 1;
     for (let k = 0; k < tries; k++) {
-      const px = k ? x + (rand() - 0.5) * 4 : x, pz = k ? z + (rand() - 0.5) * 4 : z;
-      const density = 0.62 + 0.25 * fbm(px, pz, 60, 21) + 0.35 * edge;
+      const px = k ? x + (rand() - 0.5) * 3.2 : x, pz = k ? z + (rand() - 0.5) * 3.2 : z;
+      const density = 0.74 + 0.2 * fbm(px, pz, 60, 21) + 0.3 * edge;
       if (rand() > density || !isWild(px, pz, 0.5) || nearPath(px, pz, 3.5)) continue;
       const scale = 0.78 + rand() * 0.45;
       trees[pickTree(px, pz, rand())].push({ x: px, y: groundUnder(px, pz, 0.6) - 0.1, z: pz, rot: rand() * Math.PI * 2, scale });

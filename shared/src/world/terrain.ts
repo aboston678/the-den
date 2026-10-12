@@ -21,6 +21,9 @@ export function lawnMask(x: number, z: number) {
   return Math.max(oval, apron);
 }
 
+/** How far the back lawn sits below the main floor under the deck's east end (GAME_SPEC §4). */
+export const DECK_EAST_DROP = 2;
+
 /** Lawn level around the house: 0 in front, dropping to the basement floor behind. */
 function houseLevel(x: number, z: number) {
   // Where the drop starts (z0) and ends (z1) along z, for three stretches west→east:
@@ -30,7 +33,10 @@ function houseLevel(x: number, z: number) {
   const west = 1 - smoothstep(-12, -7, x), east = smoothstep(20, 25, x), mid = Math.max(0, 1 - west - east);
   const z0 = west * 9 + mid * -0.5 + east * 1.5;
   const z1 = west * 22 + mid * 5.4 + east * 13;
-  const drop = smoothstep(z0, z1, z) * -HOUSE.basementFloorY;
+  // Full basement depth by the den's walk-out doors; the lawn rises to ~2 m below the deck at its
+  // east end (Andrew, 2026-10-11) and stays there along the east side yard.
+  const depth = lerp(-HOUSE.basementFloorY, DECK_EAST_DROP, smoothstep(5, 13, x));
+  const drop = smoothstep(z0, z1, z) * depth;
   return HOUSE.mainFloorY - drop - 1.2 * smoothstep(12, 45, z); // the back lawn keeps falling gently south
 }
 

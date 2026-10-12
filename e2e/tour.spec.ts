@@ -32,7 +32,7 @@ test("screenshot tour of the property", async ({ page }) => {
       ["04-garage-apron", -40, -4, -18, -2, 0.12, 5],
       ["05-front-lawn", 8, -34, 2, 0, 0.12, 5],
       ["06-front-boulder", 20, -28, 13, -20, 0.2, 4],
-      ["07-back-lawn", 6, 34, 4, 0, 0.15, 5],
+      ["07-back-lawn", 8, 24, 4, 0, 0.15, 6],
       ["08-trail", 50, 22, 80, 9],
       ["09-dock", 106, 0, 125, 0, 0.25, 5],
       ["10-dock-end-upstream", 117, 0, 117, -40, 0.15, 4],

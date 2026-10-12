@@ -67,7 +67,7 @@ The Den is a private, browser-based, multiplayer 3D game for Andrew and his frie
 
 **Layout:**
 - **House** in a lawn clearing (~70 m × 60 m), more lawn to the south (back) and east than the north. Front of the house faces north.
-- **Ground:** the front (north) lawn is level with the main floor; the ground drops ~2.5 m toward the back (south) lawn so the basement walks out on the south side and the deck sits ~2 m above the lawn. It keeps sloping gently east down to the stream.
+- **Ground:** the front (north) lawn is level with the main floor; the ground drops toward the back (south) lawn so the basement walks out on the south side: at basement level (~3.4 m down at 1.25×) by the den's doors, rising to ~2 m below the deck at the deck's east end (Andrew, 2026-10-11). It keeps sloping gently east down to the stream.
 - **Driveway:** asphalt, ~4 m wide, starts at the **spawn point on the northwest edge of the map** and winds ~170 m through the woods to a paved apron in front of the garage doors (west end of the house). Dry-stacked stone retaining wall along the apron (see `greenhouse-exterior_and_garage-driveway.jpg`).
 - **Forest:** dense mixed Maine woods: tall eastern white pines (dominant), red maple, red oak, paper birch, hemlock. Ferns, saplings, fallen logs, mossy boulders. Walkable between trees. Dry-stone walls along parts of the woodline. Full green summer foliage.
 - **Yard details:** big boulder on the front lawn, rhododendrons along the front foundation, shrub beds behind the house, a few huge pines near the house (photos).
