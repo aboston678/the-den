@@ -74,3 +74,19 @@ for (const preset of (process.env.PRESETS ?? "medium").split(",")) {
     await ctx.close();
   });
 }
+
+test("Auto steps down a level when the first seconds of play are too slow", async ({ page }) => {
+  test.setTimeout(90_000);
+  failOnErrors(page);
+  // Pretend Auto had picked High on this computer (an M1 manages ~18 fps on High at 1080p).
+  await page.setViewportSize({ width: 1920, height: 1080 });
+  await page.addInitScript(() => {
+    if (!sessionStorage.getItem("seeded")) {
+      localStorage.setItem("den.autoTier", "high");
+      localStorage.setItem("den.settings", JSON.stringify({ graphics: "auto" }));
+      sessionStorage.setItem("seeded", "1");
+    }
+  });
+  await hostGame(page, "Auto");
+  await expect.poll(() => page.evaluate(() => localStorage.getItem("den.autoTier")), { timeout: 30_000 }).toBe("medium");
+});

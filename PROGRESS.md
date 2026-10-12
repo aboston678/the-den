@@ -3,7 +3,7 @@
 Claude Code updates this file after every milestone: tick the box, add a short note, and say what's next.
 **[ANDREW APPROVES]** = stop, show Andrew, and wait for his OK.
 
-**Current status:** 1.11 approved by Andrew. Next: 1.12 performance (graphics presets, frame-time budgets).
+**Current status:** 1.12 done (graphics presets, 60 fps on Medium at 1080p on an M1). Next: 1.13 deploy: Andrew sets up Vercel + Railway with step-by-step help.
 
 ---
 
@@ -32,7 +32,8 @@ Goal: Andrew sends friends a link; everyone makes or joins a party, loads in at 
   - Done 2026-10-12. The server owns a 68-min clock (ticks once a second; new parties start mid-morning; `?time=dusk` and `__den.setTime()` in dev only). Sun arcs east → south → west, sunset/sunrise colours, a night sky with stars and a moon, moonlit shadows, a little "auto exposure" at night (`client/src/game/sky/`). House (`house/Lights.tsx`): a glowing fixture in every room plus a pool of 4 real lights that follow the nearest fixtures; porch/garage/mudroom/deck/den lanterns fade on at dusk and off at dawn; outside windows glow at night; a fire burns at night. Flashlight (F) synced to the party; your own beam casts shadows. Sound (`audio/`): day birds + wind, dawn chorus, crickets + tree frogs, woodpecker/thrush/loon one-shots, stream heard near the water, fire crackle, quiet room hum indoors with the outdoors muffled, roar. Sounds are public-domain NPS + CC0 recordings (`npm run build:audio`, 1.4 MB). ~55 fps day and night (pre-1.10: 59 at the same spot). Tests: `e2e/daynight.spec.ts` (shared clock, lights at dusk, flashlight seen by another bear, sound, frame rate) + tour `e2e/daynight-tour.spec.ts`; screenshots `docs/screenshots/1.10/`. Tests now fail on any WebGL error.
 - [x] **1.11 Menus.** Click-to-enter splash, loading screen (keyframe image + `kling3_0` video, ~20 credits per try; ask first) with the song, Fortnite-style home screen (rotating bear, party lineup, create/join, code display), settings, pause menu, HUD prompts. **[ANDREW APPROVES]** the loading video and home screen.
   - Done 2026-10-12; Andrew approved the intro and home screen. Every page load: "Click to start" (shows a loading bar until the 3D world has loaded, so the intro never stutters) → Andrew's lyric intro: his 19 s clip, lines appear as sung, logo (#2) fades in at ~14 s, camera glides up the driveway to the house at golden dusk, Skip bottom right → home screen, with the full song carrying on seamlessly (`tools/build-music.mjs` lines the clip up with the song, 0.994 match). Home screen: your bear on a glowing pedestal (drag to spin), party bears beside you with name tags, create/join, big party code, PLAY, settings. Settings (saved): music/effects/ambience volume, mouse speed, invert Y, graphics preset (used in 1.12). Loading screen with progress + tips; pause on Esc (resume, settings, leave, all controls); HUD time-of-day icon; Tab party list. Name tags are now plain page elements (drei's Html crashed under React 19 once models were cached). Tests: `e2e/menus.spec.ts`; all tests now click Start + Skip.
-- [ ] **1.12 Performance.** Graphics presets (Auto/Low/Medium/High), budgets from GAME_SPEC §17, check frame times.
+- [x] **1.12 Performance.** Graphics presets (Auto/Low/Medium/High), budgets from GAME_SPEC §17, check frame times.
+  - Done 2026-10-12. Measured first at full 1080p on this M1 (same chip as the spec's MacBook Air): only 33–45 fps, 3.4–7M triangles, up to 640 draw calls. Now: graphics presets Low/Medium/High + Auto (`client/src/game/quality.ts`, chosen in Settings; Auto guesses from the graphics chip and steps down if the first 10 s are slow). Far trees are impostor cards (`world/property/impostor.ts`); indoors the forest drops to cheap levels; door pieces merged (212 → 86 draws). Medium @1080p: 60 fps everywhere except ~50 at the deepest forest edge, ≤353 draw calls, ~320 MB textures, ~25–35 MB download. Low: 60 everywhere. High (bloom, AO, indoor shadow lamp, 4096 shadows) ~18 fps on an M1, meant for stronger GPUs. `e2e/perf.spec.ts` checks Medium's budgets + Auto stepping down. Lesson: a game left running in the browser pane halves test frame rates; close it before measuring.
 - [ ] **1.13 Deploy.** Walk Andrew through Vercel + Railway setup, deploy, then Andrew and one friend test from two different computers. **[ANDREW APPROVES]** 🎉
 
 ## Phase 2: The house comes alive
@@ -107,6 +108,9 @@ Starting balance: 1,210 (2026-10-11)
 | 2026-10-11 | Cape roof: eaves 1 m above the upstairs floor, 35° pitch, peak ~7.2 m over the great room; sloped ceilings in the upstairs front and back rooms; dormers give the front rooms windows | Matches the exterior photos (low eaves, dormers) and GAME_SPEC's ~7 m great-room peak |
 | 2026-10-11 | Steep house stairs use an invisible smooth ramp for walking; the bear presses less hard into the ground | At 1.25× the treads are 27 cm, too shallow for step-by-step climbing; the old ground press slowed climbing to a crawl |
 | 2026-10-11 | Doors are server-checked (you must be next to a door to open it) | Stops a modified client opening doors from across the map |
+| 2026-10-12 | Medium has no bloom/SSAO/vignette; they're High-only (GAME_SPEC §17 updated) | On an M1 at 1080p they cost ~15 fps; Medium must hold 60 |
+| 2026-10-12 | Far trees drawn as impostor cards baked at load; forest LODs per preset; indoors the forest uses cheap levels | Trees were 2–5M triangles; this keeps Medium at 60 fps at 1080p |
+| 2026-10-12 | Textures stay WebP (KTX2 not needed) | Measured texture memory ~320 MB, well under the 1 GB budget |
 | 2026-10-12 | Intro is a lyric video over the 3D property at dusk (Andrew's 19 s clip), Skip button, every page load; AI loading video dropped (GAME_SPEC §11 updated) | Andrew's design; the 3D world is free and warms up the game's assets |
 | 2026-10-12 | The intro's first lyric shows the town name as sung (CLAUDE.md exception) | Andrew's call: it's his song, and the song already says it aloud |
 | 2026-10-12 | Day/night clock: server keeps seconds-into-cycle and sends it once a second; browsers count between ticks | Tiny network cost, everyone within ~0.1 s |
@@ -119,6 +123,7 @@ Starting balance: 1,210 (2026-10-11)
 ## Session notes
 (Newest first. 1–3 lines per session: what got done, what's next, anything Andrew needs to do.)
 
+- **2026-10-12 · Session 3 (cont. 2).** 1.12 done: presets + impostor trees; Medium 60 fps at 1080p on the M1. No credits. Next: 1.13 deploy (Andrew will need to create Vercel + Railway accounts; step-by-step).
 - **2026-10-12 · Session 3 (cont.).** 1.11 built: lyric intro, home screen, settings, loading, pause, HUD. Logo #2 picked (1 credit). Andrew approved. Next: 1.12 performance.
 - **2026-10-12 · Session 3.** Andrew approved the 1.9 house tour. 1.10 done: day/night, house + outdoor lights, flashlight, sound (Andrew OK'd the free NPS/OpenGameArt downloads and tree frogs instead of peepers; no credits spent). Fixed along the way: key presses could be lost depending on frame order; house tests now wait for the server instead of a fixed delay. Next: 1.11 menus.
 

@@ -308,9 +308,12 @@ Weight = min + (max − min) × r^2.2 (r random 0–1), so big fish are rare. Fi
 ## 17. Graphics quality and performance
 
 - Targets: **60 fps on Medium** at 1080p on an M1 MacBook Air or a mid-range Windows laptop; **Low** must hold 30+ fps on older integrated graphics.
-- Presets Low/Medium/High + Auto (picks based on the GPU and the first few seconds of frame times).
-- Budgets (Medium): under ~400 draw calls, under ~1.5M triangles on screen, texture memory under ~1 GB. Initial download to spawn under ~120 MB; stream the rest after spawning.
-- Use: KTX2 textures, meshopt/Draco GLBs (gltf-transform), instancing for trees/grass/rocks, LODs/impostors for far trees, interior vs exterior culling (don't render the forest's detail when deep inside, don't render furniture from far outside), pixel-ratio cap, shadows/SSAO/bloom scaled by preset.
+- Presets Low/Medium/High + Auto (picks from the graphics chip's name, then steps down a level if the first ~10 s of play average too slow; remembered per computer). Measured on an M1 at 1080p (`e2e/perf.spec.ts`, 2026-10-12): Low and Medium 60 fps nearly everywhere (Medium ~50 at the deepest forest edge); High ~18 fps on an M1, it's for gaming PCs and Pro/Max Macs.
+  - **Low:** 75% render resolution, 1024 shadows over 30 m, trees detailed to 18 m, fewer lamps, no flashlight shadow, no screen effects.
+  - **Medium:** full resolution, 2048 shadows over 40 m, trees detailed to 20 m, 4 indoor lamps, flashlight shadow. **No bloom/SSAO/vignette on Medium** (Andrew, 2026-10-12): on an M1 they cost ~15 fps at 1080p.
+  - **High:** 1.25× resolution, 4096 shadows over 55 m, trees detailed to 35 m, 6 lamps, bloom + ambient occlusion + vignette, and the lamp of the room you're in casts shadows.
+- Budgets (Medium): under ~400 draw calls, under ~1.5M triangles on screen (the deep forest goes a little over), texture memory under ~1 GB (measured ~320 MB). Initial download to spawn under ~120 MB (measured ~25–35 MB); stream the rest after spawning.
+- Use: meshopt GLBs (gltf-transform), instancing for trees/rocks/ferns, LODs plus **impostor cards** for far trees (each tree kind photographed once at load; ~2 triangles per far tree), interior vs exterior culling (inside the house the forest drops to its cheap levels), merged meshes, pixel-ratio cap, shadows and screen effects scaled by preset. Textures stay WebP: KTX2 isn't needed for the memory budget (revisit if a friend's laptop runs short of GPU memory).
 - Trees: a good procedural tree generator for three.js (e.g., EZ-Tree) or CC0 tree models. Grass: instanced blades with wind on Medium/High, a textured ground on Low.
 
 ---
