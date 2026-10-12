@@ -6,6 +6,7 @@ import {
   SphereGeometry, Sprite, SpriteMaterial, WebGLCubeRenderTarget,
 } from "three";
 import { Sky as SkyMesh } from "three/addons/objects/Sky.js";
+import { indoor } from "../house/lights.ts";
 import { playerState } from "../state.ts";
 import { gameClock } from "./clock.ts";
 import { current, lookAt } from "./look.ts";
@@ -148,7 +149,7 @@ export function DayNightSky() {
   }, [scene, parts]);
 
   useFrame((_, dt) => {
-    const look = lookAt(gameClock(), current);
+    const look = lookAt(gameClock(), current, indoor.amount);
     const { sky, dome, starField, moonSprite } = parts;
     const u = sky.material.uniforms;
     const s = look.sky.sun, m = look.sky.moon;

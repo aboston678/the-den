@@ -11,9 +11,9 @@ const C = {
   nightFog: new Color("#0e1520"),
   daySun: new Color("#fff4e6"),
   lowSun: new Color("#ffaa5e"),
-  moon: new Color("#a8bde3"),
+  moon: new Color("#b6c4dc"),
   dayHemiSky: new Color("#dfe9f3"),
-  nightHemiSky: new Color("#5d74a6"),
+  nightHemiSky: new Color("#4f5f7e"),
   dayHemiGround: new Color("#3a4630"),
   nightHemiGround: new Color("#161c28"),
 };
@@ -38,7 +38,14 @@ export interface Look {
   night: number;
 }
 
-export function lookAt(time: number, out: Look = newLook()): Look {
+const INDOOR_HEMI_SKY = new Color("#d9ccb6");
+const INDOOR_HEMI_GROUND = new Color("#6e5d4a");
+
+/**
+ * The look at `time`. `indoors` (0…1) swaps the sky's blue fill light for a dim warm one, so the
+ * night sky doesn't light up the rooms; the house's own lamps do that (house/Lights.tsx).
+ */
+export function lookAt(time: number, out: Look = newLook(), indoors = 0): Look {
   const sky = skyAt(time);
   const d = sky.daylight;
   out.sky = sky;
@@ -56,7 +63,7 @@ export function lookAt(time: number, out: Look = newLook()): Look {
   } else {
     out.light.dir = sky.moon;
     out.light.color.copy(C.moon);
-    out.light.intensity = 0.9 * moonUp;
+    out.light.intensity = 0.75 * moonUp;
   }
 
   out.hemi.sky.copy(C.nightHemiSky).lerp(C.dayHemiSky, d);
@@ -67,6 +74,14 @@ export function lookAt(time: number, out: Look = newLook()): Look {
   // A touch of "auto exposure" so night stays readable (GAME_SPEC §9).
   out.exposure = lerp(1.75, 1.0, d);
   out.night = 1 - d;
+
+  if (indoors > 0) {
+    out.hemi.sky.lerp(INDOOR_HEMI_SKY, indoors);
+    out.hemi.ground.lerp(INDOOR_HEMI_GROUND, indoors);
+    out.hemi.intensity = lerp(out.hemi.intensity, lerp(0.12, 0.3, d), indoors);
+    out.envIntensity = lerp(out.envIntensity, lerp(0.02, 0.06, d), indoors);
+    out.exposure = lerp(out.exposure, 1.1, indoors);
+  }
   return out;
 }
 

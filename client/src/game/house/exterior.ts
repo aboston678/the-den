@@ -1,4 +1,4 @@
-import { ExtrudeGeometry, Path, Shape, ShapeGeometry } from "three";
+import { type BufferGeometry, ExtrudeGeometry, Path, PlaneGeometry, Shape, ShapeGeometry } from "three";
 import { type GeoBuckets, type SolidBox, add, boxFaces, quad } from "./geometry.ts";
 import { type Box2, subtractAll } from "./rects.ts";
 import { DORMERS, type Dormer, type Gable, OVERHANG, ROOFS, ROOF_THICKNESS, dormerBox, ridgeY } from "./roof.ts";
@@ -232,6 +232,33 @@ export function windowParts(o: Opening, axis: "x" | "z", c: number, outside: -1 
   }
 }
 
+/**
+ * A warm pane just inside an outside window, facing out: the window glowing at night (its
+ * material fades with the time of day, see Lights.tsx). Seen only from outdoors.
+ */
+function windowGlow(o: Opening, axis: "x" | "z", c: number, outside: -1 | 1, out: GeoBuckets) {
+  const { u0, u1, y0, y1 } = o;
+  let g: BufferGeometry;
+  if (o.kind === "arch") {
+    const r = (u1 - u0) / 2, cy = y1 - r - y0;
+    const s = new Shape();
+    s.moveTo(-r, 0);
+    s.lineTo(r, 0);
+    s.lineTo(r, cy);
+    s.absarc(0, cy, r, 0, Math.PI, false);
+    s.lineTo(-r, 0);
+    g = new ShapeGeometry(s, 24).toNonIndexed();
+  } else {
+    g = new PlaneGeometry(u1 - u0, y1 - y0).toNonIndexed().translate(0, (y1 - y0) / 2, 0);
+  }
+  // The plane faces +z; turn it to face outdoors.
+  if (axis === "x") g.rotateY(outside === 1 ? 0 : Math.PI);
+  else g.rotateY(outside === 1 ? Math.PI / 2 : -Math.PI / 2);
+  const inset = -outside * 0.035, um = (u0 + u1) / 2;
+  g.translate(axis === "x" ? um : c + inset, y0, axis === "x" ? c + inset : um);
+  add(out, "window_glow", g);
+}
+
 /** Windows for every wall piece (shutters on the front, north-facing walls). */
 export function windows(pieces: WallPiece[], out: GeoBuckets) {
   for (const p of pieces) {
@@ -240,6 +267,7 @@ export function windows(pieces: WallPiece[], out: GeoBuckets) {
     for (const o of p.openings) {
       if (o.kind === "door") continue;
       windowParts(o, p.axis, p.c, outside, front, out);
+      if (outside !== 0 && (p.a ?? p.b)?.id !== "garage") windowGlow(o, p.axis, p.c, outside, out);
     }
   }
 }

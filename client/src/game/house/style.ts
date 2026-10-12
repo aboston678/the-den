@@ -1,5 +1,5 @@
 import {
-  CanvasTexture, Color, DoubleSide, type Material, MeshStandardMaterial, RepeatWrapping, SRGBColorSpace, type Texture, Vector2,
+  CanvasTexture, Color, DoubleSide, type Material, MeshBasicMaterial, MeshStandardMaterial, RepeatWrapping, SRGBColorSpace, type Texture, Vector2,
 } from "three";
 import type { useOutdoorMaps } from "../world/property/textures.ts";
 
@@ -173,6 +173,8 @@ export class HouseMaterials {
       case "glass": return new MeshStandardMaterial({
         color: "#a9bcc4", roughness: 0.04, metalness: 0.1, transparent: true, opacity: 0.22, envMapIntensity: 1.6, side: DoubleSide, depthWrite: false,
       });
+      // Warm light behind the windows at night; Lights.tsx fades its opacity with the time of day.
+      case "window_glow": return new MeshBasicMaterial({ color: "#f2b866", transparent: true, opacity: 0, depthWrite: false });
       case "dark_glass": return new MeshStandardMaterial({ color: "#20262a", roughness: 0.08, metalness: 0.3, envMapIntensity: 1.4 });
       case "shutter": return new MeshStandardMaterial({ color: "#1d2228", roughness: 0.6 });
       case "frame": return new MeshStandardMaterial({ color: "#f4f3ef", roughness: 0.4, metalness: 0.2 });

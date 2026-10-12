@@ -4,7 +4,7 @@ import { failOnErrors, hostGame } from "./helpers.ts";
 
 // Milestone 1.9 screenshot tour: every room of the house, plus the porch, deck and greenhouse.
 //   npx playwright test e2e/house-tour.spec.ts   -> test-results/house-tour/*.png
-// (STOPS=kitchen,den to shoot just some.)
+// (STOPS=kitchen,den to shoot just some; TIME=night to shoot at another time of day.)
 
 const SKIP = new Set(["utility"]); // locked, not enterable
 const floorY = (level: string, room: string) =>
@@ -14,6 +14,9 @@ test("screenshot tour of every room", async ({ page }) => {
   test.setTimeout(400_000);
   failOnErrors(page);
   await hostGame(page, "Tour");
+  const time = process.env.TIME;
+  if (time) await page.evaluate((t) => window.__den!.setTime(t), time);
+  const dir = `test-results/house-tour${time ? `-${time}` : ""}`;
   const only = process.env.STOPS?.split(",");
   const stops = [
     ...LEVELS.flatMap((l) => l.rooms.filter((r) => !SKIP.has(r.id)).map((r) => ({ level: l.id, room: r }))),
@@ -35,7 +38,7 @@ test("screenshot tour of every room", async ({ page }) => {
     await page.waitForTimeout(1200);
     const p = await page.evaluate(() => window.__den!.player.position);
     expect(Math.abs(p.y - y), `${room.id}: standing on its floor`).toBeLessThan(0.3);
-    await page.screenshot({ path: `test-results/house-tour/${level}-${room.id}.png` });
+    await page.screenshot({ path: `${dir}/${level}-${room.id}.png` });
   }
   if (only) return;
   // And the outside, from the lawns (world x, z, look-at x, z).
@@ -51,6 +54,6 @@ test("screenshot tour of every room", async ({ page }) => {
       d.camera.distance = 6;
     }, [x, z, lx, lz] as const);
     await page.waitForTimeout(1500);
-    await page.screenshot({ path: `test-results/house-tour/outside-${name}.png` });
+    await page.screenshot({ path: `${dir}/outside-${name}.png` });
   }
 });
