@@ -558,3 +558,9 @@ button:disabled {
 .catch-best { margin-top: 6px; font-size: 14px; font-weight: 700; color: #e8742e; text-transform: uppercase; letter-spacing: 1px; }
 @keyframes catch-in { from { transform: translateY(-12px); opacity: 0; } to { transform: none; opacity: 1; } }
 .catch-toast { position: absolute; right: 32px; top: 240px; padding: 8px 14px; border-radius: 10px; background: rgba(12, 18, 15, 0.8); font-size: 14px; }
+
+/* --- sign-in (2.5) --- */
+.signed-in { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+button.link { background: none; border: none; padding: 0; color: #e8742e; text-decoration: underline; cursor: pointer; font: inherit; }
+.dev-tag { margin-left: 6px; padding: 1px 6px; border-radius: 6px; background: rgba(232, 116, 46, 0.25); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
+.username-form { display: grid; gap: 8px; }

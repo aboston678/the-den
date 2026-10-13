@@ -19,6 +19,7 @@ import {
   spawnPoint,
   wrapTime,
 } from "@den/shared";
+import { type Bear, authenticate } from "../auth.ts";
 import { devToolsOn } from "../config.ts";
 import { PartyState, Player } from "./PartyState.ts";
 import { Fishing } from "./fishing.ts";
@@ -43,6 +44,8 @@ export class PartyRoom extends Room<{ state: PartyState }> {
   state = new PartyState();
   private lastPoseAt = new Map<string, number>();
   private fishing = new Fishing();
+  /** Supabase user id per bear (server-side only; used to save stats), null for development players. */
+  readonly userIds = new Map<string, string | null>();
 
   async onCreate(options?: { world?: unknown; time?: unknown }) {
     this.roomId = await uniqueRoomCode();
@@ -121,9 +124,16 @@ export class PartyRoom extends Room<{ state: PartyState }> {
     });
   }
 
-  onJoin(client: Client, options?: { name?: unknown }) {
+  /** Signed-in players only (GAME_SPEC §14): checks the Google sign-in; development can join with a name. */
+  async onAuth(_client: Client, options?: { token?: unknown; name?: unknown }): Promise<Bear> {
+    return authenticate(options);
+  }
+
+  onJoin(client: Client, _options?: unknown) {
+    const bear = client.auth as Bear;
     const player = new Player();
-    player.name = sanitizeNickname(options?.name);
+    player.name = bear.username;
+    this.userIds.set(client.sessionId, bear.userId);
     player.slot = this.freeSlot();
     placeAtSpawn(player, this.state.world as WorldName);
     this.state.players.set(client.sessionId, player);
@@ -144,6 +154,7 @@ export class PartyRoom extends Room<{ state: PartyState }> {
   onLeave(client: Client) {
     this.state.players.delete(client.sessionId);
     this.fishing.remove(client.sessionId);
+    this.userIds.delete(client.sessionId);
     this.lastPoseAt.delete(client.sessionId);
     if (this.state.hostId === client.sessionId) {
       // Next host: the remaining bear with the lowest slot, preferring connected ones.

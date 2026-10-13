@@ -5,6 +5,7 @@ import {
 import { create } from "zustand";
 import { setServerClock } from "../game/sky/clock.ts";
 import { playerState } from "../game/state.ts";
+import { accessToken } from "./auth.ts";
 import { type FishView, addSnapshot, remotes } from "./remotes.ts";
 
 // Party networking (GAME_SPEC §7): create/join with a 5-character code, lobby list, host
@@ -113,6 +114,7 @@ function rememberNickname(name: string) {
 
 function friendlyError(err: unknown, code?: string) {
   const msg = String((err as Error)?.message ?? err).toLowerCase();
+  if (msg.includes("sign in")) return "Your sign-in has expired. Sign out and sign in again.";
   if (msg.includes("not found") || msg.includes("invalid") || msg.includes("expired")) return `No party with code ${code ?? ""}. Check the code and try again.`;
   if (msg.includes("locked") || msg.includes("full")) return "That party is full (6 bears max).";
   if (msg.includes("fetch") || msg.includes("network") || msg.includes("refused")) return "Can't reach the game server. Try again in a moment.";
@@ -124,8 +126,14 @@ const requestedWorld = () => new URLSearchParams(location.search).get("world") ?
 /** ?time=dusk (or night, noon, … or seconds) starts the party at that time of day (dev only). */
 const requestedTime = () => new URLSearchParams(location.search).get("time") ?? undefined;
 
+/** Who we are, for the server: our sign-in (GAME_SPEC §14), or in development just a name. */
+async function identity(name: string) {
+  const token = await accessToken();
+  return token ? { token } : { name: sanitizeNickname(name) };
+}
+
 export async function createParty(name: string) {
-  return enter(() => getClient().create(PARTY_ROOM, { name: sanitizeNickname(name), world: requestedWorld(), time: requestedTime() }), name);
+  return enter(async () => getClient().create(PARTY_ROOM, { ...(await identity(name)), world: requestedWorld(), time: requestedTime() }), name);
 }
 
 export async function joinParty(rawCode: string, name: string) {
@@ -134,7 +142,7 @@ export async function joinParty(rawCode: string, name: string) {
     usePartyStore.setState({ status: "error", error: "Party codes are 5 letters and numbers (no I or O, no 0 or 1)." });
     return;
   }
-  return enter(() => getClient().joinById(code, { name: sanitizeNickname(name) }), name, code);
+  return enter(async () => getClient().joinById(code, await identity(name)), name, code);
 }
 
 async function enter(connect: () => Promise<Room>, name: string, code?: string) {

@@ -6,3 +6,4 @@ export * from "./world/index.ts";
 export * from "./house/floorplan.ts";
 export * from "./house/furniture.ts";
 export * from "./fishing.ts";
+export * from "./username.ts";

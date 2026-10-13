@@ -136,7 +136,7 @@ describe("party room", () => {
     expect(b.state.clock - before).toBeCloseTo(1, 3);
   });
 
-  it("dev tools can set the time (?time=dusk), but not in production", async () => {
+  it("dev tools can set the time (?time=dusk); production refuses players who aren't signed in", async () => {
     const a = track(await client().create(PARTY_ROOM, { name: "Alpha", time: "dusk" }));
     await until(() => a.state.clock > 0);
     expect(a.state.clock).toBeGreaterThanOrEqual(TIME_PRESETS.dusk);
@@ -146,12 +146,11 @@ describe("party room", () => {
     const env = process.env.NODE_ENV;
     process.env.NODE_ENV = "production";
     try {
-      const c = track(await client().create(PARTY_ROOM, { name: "Charlie", time: "dusk" }));
-      await until(() => c.state.clock > 0);
-      expect(c.state.clock).toBeLessThan(START_TIME + 2);
-      c.send(MSG.devTime, { time: "night" });
+      // In production only signed-in players can join (GAME_SPEC §14), and dev time jumps are ignored.
+      await expect(client().create(PARTY_ROOM, { name: "Charlie", time: "dusk" })).rejects.toThrow(/sign in/);
+      a.send(MSG.devTime, { time: "dusk" });
       await new Promise((r) => setTimeout(r, 150));
-      expect(c.state.clock).toBeLessThan(START_TIME + 2);
+      expect(a.state.clock).toBeGreaterThanOrEqual(TIME_PRESETS.night);
     } finally {
       process.env.NODE_ENV = env;
     }
