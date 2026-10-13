@@ -3,7 +3,7 @@
 Claude Code updates this file after every milestone: tick the box, add a short note, and say what's next.
 **[ANDREW APPROVES]** = stop, show Andrew, and wait for his OK.
 
-**Current status:** Phase 2 on branch `phase-2`: 2.1, 2.2 and 2.4 built (furniture, greenhouse, TVs, boat, fishing). Next: 2.5 Google sign-in. Waiting on Andrew for the Google sign-in setup (`docs/setup-google-signin.md`), needed by 2.5. Then 2.6, one combined review, 2.7 deploy.
+**Current status:** Phase 2 on branch `phase-2`: 2.1, 2.2 and 2.4 built (furniture, greenhouse, TVs, boat, fishing). Next: 2.5 Google sign-in (setup done by Andrew 2026-10-13). Waiting on Andrew for the Google sign-in setup (`docs/setup-google-signin.md`), needed by 2.5. Then 2.6, one combined review, 2.7 deploy.
 
 ---
 
@@ -148,6 +148,7 @@ Starting balance: 1,210 (2026-10-11)
 ## Session notes
 (Newest first. 1–3 lines per session: what got done, what's next, anything Andrew needs to do.)
 
+- **2026-10-13 · Session 4 (cont.).** Andrew finished the Google sign-in setup: Supabase project `the-den` (East US) with Google sign-in on (Google Cloud project "The Den", app published), redirect URLs for localhost, the Vercel site and its previews; keys in Railway + Vercel; public values and the secret key in the local `.env` (gitignored; secret read from his clipboard, never shown). Checked: Google provider on, secret key works. Next: 2.5 sign-in in the game.
 - **2026-10-12 · Session 4.** Phase 1 done. Phase 2 planned as one batch. Credit batch approved and spent (182.5; 20 models). Dogs dropped (Andrew: no purchase). TV = Andrew's private clips; boat at the dock. 2.1 + 2.2 built and committed on `phase-2`. Next: 2.4 fishing; Andrew to do the Google sign-in setup when convenient.
 
 - **2026-10-12 · Session 3 (cont. 4).** Andrew played online: works. Feedback: woods too big → smaller map; walk looked funny → 3 new walks tried (24 credits), he picked walking_2; distance fuzzy/shadows popping → sharper far trees + shadows reach 55 m. Work on branch `feedback-1` until verified, then merged to main (goes live). Still to do for 1.13: the two-computer test with a friend.
