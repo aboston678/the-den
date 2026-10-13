@@ -117,6 +117,11 @@ Starting balance: 1,210 (2026-10-11)
 ## Decision log
 | Date | Decision | Why |
 |---|---|---|
+| 2026-10-13 | **Cartoon art style becomes the game's look** (GAME_SPEC §1, §2, §5.1b, §17); realistic kept as a Settings option | Andrew wasn't happy with the realistic graphics and loved the cartoon concept pictures; a browser on a laptop can make a bright cartoon look polished far more easily than photoreal |
+| 2026-10-13 | Forest pop-in fix: copies dissolve between detail levels; shadow box ahead of the camera; furniture shaders prepared at load | Andrew: "everything loads in as you run by it" |
+| 2026-10-13 | Cartoon bear is an original design, not the film bear Andrew showed | We don't copy existing copyrighted characters; the design keeps the qualities he liked (pear shape, no neck, goofy grin) |
+| 2026-10-13 | Bear clips reused on the new bear (`tools/transfer-clips.mjs`) instead of bought again | Saved ~104 credits; all 14 clips checked in the viewer |
+| 2026-10-13 | Keep the real property: no fence, lake or mountains from the concept pictures | Andrew |
 | 2026-10-11 | Upright two-legged grizzly only (no all-fours mode) | Higgsfield's rig and animation library is two-legged only |
 | 2026-10-11 | House built at 1.25× real scale | 2.1 m bear must fit through doors; third-person camera needs room indoors |
 | 2026-10-11 | Vercel (site) + Railway (multiplayer server) + Supabase (accounts/DB) | Vercel can't run an always-on WebSocket game server |

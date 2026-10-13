@@ -1,19 +1,23 @@
 import { ShaderChunk } from "three";
 import { settings } from "../ui/settings.ts";
 
-// The art-style test (2026-10-13): Andrew is weighing a brighter, chunkier cartoon look against the
-// current realistic one. "Cartoon" is picked in Settings (it reloads the page) or with ?toon in the
-// address. It changes the look only, never the gameplay:
+// The art style (GAME_SPEC §1). Since 2026-10-13 the game is a bright, chunky cartoon (Andrew
+// approved it from the concept pictures in assets/concepts/style/); the original realistic look
+// can still be picked in Settings (it reloads the page) or with ?realistic in the address (?toon
+// forces cartoon). It changes the look only, never the gameplay:
 //  - lighting in soft bands (lit side / shade side) instead of a smooth photographic falloff
 //  - textures softened toward their own average colours, a little more colour saturation
-//  - chunky stylized trees and round bushes (toonTrees.ts), a deeper blue sky, a brighter lawn
+//  - Higgsfield cartoon scenery and bear (toonTrees.ts, bear-toon.glb), painted ground, grass
+//    blades, a painted sky with puffy clouds, warmer sun and brighter shade
 
 export type ArtStyle = "realistic" | "cartoon";
 
 /** Decided once at load: shaders and tree models are built for one style. */
 export const TOON: boolean = (() => {
   try {
-    if (new URLSearchParams(location.search).has("toon")) return true;
+    const q = new URLSearchParams(location.search);
+    if (q.has("toon")) return true;
+    if (q.has("realistic")) return false;
   } catch {
     /* no location (tests in node) */
   }

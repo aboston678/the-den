@@ -42,8 +42,8 @@ export function SettingsPanel({ onClose }: { onClose: () => void }) {
               location.reload(); // shaders and trees are built for one style
             }}
           >
-            <option value="realistic">Realistic (current)</option>
-            <option value="cartoon">Cartoon (test)</option>
+            <option value="cartoon">Cartoon</option>
+            <option value="realistic">Realistic (old look)</option>
           </select>
           <output />
         </label>

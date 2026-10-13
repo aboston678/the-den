@@ -42,7 +42,7 @@ test("realistic vs cartoon", async ({ browser }) => {
     const ctx = await browser.newContext({ viewport: { width: 1280, height: 720 } });
     const page = await ctx.newPage();
     failOnErrors(page);
-    await openGame(page, style === "cartoon" ? "/?toon" : "/");
+    await openGame(page, style === "cartoon" ? "/?toon" : "/?realistic");
     await page.getByTestId("nickname").fill("Stylist");
     await page.getByTestId("create").click();
     await expect(page.getByTestId("party-code")).toHaveText(/^[A-Z2-9]{5}$/, { timeout: 15_000 });

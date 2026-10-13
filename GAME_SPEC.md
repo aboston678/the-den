@@ -7,9 +7,9 @@ This is the source of truth. Build what is written here. If something here won't
 
 ## 1. The game in one paragraph
 
-The Den is a private, browser-based, multiplayer 3D game for Andrew and his friends (max 6 per party). Everyone plays the same realistic upright grizzly bear. You load in at the end of a wooded driveway in summer Maine, walk out of the trees to a big white farmhouse on a lawn, and hang out: open doors, explore every room, roar at each other, dance, fish off the dock in the stream, bowl on the two-lane alley in the basement, and play full-rules Catan around the dining-room table. A 30-minute day and 30-minute night cycle runs the whole time. Stats (fish caught, bowling high score, Catan wins) go on a leaderboard you can filter to friends.
+The Den is a private, browser-based, multiplayer 3D game for Andrew and his friends (max 6 per party). Everyone plays the same big, goofy cartoon grizzly bear, walking upright. You load in at the end of a wooded driveway in summer Maine, walk out of the trees to a big white farmhouse on a lawn, and hang out: open doors, explore every room, roar at each other, dance, fish off the dock in the stream, bowl on the two-lane alley in the basement, and play full-rules Catan around the dining-room table. A 30-minute day and 30-minute night cycle runs the whole time. Stats (fish caught, bowling high score, Catan wins) go on a leaderboard you can filter to friends.
 
-**Visual target:** grounded, cinematic, photoreal-leaning, modern indie quality (think the lighting mood of The Long Dark / Sons of the Forest). Not cartoon, not low-poly, not retro. Polish comes from good assets, lighting, post-processing and sound, not from feature count.
+**Visual target (changed 2026-10-13, Andrew):** a bright, chunky, painted cartoon look, like the concept pictures in `assets/concepts/style/` (the driveway one is the north star): saturated summer greens, a deep blue sky with puffy clouds, warm sun and soft coloured shade, chunky stylized trees and bushes, thick swaying grass. It's built from Higgsfield cartoon models (scenery and bear), painted textures, and the cartoon shading in `client/src/game/artStyle.ts`. The original photoreal look (The Long Dark mood) stays selectable in Settings → Art style → Realistic. Keep the real property's layout: no invented landmarks (no fence, lake or mountains).
 
 ---
 
@@ -20,7 +20,7 @@ The Den is a private, browser-based, multiplayer 3D game for Andrew and his frie
 | Name | **The Den** |
 | Platform | Desktop web browser (Chrome, Edge, Safari, Firefox) on laptops. Keyboard + mouse only. No mobile, no controllers. |
 | Players | 1–6 per party. Join a party with a room code. |
-| Character | ONE character: realistic **upright (two-legged) grizzly bear**, made, rigged and animated with Higgsfield. Everyone looks the same; name tags tell bears apart. |
+| Character | ONE character: a **cartoon upright (two-legged) grizzly bear**, an original design (big pear-shaped body, almost no neck, goofy grin; `assets/concepts/bear-v2/` #1), made and rigged with Higgsfield. Everyone looks the same; name tags tell bears apart. (The realistic bear is still used by the Realistic art style.) |
 | Camera | Third-person, behind and slightly above the bear. |
 | Map | Real property (see `reference/`): wooded driveway, lawn, house, mixed forest, stream with a dock. Summer. |
 | House | Built from `docs/floorplan.json` and the listing photos, at **1.25× real scale** (doors, rooms, stairs, bowling alley, everything). |
@@ -91,6 +91,10 @@ The Den is a private, browser-based, multiplayer 3D game for Andrew and his frie
 3. **Rig test before spending more** — use model `meshy_rigging` (verified cost **8 credits per clip**) on the same mesh for 2 clips (Casual_Walk 30, RunFast 16). Load all three GLBs in three.js and confirm the clips play correctly on ONE skinned mesh (bone names/hierarchy match). If they don't match, stop and tell Andrew before generating more. *(Result 2026-10-11: names/hierarchy match but every re-rig places joints differently, so each clip is converted onto the base bear's skeleton with `tools/retarget-clip.mjs`. Andrew approved.)*
 4. **Remaining clips** (table below). Show Andrew the preview GIF links for any clip marked "preview first" and let him pick.
 5. **Process:** fatten the base mesh (`tools/fatten-bear.mjs`, torso +22%, belly +15%; Andrew's request), retarget every clip onto its skeleton (`tools/retarget-clip.mjs`), merge into one `bear.glb` (mesh + all clips) with gltf-transform; meshopt/Draco + KTX2 textures; target under 25 MB.
+
+### 5.1b The cartoon bear (2026-10-13)
+
+The game's bear since the cartoon remake: concept `assets/concepts/bear-v2/bear-1.png` (job 01e1151d; original design, not a copy of any film character), `meshy_v7_image_to_3d` with the same settings as above (47.5 credits). Not fattened. The realistic bear's clips below are reused: `tools/transfer-clips.mjs` turns each joint from the new bear's A-pose by the same world-space amount as the clip's joint, keeping the new bear's bone lengths and scaling the hips' movement by leg length (no clips bought). Build: `node tools/build-bear.mjs --toon` → `client/public/models/bear-toon.glb`. If a clip ever looks wrong on him, buy that one clip with `meshy_rigging` on his mesh (8 credits) and use `retarget-clip.mjs`.
 
 ### 5.2 Animation clips (Higgsfield animation library IDs, verified)
 
@@ -307,6 +311,7 @@ Weight = min + (max − min) × r^2.2 (r random 0–1), so big fish are rare. Fi
 - Budgets (Medium): under ~400 draw calls, under ~1.5M triangles on screen (the deep forest goes a little over), texture memory under ~1 GB (measured ~320 MB). Initial download to spawn under ~120 MB (measured ~25–35 MB); stream the rest after spawning.
 - Use: meshopt GLBs (gltf-transform), instancing for trees/rocks/ferns, LODs plus **impostor cards** for far trees (copies **dissolve** between detail levels over a short band instead of swapping, so nothing pops; the sun's shadow box sits ahead of where you look; furniture shows through the windows from 12/15/30 m by preset, its shaders prepared at load) (each tree kind photographed once at load; ~2 triangles per far tree), interior vs exterior culling (inside the house the forest drops to its cheap levels), merged meshes, pixel-ratio cap, shadows and screen effects scaled by preset. Textures stay WebP: KTX2 isn't needed for the memory budget (revisit if a friend's laptop runs short of GPU memory).
 - Trees: a good procedural tree generator for three.js (e.g., EZ-Tree) or CC0 tree models. Grass: instanced blades with wind on Medium/High, a textured ground on Low.
+- **Cartoon look (default since 2026-10-13):** the forest keeps the realistic layout and LOD system, but each tree, bush, fern and rock is drawn with a Higgsfield cartoon model (pine, birch, maple, bush, fern, 2 rocks; `npm run build:toon` → `toon-scenery.glb`, ~6k / ~1.4k / ~250 triangles per tree level; the far levels carry the texture's colours on their corners so the sloppy simplifier can't smear them), and trees cast shadows from their simplest level. Grass blades on the lawn and driveway edges (draw distance 16/26/38 m by preset). Measured on the M1 at 1080p, Medium: 60 fps at every perf spot.
 
 ---
 
