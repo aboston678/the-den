@@ -537,3 +537,24 @@ button:disabled {
   text-transform: none;
   letter-spacing: 0.02em;
 }
+
+/* --- fishing HUD (2.4) --- */
+.fishing-hud { position: fixed; inset: 0; pointer-events: none; z-index: 20; font-family: Inter, system-ui, sans-serif; color: #f6efe0; }
+.fishing-hud .bar { height: 12px; border-radius: 6px; background: rgba(10, 14, 12, 0.6); border: 1px solid rgba(246, 239, 224, 0.35); overflow: hidden; }
+.fishing-hud .bar > div { height: 100%; background: #e8742e; transition: width 80ms linear; }
+.cast-power { position: absolute; left: 50%; bottom: 190px; width: 260px; transform: translateX(-50%); display: grid; gap: 6px; text-align: center; font-weight: 600; text-shadow: 0 1px 3px #000; }
+.fish-hint, .fish-help { position: absolute; left: 50%; bottom: 112px; transform: translateX(-50%); padding: 6px 14px; border-radius: 999px; background: rgba(12, 18, 15, 0.7); font-size: 14px; white-space: nowrap; }
+.fish-help { bottom: 70px; opacity: 0.85; font-size: 13px; }
+.fish-on { position: absolute; left: 50%; top: 32%; transform: translateX(-50%); font-family: "Bebas Neue", Oswald, sans-serif; font-size: 64px; letter-spacing: 2px; color: #ffd36a; text-shadow: 0 3px 12px rgba(0, 0, 0, 0.8); animation: fish-on-pulse 0.35s ease-in-out infinite alternate; }
+.fish-on b { color: #fff; }
+@keyframes fish-on-pulse { from { transform: translateX(-50%) scale(1); } to { transform: translateX(-50%) scale(1.07); } }
+.tension { position: absolute; left: 50%; bottom: 190px; width: 380px; transform: translateX(-50%); display: grid; gap: 6px; text-shadow: 0 1px 3px #000; }
+.tension .bar { height: 18px; border-radius: 9px; }
+.tension-label { display: flex; justify-content: space-between; font-size: 14px; font-weight: 600; }
+.fish-result { position: absolute; left: 50%; top: 34%; transform: translateX(-50%); font-family: "Bebas Neue", Oswald, sans-serif; font-size: 52px; color: #f6efe0; text-shadow: 0 3px 12px rgba(0, 0, 0, 0.8); }
+.catch-card { position: absolute; right: 32px; top: 90px; min-width: 260px; padding: 18px 22px; border-radius: 14px; background: linear-gradient(160deg, rgba(31, 50, 38, 0.95), rgba(18, 26, 21, 0.95)); border: 1px solid rgba(232, 116, 46, 0.6); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45); animation: catch-in 0.35s ease-out; }
+.catch-species { font-family: "Bebas Neue", Oswald, sans-serif; font-size: 34px; letter-spacing: 1px; }
+.catch-weight { font-size: 22px; font-weight: 700; color: #ffd36a; }
+.catch-best { margin-top: 6px; font-size: 14px; font-weight: 700; color: #e8742e; text-transform: uppercase; letter-spacing: 1px; }
+@keyframes catch-in { from { transform: translateY(-12px); opacity: 0; } to { transform: none; opacity: 1; } }
+.catch-toast { position: absolute; right: 32px; top: 240px; padding: 8px 14px; border-radius: 10px; background: rgba(12, 18, 15, 0.8); font-size: 14px; }

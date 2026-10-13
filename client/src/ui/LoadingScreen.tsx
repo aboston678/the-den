@@ -11,7 +11,7 @@ const TIPS = [
   "Doors open with E, for the whole party.",
   "A full day and night takes 68 minutes. The house lights stay on.",
   "Hold Tab to see who's in your party.",
-  "Grab a rod from the bucket at the dock to go fishing (coming soon).",
+  "Grab a rod from the bucket at the dock, hold the mouse to cast, and spam R when a fish bites.",
 ];
 
 export function LoadingScreen() {

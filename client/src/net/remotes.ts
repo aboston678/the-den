@@ -1,4 +1,17 @@
-import type { BearAction } from "@den/shared";
+import type { BearAction, FishState } from "@den/shared";
+
+/** A bear's fishing, as the server reports it (GAME_SPEC §13). */
+export interface FishView {
+  rod: boolean;
+  state: FishState;
+  lureX: number;
+  lureZ: number;
+  tension: number;
+  line: number;
+  surges: number;
+  species: string;
+  weight: number;
+}
 
 // Other bears in the party, as received from the server. Updated by net/party.ts on every
 // state patch; read every frame by game/remote/RemoteBears.tsx. Plain objects (not React
@@ -25,6 +38,7 @@ export interface RemoteBear {
   /** Where the bear is drawn this frame (interpolated), written by RemoteBears. */
   current: { x: number; y: number; z: number; speed: number; action: BearAction; flashlight: boolean; aimYaw: number; aimPitch: number };
   tagVisible: boolean;
+  fish: FishView;
 }
 
 export const remotes = new Map<string, RemoteBear>();

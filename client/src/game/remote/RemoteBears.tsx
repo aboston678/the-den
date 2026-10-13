@@ -9,6 +9,7 @@ import { playAt } from "../audio/audio.ts";
 import { nameTagEls } from "./nameTags.ts";
 import { CAPSULE, CAPSULE_CENTER, JUMP_AIR_TIME } from "../config.ts";
 import { useBearModel } from "../player/useBearModel.ts";
+import { useRod } from "../fishing/rig.ts";
 import { cameraState, playerState } from "../state.ts";
 import { invisibleColliders } from "../world/invisible.ts";
 
@@ -47,6 +48,8 @@ function RemoteBearView({ id }: { id: string }) {
   const size = useThree((s) => s.size);
   const bear = remotes.get(id);
   const start = bear?.current ?? { x: 0, y: 0, z: 0 };
+  const yaw = useRef(0);
+  useRod(id, model, visual, () => ({ rod: remotes.get(id)?.fish.rod ?? false, action: animator.action, yaw: yaw.current }));
 
   useFrame((_, rawDt) => {
     const b = remotes.get(id);
@@ -57,6 +60,7 @@ function RemoteBearView({ id }: { id: string }) {
 
     body.current.setNextKinematicTranslation({ x: s.x, y: s.y + CAPSULE_CENTER, z: s.z });
     if (visual.current) visual.current.rotation.y = s.yaw;
+    yaw.current = s.yaw;
 
     if (s.action !== animator.action) {
       animator.start(s.action, JUMP_AIR_TIME);

@@ -1,5 +1,6 @@
 import { AudioListener, Object3D, PositionalAudio } from "three";
 import { settings } from "../../ui/settings.ts";
+import { castWhooshBuffer, lineSnapBuffer, plopBuffer, reelClickBuffer, splashBuffer } from "./synth.ts";
 
 // Sound for the game (GAME_SPEC §10): one listener on the camera, decoded sounds cached by name,
 // and short positional one-shots (roars, birds, loons). Browsers only allow sound after the
@@ -25,9 +26,23 @@ export function getListener() {
 
 const buffers = new Map<string, Promise<AudioBuffer>>();
 
-/** A sound from client/public/audio/ (built by `npm run build:audio`). */
+/** Sounds made in code (synth.ts), by name; everything else comes from client/public/audio/. */
+const MADE_IN_CODE: Record<string, (ctx: BaseAudioContext) => AudioBuffer> = {
+  "cast-whoosh": castWhooshBuffer,
+  plop: plopBuffer,
+  splash: splashBuffer,
+  "reel-click": reelClickBuffer,
+  "line-snap": lineSnapBuffer,
+};
+
+/** A sound from client/public/audio/ (built by `npm run build:audio`), or one made in code. */
 export function loadSound(name: string) {
   let p = buffers.get(name);
+  const make = MADE_IN_CODE[name];
+  if (!p && make) {
+    p = Promise.resolve(make(getListener().context));
+    buffers.set(name, p);
+  }
   if (!p) {
     p = fetch(`/audio/${name}.mp3`)
       .then((r) => {

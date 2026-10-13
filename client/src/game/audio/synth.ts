@@ -78,3 +78,58 @@ export function fireBuffer(ctx: BaseAudioContext) {
   }
   return toBuffer(ctx, loopify(data, rate, 0.3), rate);
 }
+
+// --- fishing (milestone 2.4): short one-shots ---
+
+/** A rod whipping through the air: a fast rising-then-falling filtered noise sweep. */
+export function castWhooshBuffer(ctx: BaseAudioContext) {
+  const rate = 22050, data = new Float32Array(Math.round(rate * 0.45));
+  const r = rng(31);
+  let lp = 0;
+  for (let i = 0; i < data.length; i++) {
+    const t = i / data.length;
+    const env = Math.sin(Math.PI * Math.min(1, t * 1.3)) ** 2;
+    lp += (r() - lp) * (0.05 + 0.5 * env); // brighter in the middle of the swing
+    data[i] = lp * env;
+  }
+  return toBuffer(ctx, data, rate);
+}
+
+/** Water: a plop (lure landing, small) or a splash (a fish breaking the surface, big). */
+function waterBuffer(ctx: BaseAudioContext, big: boolean) {
+  const rate = 22050, data = new Float32Array(Math.round(rate * (big ? 0.9 : 0.35)));
+  const r = rng(big ? 41 : 43);
+  let lp = 0;
+  for (let i = 0; i < data.length; i++) {
+    const t = i / rate;
+    // A dropping "bloop" tone under a burst of filtered noise.
+    const tone = Math.sin(2 * Math.PI * (big ? 180 : 420) * t * (1 - t * 1.2)) * Math.exp(-t * (big ? 9 : 22));
+    lp += (r() - lp) * (big ? 0.35 : 0.25);
+    data[i] = tone * 0.6 + lp * Math.exp(-t * (big ? 4.5 : 14)) * (big ? 1.4 : 0.7);
+  }
+  return toBuffer(ctx, data, rate);
+}
+export const plopBuffer = (ctx: BaseAudioContext) => waterBuffer(ctx, false);
+export const splashBuffer = (ctx: BaseAudioContext) => waterBuffer(ctx, true);
+
+/** One turn of the reel handle: a quick ratchet of clicks. */
+export function reelClickBuffer(ctx: BaseAudioContext) {
+  const rate = 22050, data = new Float32Array(Math.round(rate * 0.12));
+  const r = rng(47);
+  for (let k = 0; k < 4; k++) {
+    const start = Math.round(k * rate * 0.028);
+    for (let i = 0; i < 90 && start + i < data.length; i++) data[start + i]! += r() * Math.exp(-i / 14) * (k % 2 ? 0.6 : 1);
+  }
+  return toBuffer(ctx, data, rate);
+}
+
+/** The line snapping: a sharp crack and a falling twang. */
+export function lineSnapBuffer(ctx: BaseAudioContext) {
+  const rate = 22050, data = new Float32Array(Math.round(rate * 0.6));
+  const r = rng(53);
+  for (let i = 0; i < data.length; i++) {
+    const t = i / rate;
+    data[i] = r() * Math.exp(-t * 90) + Math.sin(2 * Math.PI * 900 * t * (1 - t * 0.7)) * Math.exp(-t * 7) * 0.5;
+  }
+  return toBuffer(ctx, data, rate);
+}

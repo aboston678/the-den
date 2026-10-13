@@ -27,6 +27,8 @@ export const playerState = {
    * the bear and camera. A NaN height means "land on the highest surface there".
    */
   teleportTo: null as { x: number; y: number; z: number; yaw?: number } | null,
+  /** Fishing: cast to this point on the water (set by the fishing controls; the player plays the cast and sends it). */
+  castRequest: null as { x: number; z: number } | null,
   /** Test helper: when true, the player records its toe positions each frame (foot-slide check). */
   trackFeet: false,
   feet: [new Vector3(), new Vector3()] as [Vector3, Vector3],
@@ -42,7 +44,8 @@ export const cameraState = {
   shake: 0,
 };
 
-export type BearAction = "locomotion" | "jump" | "fall" | "roar" | "dance";
+export type { BearAction } from "@den/shared";
+import type { BearAction } from "@den/shared";
 
 declare global {
   interface Window {
@@ -73,7 +76,7 @@ declare global {
       perf?: () => { fps: number; p95ms: number; calls: number; triangles: number; textureMB: number; programs: number; pixelRatio: number; size: string };
       perfBreakdown?: () => string[];
       /** Other bears as this client sees them. */
-      remotes: () => { id: string; name: string; x: number; z: number; action: string; flashlight: boolean; tagVisible: boolean; connected: boolean }[];
+      remotes: () => { id: string; name: string; x: number; z: number; action: string; flashlight: boolean; tagVisible: boolean; connected: boolean; fish: { rod: boolean; state: string; species: string } }[];
     };
   }
 }
@@ -91,6 +94,7 @@ window.__den = {
       flashlight: r.current.flashlight,
       tagVisible: r.tagVisible,
       connected: r.connected,
+      fish: { rod: r.fish.rod, state: r.fish.state, species: r.fish.species },
     })),
   teleport: (x, z, y = Number.NaN) => {
     playerState.teleportTo = { x, y, z }; // NaN height: the player drops onto whatever is there

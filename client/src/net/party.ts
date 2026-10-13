@@ -1,11 +1,11 @@
 import { Callbacks, Client, type Room } from "@colyseus/sdk";
 import {
-  type BearAction, MSG, PARTY_ROOM, type Pose, type WorldName, isValidRoomCode, isWorldName, normalizeRoomCode, sanitizeNickname,
+  type BearAction, type FishState, MSG, PARTY_ROOM, type Pose, SERVER_MSG, type WorldName, isValidRoomCode, isWorldName, normalizeRoomCode, sanitizeNickname,
 } from "@den/shared";
 import { create } from "zustand";
 import { setServerClock } from "../game/sky/clock.ts";
 import { playerState } from "../game/state.ts";
-import { addSnapshot, remotes } from "./remotes.ts";
+import { type FishView, addSnapshot, remotes } from "./remotes.ts";
 
 // Party networking (GAME_SPEC §7): create/join with a 5-character code, lobby list, host
 // starts the game, 20 Hz poses, and rejoining after a page reload.
@@ -30,7 +30,28 @@ interface NetPlayer {
   flashlight: boolean;
   aimYaw: number;
   aimPitch: number;
+  rod: boolean;
+  fishing: FishState;
+  lureX: number;
+  lureZ: number;
+  tension: number;
+  line: number;
+  surges: number;
+  catchSpecies: string;
+  catchWeight: number;
 }
+
+/** A player's fishing as the server says (GAME_SPEC §13). */
+const fishOf = (p: NetPlayer): FishView => ({
+  rod: p.rod, state: p.fishing, lureX: p.lureX, lureZ: p.lureZ, tension: p.tension, line: p.line, surges: p.surges, species: p.catchSpecies, weight: p.catchWeight,
+});
+export const NO_FISH: FishView = { rod: false, state: "", lureX: 0, lureZ: 0, tension: 0, line: 0, surges: 0, species: "", weight: 0 };
+
+/** Our own bear's fishing, and the latest catches announced to the party. */
+export const useFishStore = create<{ me: FishView; catches: { id: string; name: string; species: string; weight: number; best: boolean; at: number; mine: boolean }[] }>(() => ({
+  me: NO_FISH,
+  catches: [],
+}));
 
 export interface LobbyPlayer {
   id: string;
@@ -191,6 +212,14 @@ export function serverPosition() {
   return me ? { x: me.x, y: me.y, z: me.z } : null;
 }
 
+/** Fishing (GAME_SPEC §13): the server checks every request. */
+export const takeRod = (take: boolean) => room?.send(MSG.rod, { take });
+export const castTo = (x: number, z: number) => room?.send(MSG.cast, { x, z });
+export const reelPress = () => room?.send(MSG.reel);
+export const reelInLine = () => room?.send(MSG.reelIn);
+/** Dev and tests: next bite after `biteIn` seconds (optionally a set species and weight). */
+export const devFish = (biteIn: number, species?: string, weight?: number) => room?.send(MSG.devFish, { biteIn, species, weight });
+
 /** Jump the party's clock (dev and tests; the server ignores it in production). */
 export function setDevTime(time: number | string) {
   room?.send(MSG.devTime, { time });
@@ -262,6 +291,7 @@ function bind(r: Room) {
         snapshots: [],
         current: { x: p.x, y: p.y, z: p.z, speed: 0, action: "locomotion" as BearAction, flashlight: false, aimYaw: 0, aimPitch: 0 },
         tagVisible: false,
+        fish: fishOf(p),
       };
       remotes.set(id, bear);
       const snap = () => {
@@ -274,8 +304,13 @@ function bind(r: Room) {
       $.onChange(p, () => {
         const wasConnected = bear.connected;
         snap();
+        bear.fish = fishOf(p);
         if (wasConnected !== p.connected) sync();
       });
+    } else {
+      const mine = () => useFishStore.setState({ me: fishOf(p) });
+      mine();
+      $.onChange(p, mine);
     }
     sync();
   });
@@ -288,6 +323,10 @@ function bind(r: Room) {
   $.onAdd("doors", (open: unknown, id: unknown) => setDoor(open as boolean, id as string));
   $.onChange("doors", (id: unknown, open: unknown) => setDoor(open as boolean, id as string));
 
+  r.onMessage(SERVER_MSG.caught, (c: { id: string; name: string; species: string; weight: number; best: boolean }) => {
+    useFishStore.setState((st) => ({ catches: [...st.catches.slice(-4), { ...c, at: performance.now(), mine: c.id === r.sessionId }] }));
+  });
+
   r.onDrop(() => usePartyStore.setState({ status: "reconnecting" }));
   r.onReconnect(() => {
     saveToken(r);
@@ -298,6 +337,7 @@ function bind(r: Room) {
     remotes.clear();
     forgetToken();
     usePartyStore.setState({ status: "idle", code: "", hostId: "", phase: "lobby", players: [], remoteIds: [], sessionId: "", doors: {} });
+    useFishStore.setState({ me: NO_FISH, catches: [] });
   });
 
   usePartyStore.setState({ status: "in-party", sessionId: r.sessionId, error: null });

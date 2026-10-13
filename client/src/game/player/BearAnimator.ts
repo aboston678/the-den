@@ -3,8 +3,12 @@ import { CLIP, CROSSFADE, MOVE } from "../config.ts";
 import type { BearAction } from "../state.ts";
 import { locomotionWeights } from "./movement.ts";
 
-const LOOPING = ["Idle", "Walk", "Run", "Dance"] as const;
-const ONE_SHOT = ["Jump", "Roar"] as const;
+const LOOPING = ["Idle", "Walk", "Run", "Dance", "Reel"] as const;
+const ONE_SHOT = ["Jump", "Roar", "Cast", "Celebrate"] as const;
+/** The cast clip's long wind-up is skipped and the throw sped up (GAME_SPEC §13: casting should feel snappy). */
+export const CAST = { from: 1.4, speed: 1.3, release: 2.6 } as const;
+/** Seconds from starting a cast to the lure leaving the rod. */
+export const CAST_RELEASE_S = (CAST.release - CAST.from) / CAST.speed;
 type ClipName = (typeof LOOPING)[number] | (typeof ONE_SHOT)[number];
 
 /**
@@ -54,7 +58,22 @@ export class BearAnimator {
       this.actions.get("Roar")!.reset().play();
     } else if (action === "dance") {
       this.actions.get("Dance")!.reset().play();
+    } else if (action === "cast") {
+      const cast = this.actions.get("Cast")!;
+      cast.reset().play();
+      cast.time = CAST.from;
+      cast.timeScale = CAST.speed;
+    } else if (action === "reel") {
+      this.actions.get("Reel")!.reset().play();
+    } else if (action === "celebrate") {
+      this.actions.get("Celebrate")!.reset().play();
     }
+  }
+
+  /** True once a one-shot (cast, celebrate) has played to its end. */
+  finished(name: "Cast" | "Celebrate") {
+    const a = this.actions.get(name)!;
+    return a.time >= a.getClip().duration - 0.05;
   }
 
   get action() {
@@ -68,7 +87,7 @@ export class BearAnimator {
   }
 
   update(dt: number, speed: number) {
-    const target: Record<ClipName, number> = { Idle: 0, Walk: 0, Run: 0, Dance: 0, Jump: 0, Roar: 0 };
+    const target: Record<ClipName, number> = { Idle: 0, Walk: 0, Run: 0, Dance: 0, Jump: 0, Roar: 0, Reel: 0, Cast: 0, Celebrate: 0 };
     if (this.current === "locomotion") {
       const loco = locomotionWeights(speed, MOVE.walkSpeed, MOVE.sprintSpeed);
       target.Idle = loco.idle;
@@ -77,6 +96,9 @@ export class BearAnimator {
     } else if (this.current === "jump" || this.current === "fall") target.Jump = 1;
     else if (this.current === "roar") target.Roar = 1;
     else if (this.current === "dance") target.Dance = 1;
+    else if (this.current === "cast") target.Cast = 1;
+    else if (this.current === "reel") target.Reel = 1;
+    else if (this.current === "celebrate") target.Celebrate = 1;
 
     // Match leg speed to ground speed (never slower than the clip's own pace).
     this.actions.get("Walk")!.timeScale = Math.max(1, speed / CLIP.walkNaturalSpeed);

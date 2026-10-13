@@ -3,7 +3,7 @@
 Claude Code updates this file after every milestone: tick the box, add a short note, and say what's next.
 **[ANDREW APPROVES]** = stop, show Andrew, and wait for his OK.
 
-**Current status:** Phase 2 on branch `phase-2`: 2.1 + 2.2 built (furniture, greenhouse, TVs, boat). Next: 2.4 fishing. Waiting on Andrew for the Google sign-in setup (`docs/setup-google-signin.md`), needed by 2.5. Then 2.6, one combined review, 2.7 deploy.
+**Current status:** Phase 2 on branch `phase-2`: 2.1, 2.2 and 2.4 built (furniture, greenhouse, TVs, boat, fishing). Next: 2.5 Google sign-in. Waiting on Andrew for the Google sign-in setup (`docs/setup-google-signin.md`), needed by 2.5. Then 2.6, one combined review, 2.7 deploy.
 
 ---
 
@@ -46,7 +46,8 @@ Run as one batch (Andrew, 2026-10-12; full plan in `docs/phase-2-plan.md`): all 
 - [x] **2.2 Furnish upstairs, basement den, greenhouse** (winter stockpile + canoe), **TVs** looping Andrew's 3 video clips, **Andrew's boat tied to the dock**. **[ANDREW APPROVES]**
   - Built 2026-10-12 (review at the end of Phase 2). Upstairs (all 6 spaces, tall pieces kept where the sloped roof allows), basement den (Chesterfield, recliner, TV, globe, nautical chart, pine armoire, floral drapes, reading corner), greenhouse (plant benches, shelves, hanging baskets, donut-hole boxes + canned pasta rings with made-up labels, salmon on ice, smoked salmon, crates, the canoe on sawhorses). Andrew's boat tied alongside the dock, bobbing (`world/property/Boat.tsx`). TVs (`furniture/Tvs.tsx`) play the home-video loop with sound from the screen, only when you're near; online they stay dark until sign-in supplies a private link (2.5), in dev they play the local copy. Fixed: hero models ignored their compressed-position scale (the canoe was tiny and under the floor). Medium: ≤390 draw calls, 497 MB textures; frame rates were noisy (other apps busy), great room at night 41–49 with or without furniture; re-measure at the review. Screenshots `docs/screenshots/2.1/`, `2.2/`.
 - ~~**2.3 Dogs.**~~ Dropped (Andrew, 2026-10-12): no good free dogs, and he chose not to buy the ~$155 set.
-- [ ] **2.4 Fishing.** Rod bucket, cast, 10–45 s bites, spam-R tension reeling, 5 species, catch card, synced for everyone.
+- [x] **2.4 Fishing.** Rod bucket, cast, 10–45 s bites, spam-R tension reeling, 5 species, catch card, synced for everyone.
+  - Built 2026-10-12 (review at the end of Phase 2). Rules in `shared/src/fishing.ts` (species table, weight curve, 10–45 s bites, 2.5 s to strike, the tension fight; tests show a careful player lands a 7 lb bass in ~13 s and mashing R snaps it). The server runs rods, casts (must land on the stream, ≤25 m), bites, fights and catches (`server/src/rooms/fishing.ts`, tested) and announces catches to the party. In game: E at the bucket takes/returns a rod (it's put away when you go indoors), hold left mouse to charge and cast where the camera looks, FISH ON! → spam R with a tension meter, catch card with lb/oz and personal best (per species, this session; saved for good in 2.6), the bear holds the fish up (celebrates for 2 lb+). Everyone sees the rod, line, bobber, splashes, the fight and the fish; toasts for others' catches. 5 fish models (`npm run build:fish`). Sounds made in code (whoosh, plop, splash, reel clicks, snap). Tests: `e2e/fishing.spec.ts` (two bears), screenshots `docs/screenshots/2.4/`.
 - [ ] **2.5 Google sign-in.** Supabase project + Google login (walk Andrew through it), usernames, profiles.
 - [ ] **2.6 Friends + leaderboard.** Friend requests, leaderboard tabs (All/Friends), fish caught live; bowling and Catan columns ready.
 - [ ] **2.7 Deploy + friend test.**
@@ -141,6 +142,8 @@ Starting balance: 1,210 (2026-10-11)
 | 2026-10-12 | Furniture doesn't cast shadows; room furniture is hidden outdoors more than 9 m from the house | Each shadow-casting piece costs a draw per shadow pass; Medium went over its 400 draw-call budget. Under the roof the shadows barely show |
 | 2026-10-12 | TV screens stay dark online until sign-in (2.5) provides a private link to the clips; the local dev copy (`client/public/video/`) is gitignored and in `client/.vercelignore` | Keeps Andrew's friends' videos off the public website |
 | 2026-10-12 | The boat is scenery: an invisible box round it, no climbing aboard | Stepping off it would drop a bear into deep water past the wading wall |
+| 2026-10-12 | Fishing: cast direction = where the camera looks, distance = how long you hold (3–25 m); R with no fish on winds the lure in; personal bests per species | Plays well with a mouse; a bass PB and a sunfish PB are different things |
+| 2026-10-12 | Fishing sounds are made in code (whoosh, plop, splash, reel ratchet, snap) | No downloads or approvals needed; matches the wind/fire approach |
 
 ## Session notes
 (Newest first. 1–3 lines per session: what got done, what's next, anything Andrew needs to do.)

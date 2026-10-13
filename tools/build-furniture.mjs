@@ -4,6 +4,7 @@
 // to a game-friendly triangle count, and packed into one compressed GLB.
 //
 // Usage: npm run build:furniture  ->  client/public/models/furniture.glb
+//        npm run build:fish       ->  client/public/models/fish.glb (the 5 species, each 1 m long; the game scales by weight)
 
 import { statSync } from "node:fs";
 import { Document, NodeIO } from "@gltf-transform/core";
@@ -16,7 +17,8 @@ import { MeshoptDecoder, MeshoptEncoder, MeshoptSimplifier } from "meshoptimizer
 import sharp from "sharp";
 
 const SRC = "assets/models/phase2";
-const OUT = process.env.OUT ?? "client/public/models/furniture.glb";
+const FISH = process.argv.includes("--fish");
+const OUT = process.env.OUT ?? (FISH ? "client/public/models/fish.glb" : "client/public/models/furniture.glb");
 
 /**
  * name -> real-world size (metres, before the house's 1.25× scale) along one measure:
@@ -40,6 +42,9 @@ const PIECES = {
   boat: { l: 6.9, yaw: 0, tris: 25000, texture: 1024 },
 };
 
+/** The fish (milestone 2.4): 1 m long, nose toward +x, small textures. */
+const FISH_PIECES = Object.fromEntries(["sunfish", "yellow-perch", "crappie", "smallmouth-bass", "largemouth-bass"].map((n) => [`fish-${n}`, { l: 1, yaw: 0, tris: 3000, texture: 512 }]));
+
 await MeshoptEncoder.ready;
 await MeshoptDecoder.ready;
 await MeshoptSimplifier.ready;
@@ -48,11 +53,11 @@ const io = new NodeIO()
   .registerDependencies({ "meshopt.encoder": MeshoptEncoder, "meshopt.decoder": MeshoptDecoder });
 
 const triangles = (mesh) => mesh.listPrimitives().reduce((n, p) => n + (p.getIndices()?.getCount() ?? p.getAttribute("POSITION").getCount()) / 3, 0);
-const only = process.argv.slice(2);
+const only = process.argv.slice(2).filter((a) => !a.startsWith("--"));
 
 const out = new Document();
 const report = [];
-for (const [name, spec] of Object.entries(PIECES)) {
+for (const [name, spec] of Object.entries(FISH ? FISH_PIECES : PIECES)) {
   if (only.length && !only.includes(name)) continue;
   const doc = await io.read(`${SRC}/${name}.glb`);
   const scene = doc.getRoot().listScenes()[0];

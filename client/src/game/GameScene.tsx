@@ -2,6 +2,8 @@ import { useFrame } from "@react-three/fiber";
 import { Physics } from "@react-three/rapier";
 import { Suspense, useEffect } from "react";
 import { GameAudio } from "./audio/GameAudio.tsx";
+import { FishingControls } from "./fishing/FishingControls.tsx";
+import { FishingLines } from "./fishing/FishingLines.tsx";
 import { ThirdPersonCamera } from "./camera/ThirdPersonCamera.tsx";
 import { attachKeyboard, beginInputFrame } from "./input/keyboard.ts";
 import { PerfProbe } from "./PerfProbe.tsx";
@@ -32,6 +34,10 @@ export function GameScene() {
           <Player />
         </Suspense>
         <RemoteBears />
+        <FishingControls />
+        <Suspense fallback={null}>
+          <FishingLines />
+        </Suspense>
         <Flashlights />
         <ThirdPersonCamera />
       </Physics>

@@ -5,7 +5,9 @@ import type { KinematicCharacterController } from "@dimforge/rapier3d-compat";
 import { type Group, Matrix4, Vector3 } from "three";
 import { NET_TICK_HZ } from "@den/shared";
 import { CAPSULE, CAPSULE_CENTER, CONTROLLER_OFFSET, JUMP_AIR_TIME, MOVE } from "../config.ts";
-import { sendPose } from "../../net/party.ts";
+import { castTo, sendPose, useFishStore } from "../../net/party.ts";
+import { useRod } from "../fishing/rig.ts";
+import { CAST_RELEASE_S } from "./BearAnimator.ts";
 import { remotes } from "../../net/remotes.ts";
 import { consumePress, isHeld } from "../input/keyboard.ts";
 import { playAt } from "../audio/audio.ts";
@@ -53,10 +55,11 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
 
   const { model, animator } = useBearModel();
   const toes = useMemo(() => ["LeftToeBase", "RightToeBase"].map((n) => model.getObjectByName(n)!), [model]);
+  useRod("me", model, visual, () => ({ rod: useFishStore.getState().me.rod, action: animator.action, yaw: playerState.yaw }));
 
   // Start facing away from the camera (which begins on the +z side looking toward −z).
   const s = useRef({ vy: 0, speed: 0, yaw: Math.PI, dir: { x: 0, z: -1 }, airTime: 0, actionTime: 0, roarReadyAt: 0, groundY: 0, ready: false,
-    pushX: 0, pushZ: 0, staggerUntil: 0, sendTimer: 0 });
+    pushX: 0, pushZ: 0, staggerUntil: 0, sendTimer: 0, castAt: null as { x: number; z: number } | null });
 
   useFrame(({ clock }, rawDt) => {
     const controller = controllerRef.current;
@@ -115,6 +118,35 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
       void playAt("roar", playerState.position.x, playerState.position.y + 1.6, playerState.position.z, 1.8, 8);
     }
     action = animator.action;
+
+    // --- fishing (GAME_SPEC §13): cast where asked, reel while a fish is on, celebrate a big one ---
+    const fish = useFishStore.getState().me;
+    const req = playerState.castRequest;
+    if (req) {
+      playerState.castRequest = null;
+      if (grounded && (action === "locomotion" || action === "dance")) {
+        st.yaw = Math.atan2(req.x - playerState.position.x, req.z - playerState.position.z);
+        st.speed = 0;
+        start("cast");
+        st.castAt = req;
+      }
+    }
+    if (animator.action === "cast") {
+      if (st.castAt && st.actionTime >= CAST_RELEASE_S) {
+        castTo(st.castAt.x, st.castAt.z);
+        void playAt("cast-whoosh", playerState.position.x, playerState.position.y + 2, playerState.position.z, 0.8, 4);
+        st.castAt = null;
+      }
+      if (animator.finished("Cast") || st.actionTime > 2.2) start("locomotion");
+    }
+    if (fish.state === "fight" && animator.action !== "reel" && grounded) start("reel");
+    if (animator.action === "reel") {
+      st.yaw = turnToward(st.yaw, Math.atan2(fish.lureX - playerState.position.x, fish.lureZ - playerState.position.z), 3 * dt);
+      if (fish.state !== "fight") start(fish.state === "landed" && fish.weight >= 2 ? "celebrate" : "locomotion");
+    }
+    if (animator.action === "celebrate" && (animator.finished("Celebrate") || moving)) start("locomotion");
+    action = animator.action;
+
     if (moving && (action === "dance" || action === "roar")) start("locomotion"); // moving cancels
     if (action === "roar" && animator.roarFinished) start("locomotion");
     if (consumePress("Space") && grounded && animator.action !== "jump" && st.vy <= 0) {
