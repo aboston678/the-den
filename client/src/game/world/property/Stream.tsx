@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import {
   BufferAttribute, BufferGeometry, DataTexture, LinearMipmapLinearFilter, MeshStandardMaterial, RepeatWrapping, Vector2,
 } from "three";
+import { TOON } from "../../artStyle.ts";
 
 // The stream (GAME_SPEC §4): ~20 m wide, slow, flowing north→south. A water surface that follows
 // the meandering centre line, with gently moving ripples. The stream bed and banks are terrain.
@@ -63,14 +64,15 @@ function surfaceGeometry() {
 export function Stream() {
   const geometry = useMemo(surfaceGeometry, []);
   const material = useMemo(() => new MeshStandardMaterial({
-    color: "#1d2620",
-    roughness: 0.16,
+    // Cartoon art style: clear turquoise water with livelier ripples (the realistic look: dark, still).
+    color: TOON ? "#2b8fae" : "#1d2620",
+    roughness: TOON ? 0.32 : 0.16, // cartoon: broader, softer glints (sharp ones flash as white stripes in banded light)
     metalness: 0,
     transparent: true,
-    opacity: 0.9,
+    opacity: TOON ? 0.82 : 0.9,
     normalMap: rippleNormals(),
-    normalScale: new Vector2(0.18, 0.18),
-    envMapIntensity: 0.7,
+    normalScale: TOON ? new Vector2(0.25, 0.25) : new Vector2(0.18, 0.18),
+    envMapIntensity: TOON ? 1.4 : 0.7,
   }), []);
 
   useFrame((_, dt) => {

@@ -1,7 +1,8 @@
 import { DOCK, STREAM, dockStartX, rodBucket } from "@den/shared";
 import { CuboidCollider, CylinderCollider, type RapierCollider, RigidBody } from "@react-three/rapier";
 import { useMemo } from "react";
-import { MeshStandardMaterial } from "three";
+import { CanvasTexture, MeshStandardMaterial, RepeatWrapping, SRGBColorSpace } from "three";
+import { TOON } from "../../artStyle.ts";
 import { useOutdoorMaps } from "./textures.ts";
 import { groundY } from "../ground.ts";
 import { invisibleColliders } from "../invisible.ts";
@@ -17,18 +18,55 @@ const invisible = (c: RapierCollider | null) => {
   if (c) invisibleColliders.add(c.handle);
 };
 
+/** Four honey-coloured boards with dark gaps and a little grain, one tile (cartoon art style). */
+function paintedBoards() {
+  const size = 256, c = document.createElement("canvas");
+  c.width = c.height = size;
+  const ctx = c.getContext("2d")!;
+  const tones = ["#d39a5e", "#c98f55", "#dca468", "#c48a52"];
+  for (let b = 0; b < 4; b++) {
+    const x = (b * size) / 4;
+    ctx.fillStyle = tones[b]!;
+    ctx.fillRect(x, 0, size / 4, size);
+    ctx.strokeStyle = "rgba(120, 70, 30, 0.25)"; // grain
+    ctx.lineWidth = 2;
+    for (let g = 0; g < 4; g++) {
+      const gx = x + 10 + g * 13 + ((b * 7) % 5);
+      ctx.beginPath();
+      ctx.moveTo(gx, 0);
+      ctx.bezierCurveTo(gx + 6, size * 0.3, gx - 6, size * 0.7, gx, size);
+      ctx.stroke();
+    }
+    ctx.fillStyle = "#5a3418"; // the gap between boards
+    ctx.fillRect(x, 0, 4, size);
+  }
+  const t = new CanvasTexture(c);
+  t.colorSpace = SRGBColorSpace;
+  t.wrapS = t.wrapT = RepeatWrapping;
+  t.anisotropy = 8;
+  return t;
+}
+
 export function Dock() {
   const maps = useOutdoorMaps("planks");
   const x0 = dockStartX();
   const cx = x0 + DOCK.length / 2;
   const deck = useMemo(() => {
     const m = new MeshStandardMaterial({ ...maps, color: "#c9c2b6" });
-    m.map = maps.map.clone();
-    m.map.repeat.set(DOCK.length / 2, DOCK.width / 2); // boards run across the dock
-    m.map.needsUpdate = true;
+    for (const key of ["map", "normalMap", "roughnessMap"] as const) {
+      m[key] = maps[key].clone();
+      m[key].repeat.set(DOCK.length / 2, DOCK.width / 2); // boards run across the dock
+      m[key].needsUpdate = true;
+    }
+    // Cartoon art style: painted warm honey boards (the photo is too dark to tint lighter).
+    if (TOON) {
+      m.map = paintedBoards();
+      m.map.repeat.set(DOCK.length / 2, DOCK.width / 2);
+      m.color.set("#ffffff");
+    }
     return m;
   }, [maps]);
-  const wood = useMemo(() => new MeshStandardMaterial({ ...maps, color: "#6d6256" }), [maps]);
+  const wood = useMemo(() => new MeshStandardMaterial({ ...maps, ...(TOON ? { map: null, color: "#8a5a33" } : { color: "#6d6256" }) }), [maps]);
 
   const posts: [number, number][] = [];
   for (let x = x0 + 0.3; x <= x0 + DOCK.length; x += 2) posts.push([x, DOCK.z - DOCK.width / 2 + 0.08], [x, DOCK.z + DOCK.width / 2 - 0.08]);

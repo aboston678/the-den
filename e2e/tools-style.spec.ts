@@ -1,7 +1,7 @@
 import { mkdirSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
 import sharp from "sharp";
-import { DRIVEWAY } from "../shared/src/index.ts";
+import { DOCK, DRIVEWAY, dockStartX, houseToWorld } from "../shared/src/index.ts";
 import { failOnErrors, openGame, waitForBear } from "./helpers.ts";
 
 // Dev tool, not a check (STYLE=1): the same views in the realistic and the cartoon art style
@@ -11,25 +11,29 @@ test.skip(!process.env.STYLE, "dev tool: set STYLE=1 to run");
 
 const OUT = "review/style";
 const near = DRIVEWAY.pointAt(DRIVEWAY.length - 45), ahead = DRIVEWAY.pointAt(DRIVEWAY.length - 30);
-/** name, time of day, bear x/z, where the camera looks (x/z), camera distance, pitch */
-const VIEWS: [string, string, number, number, number, number, number, number][] = [
+const gr = houseToWorld(24, 8), kitchen = houseToWorld(9, 5), dock = dockStartX();
+/** name, time of day, bear x/z, where the camera looks (x/z), camera distance, pitch, and a floor height for indoor views */
+const VIEWS: [string, string, number, number, number, number, number, number, number?][] = [
   ["house", "noon", 0, -19, 2, 0, 6, 0.0],
   ["driveway", "noon", near.x, near.z, ahead.x, ahead.z, 4.5, 0.12],
   ["woods", "noon", -92, -60, -80, -50, 4.5, 0.1],
-  ["dock", "dusk", 106, 0, 125, 0, 5, 0.1],
+  ["dock", "dusk", dock + 2, 0, dock + 12, -1.5, 5, 0.12, DOCK.deckY + 0.3],
   ["bear", "noon", 0, -19, 0, -40, 3.2, 0.05],
+  ["dock-noon", "noon", dock + 2, 0, dock + 12, 1.5, 5, 0.12, DOCK.deckY + 0.3],
+  ["great-room", "noon", gr.x, gr.z, gr.x + 5, gr.z, 3.5, 0.1, 0.5],
+  ["kitchen", "evening", kitchen.x, kitchen.z, kitchen.x + 4, kitchen.z + 2, 3.5, 0.1, 0.5],
 ];
 
 async function shoot(page: Page, style: string) {
-  for (const [name, time, x, z, lx, lz, dist, pitch] of VIEWS) {
+  for (const [name, time, x, z, lx, lz, dist, pitch, y] of VIEWS) {
     await page.evaluate((t) => window.__den!.setTime(t), time);
-    await page.evaluate(([x, z, lx, lz, dist, pitch]) => {
+    await page.evaluate(([x, z, lx, lz, dist, pitch, y]) => {
       const d = window.__den!;
-      d.teleport(x!, z!);
+      d.teleport(x!, z!, y ?? Number.NaN);
       d.camera.yaw = Math.atan2(-(lx! - x!), -(lz! - z!));
       d.camera.pitch = pitch!;
       d.camera.distance = dist!;
-    }, [x, z, lx, lz, dist, pitch]);
+    }, [x, z, lx, lz, dist, pitch, y ?? null] as const);
     await page.waitForTimeout(2500);
     await page.screenshot({ path: `${OUT}/${style}-${name}.png` });
   }
