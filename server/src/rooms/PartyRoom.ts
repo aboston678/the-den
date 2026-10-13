@@ -22,7 +22,8 @@ import {
 import { type Bear, authenticate } from "../auth.ts";
 import { devToolsOn } from "../config.ts";
 import { PartyState, Player } from "./PartyState.ts";
-import { Fishing } from "./fishing.ts";
+import { type Catch, Fishing } from "./fishing.ts";
+import { recordCatch } from "../stats.ts";
 
 const num = (v: unknown) => (typeof v === "number" ? v : Number.NaN);
 
@@ -109,7 +110,7 @@ export class PartyRoom extends Room<{ state: PartyState }> {
       const now = Date.now();
       const caught = this.fishing.tick(this.state.players as unknown as Map<string, Player>, now, (now - lastFishTick) / 1000);
       lastFishTick = now;
-      for (const c of caught) this.broadcast(SERVER_MSG.caught, c);
+      for (const c of caught) void this.announceCatch(c);
     }, 1000 / NET_TICK_HZ);
 
     this.onMessage(MSG.devTime, (_client, message: { time?: unknown }) => {
@@ -162,6 +163,16 @@ export class PartyRoom extends Room<{ state: PartyState }> {
         .sort(([, a], [, b]) => Number(b.connected) - Number(a.connected) || a.slot - b.slot)[0];
       this.state.hostId = next?.[0] ?? "";
     }
+  }
+
+  /** Save a signed-in bear's catch to their account (all-time personal best), then tell the party. */
+  private async announceCatch(c: Catch) {
+    const userId = this.userIds.get(c.id);
+    if (userId) {
+      const saved = await recordCatch(userId, c.species, c.weight).catch(() => null);
+      if (saved) c.best = saved.best;
+    }
+    this.broadcast(SERVER_MSG.caught, c);
   }
 
   private freeSlot() {

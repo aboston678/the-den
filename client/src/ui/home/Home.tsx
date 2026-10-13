@@ -4,6 +4,9 @@ import { chooseUsername, signInWithGoogle, signOut, useAuth } from "../../net/au
 import { createParty, joinParty, leaveParty, savedNickname, startGame, usePartyStore } from "../../net/party.ts";
 import { SettingsPanel } from "../Settings.tsx";
 import { HomeStage, type StageBear } from "./HomeStage.tsx";
+import { FriendsPanel, usePendingRequests } from "./Friends.tsx";
+import { LeaderboardPanel } from "./Leaderboard.tsx";
+import { mockSocial } from "../../net/social.ts";
 
 /**
  * The home screen (GAME_SPEC §11.3): your bear on a pedestal with your party around you, and the
@@ -15,10 +18,15 @@ export function Home() {
   const [joinCode, setJoinCode] = useState("");
   const [copied, setCopied] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [social, setSocial] = useState<"leaderboard" | "friends" | null>(null);
   const busy = status === "connecting";
   const inParty = status === "in-party" || status === "reconnecting";
   const isHost = hostId === sessionId;
-  const auth = useAuth();
+  const realAuth = useAuth();
+  // ?mocksocial (dev builds): pretend to be signed in, with made-up friends and scores, to look at the panels.
+  const auth = mockSocial ? { ...realAuth, status: "ready" as const, username: "DevBear" } : realAuth;
+  const signedIn = auth.status === "ready";
+  const pending = usePendingRequests(signedIn);
   /** Development builds can also play without signing in (tests, and before the keys exist). */
   const devPlay = import.meta.env.DEV && auth.status !== "ready" && auth.status !== "needs-username";
   const myName = auth.status === "ready" ? auth.username ?? "Bear" : name;
@@ -123,11 +131,21 @@ export function Home() {
             </button>
           </div>
         )}
+        {signedIn && (
+          <div className="home-social">
+            <button data-testid="open-leaderboard" onClick={() => setSocial("leaderboard")}>Leaderboard</button>
+            <button data-testid="open-friends" onClick={() => setSocial("friends")}>
+              Friends{pending > 0 && <span className="count" data-testid="request-count">{pending}</span>}
+            </button>
+          </div>
+        )}
         <button className="quiet home-settings" data-testid="open-settings" onClick={() => setShowSettings(true)}>
           Settings
         </button>
       </div>
       {showSettings && <SettingsPanel onClose={() => setShowSettings(false)} />}
+      {social === "leaderboard" && <LeaderboardPanel onClose={() => setSocial(null)} />}
+      {social === "friends" && <FriendsPanel onClose={() => setSocial(null)} />}
     </div>
   );
 }
