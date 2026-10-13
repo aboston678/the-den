@@ -24,20 +24,20 @@ const OUT = process.env.OUT ?? "client/public/models/furniture.glb";
  */
 const PIECES = {
   "grand-piano": { l: 1.75, yaw: 0, tris: 20000, texture: 1024 },
-  harp: { h: 1.85, yaw: 0, tris: 14000, texture: 1024 },
+  harp: { h: 1.85, yaw: 0, tris: 14000, texture: 512 },
   "wingback-chair": { h: 1.12, yaw: -90, tris: 12000, texture: 1024 },
   "camelback-sofa": { l: 1.95, yaw: 90, tris: 12000, texture: 1024 },
   "china-cabinet": { h: 2.0, yaw: -90, tris: 12000, texture: 1024 },
-  "chippendale-chair": { h: 0.98, yaw: -90, tris: 10000, texture: 1024 },
+  "chippendale-chair": { h: 0.98, yaw: -90, tris: 10000, texture: 512 },
   "leather-armchair-ottoman": { h: 0.9, yaw: -90, tris: 12000, texture: 1024 },
-  "pot-rack": { l: 0.9, yaw: 0, tris: 12000, texture: 1024 },
+  "pot-rack": { l: 0.9, yaw: 0, tris: 12000, texture: 512 },
   "tiffany-lamp": { h: 1.6, yaw: 0, tris: 8000, texture: 512 },
-  "spindle-bench": { l: 1.5, yaw: 90, tris: 10000, texture: 1024 },
+  "spindle-bench": { l: 1.5, yaw: 90, tris: 10000, texture: 512 },
   "four-poster-bed": { h: 2.0, yaw: -90, tris: 12000, texture: 1024 },
   chesterfield: { l: 2.2, yaw: 90, tris: 12000, texture: 1024 },
-  recliner: { h: 1.05, yaw: -90, tris: 10000, texture: 1024 },
+  recliner: { h: 1.05, yaw: -90, tris: 10000, texture: 512 },
   canoe: { l: 5.0, yaw: 90, tris: 10000, texture: 1024 },
-  boat: { l: 6.9, yaw: 0, tris: 25000, texture: 2048 },
+  boat: { l: 6.9, yaw: 0, tris: 25000, texture: 1024 },
 };
 
 await MeshoptEncoder.ready;

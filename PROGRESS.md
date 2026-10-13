@@ -41,7 +41,8 @@ Goal: Andrew sends friends a link; everyone makes or joins a party, loads in at 
 ## Phase 2: The house comes alive
 Run as one batch (Andrew, 2026-10-12; full plan in `docs/phase-2-plan.md`): all approvals up front (credit batch, Supabase + Google setup), then 2.1–2.6 built in order with a commit + push after each, then one combined **[ANDREW APPROVES]** review before 2.7.
 
-- [ ] **2.1 Furnish the main floor** from the photos. **[ANDREW APPROVES]**
+- [x] **2.1 Furnish the main floor** from the photos. **[ANDREW APPROVES]**
+  - Built 2026-10-12 (review at the end of Phase 2). Layout in `shared/src/house/furniture.ts` (every room + deck umbrella table + porch rockers), tested so nothing blocks a door, the stairs or the fireplace and nothing overlaps. 14 Higgsfield hero pieces (`tools/build-furniture.mjs` → `furniture.glb`, 3.7 MB) drawn instanced; everything else built in code (`client/src/game/house/furniture/`: kitchen, pantry, bookshelves full of books, tables, chairs, lamps, fan, chandelier, rugs, paintings, curtains), plain colours on 4 shared colour-sheet materials. Furniture is solid (camera ignores it) and only drawn inside or near the house. Medium: 48–60 fps, ≤379 draw calls, 429 MB textures. Tour: `e2e/furniture-tour.spec.ts`, screenshots `docs/screenshots/2.1/`.
 - [ ] **2.2 Furnish upstairs, basement den, greenhouse** (winter stockpile + canoe), **TVs** looping Andrew's 3 video clips, **Andrew's boat tied to the dock**. **[ANDREW APPROVES]**
 - ~~**2.3 Dogs.**~~ Dropped (Andrew, 2026-10-12): no good free dogs, and he chose not to buy the ~$155 set.
 - [ ] **2.4 Fishing.** Rod bucket, cast, 10–45 s bites, spam-R tension reeling, 5 species, catch card, synced for everyone.
@@ -136,6 +137,7 @@ Starting balance: 1,210 (2026-10-11)
 | 2026-10-12 | TVs loop Andrew's 3 home video clips instead of the AI pigeon/salmon images; his wakeboard boat (no brand name) tied to the dock; Phase 2 credit batch approved (~173 + ~9 boat) (GAME_SPEC §4, §8.4, §18 updated) | Andrew's request |
 | 2026-10-12 | TV clips kept private: out of git and the public site, served from private Supabase Storage to signed-in players only (GAME_SPEC §8.4 updated) | They show Andrew's friends; the game link isn't secret. Andrew chose this over publishing them |
 | 2026-10-12 | Dogs dropped from the game (GAME_SPEC §12 and mentions removed; loading tip replaced) | No good free realistic animated dogs; the best paid set was ~$155 and Andrew chose not to buy |
+| 2026-10-12 | Furniture doesn't cast shadows; room furniture is hidden outdoors more than 9 m from the house | Each shadow-casting piece costs a draw per shadow pass; Medium went over its 400 draw-call budget. Under the roof the shadows barely show |
 
 ## Session notes
 (Newest first. 1–3 lines per session: what got done, what's next, anything Andrew needs to do.)

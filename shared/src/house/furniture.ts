@@ -148,7 +148,7 @@ export function wallFace(roomId: string, side: Side, along: number): number {
 /** A piece standing (or hanging) against a wall, facing into the room; `along` is its centre along the wall. */
 function W(kind: KindId, room: string, side: Side, along: number, rest: Omit<Placement, "kind" | "room" | "x" | "z"> = {}): Placement {
   const d = rest.d ?? KINDS[kind].d;
-  const gap = KINDS[kind].mount === "wall" ? 0 : 0.01;
+  const gap = (KINDS[kind] as Kind).mount === "wall" ? 0 : 0.01;
   const face = wallFace(room, side, along);
   const into = side === "n" || side === "w" ? 1 : -1;
   const c = face + into * (d / 2 + gap);

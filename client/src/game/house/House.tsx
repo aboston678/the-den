@@ -4,6 +4,8 @@ import { useEffect, useMemo } from "react";
 import { type BufferGeometry, Mesh, type MeshBasicMaterial, Quaternion, Vector3 } from "three";
 import { useOutdoorMaps } from "../world/property/textures.ts";
 import { Doors } from "./Doors.tsx";
+import { Furniture } from "./furniture/Furniture.tsx";
+import { buildFurniture } from "./furniture/build.ts";
 import { HouseLights } from "./Lights.tsx";
 import { type GeoBuckets, type SolidBox, mergeBucket } from "./geometry.ts";
 import { type RailRun, Railings } from "./Railings.tsx";
@@ -15,7 +17,7 @@ import { type Railing, type WallPiece, wallColliders, wallGeometry, wallPieces }
 import { removeBody } from "../world/physics.ts";
 
 // The house (milestone 1.9), built from docs/floorplan.json: every room's walls, floors, ceilings,
-// stairs and railings. Built in floorplan metres inside a group scaled 1.25× (GAME_SPEC §4).
+// stairs, railings and furniture (2.1). Built in floorplan metres inside a group scaled 1.25× (GAME_SPEC §4).
 
 function useHouseMaterials() {
   const tex = {
@@ -47,6 +49,8 @@ function buildHouse(materials: HouseMaterials) {
   }
   const structure = buildStructure(pieces);
   const exterior = buildExterior(pieces);
+  const furnitureBuckets: GeoBuckets = new Map();
+  buildFurniture(furnitureBuckets, buckets, pieces);
   for (const part of [structure, exterior]) {
     for (const [k, list] of part.buckets) buckets.set(k, [...(buckets.get(k) ?? []), ...list]);
     solids.push(...part.solids);
@@ -61,6 +65,15 @@ function buildHouse(materials: HouseMaterials) {
     mesh.receiveShadow = key !== "window_glow";
     meshes.push(mesh);
   }
+  // Furniture in the rooms: its own meshes, drawn only near the house. No cast shadows: under the
+  // roof they barely show, and each would cost a draw per shadow pass.
+  const furniture: Mesh[] = [];
+  for (const [key, list] of furnitureBuckets) {
+    const mesh = new Mesh(mergeBucket(list as BufferGeometry[]), materials.get(key));
+    mesh.name = `furniture:${key}`;
+    mesh.receiveShadow = true;
+    furniture.push(mesh);
+  }
   const runs: RailRun[] = [
     ...[...flatRails, ...structure.railings].map((r) => ({
       from: (r.axis === "x" ? [r.u0, r.y, r.c] : [r.c, r.y, r.u0]) as [number, number, number],
@@ -68,7 +81,7 @@ function buildHouse(materials: HouseMaterials) {
     })),
     ...structure.stairRails,
   ];
-  return { meshes, solids, runs, ramps: structure.ramps };
+  return { meshes, furniture, solids, runs, ramps: structure.ramps };
 }
 
 export function House() {
@@ -118,7 +131,7 @@ export function House() {
     }
     return () => removeBody(world, body);
   }, [world, rapier, house]);
-  useEffect(() => () => house.meshes.forEach((m) => m.geometry.dispose()), [house]);
+  useEffect(() => () => [...house.meshes, ...house.furniture].forEach((m) => m.geometry.dispose()), [house]);
 
   return (
     <>
@@ -126,6 +139,7 @@ export function House() {
         {house.meshes.map((m) => <primitive key={m.uuid} object={m} />)}
         <Railings runs={house.runs} materials={{ rail: materials.get("oak_trim"), post: materials.get("trim") }} />
         <Doors materials={materials} />
+        <Furniture built={house.furniture} />
       </group>
       {/* Lights live in world space: a light's range isn't scaled with the house. */}
       <HouseLights windowGlow={materials.get("window_glow") as MeshBasicMaterial} />

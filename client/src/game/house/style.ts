@@ -2,9 +2,11 @@ import {
   CanvasTexture, Color, DoubleSide, type Material, MeshBasicMaterial, MeshStandardMaterial, RepeatWrapping, SRGBColorSpace, type Texture, Vector2,
 } from "three";
 import type { useOutdoorMaps } from "../world/property/textures.ts";
+import { atlasMaterial } from "./furniture/atlas.ts";
+import { furnitureTexture } from "./furniture/textures.ts";
 
 // What each room looks like (GAME_SPEC §8.2, the photos named in docs/floorplan.json): floor, walls,
-// ceiling. Furniture comes in milestone 2.1/2.2.
+// ceiling. Furniture (2.1/2.2) uses the same materials so it merges into the same meshes.
 
 export type FloorKind = "oak" | "terracotta" | "concrete" | "tile" | "carpet" | "pine";
 export interface RoomStyle {
@@ -180,6 +182,33 @@ export class HouseMaterials {
       case "frame": return new MeshStandardMaterial({ color: "#f4f3ef", roughness: 0.4, metalness: 0.2 });
       case "attic": return new MeshStandardMaterial({ color: "#8c7556", roughness: 1 });
       case "brass": return new MeshStandardMaterial({ color: "#c8a24a", roughness: 0.3, metalness: 0.9 });
+      // Furniture (milestone 2.1): wood grain, upholstery, leather, metal, lamp glow and generated pictures.
+      case "wood": {
+        // The exact colour asked for, with the oak's grain as surface relief only (a tinted oak map came out too dark and red).
+        const t = (tex: Texture) => {
+          const c = tex.clone();
+          c.repeat.set(1 / 1.2, 1 / 1.2);
+          c.needsUpdate = true;
+          return c;
+        };
+        return new MeshStandardMaterial({ color: arg, roughness: 0.55, normalMap: t(this.tex.oak.normalMap), normalScale: new Vector2(0.6, 0.6) });
+      }
+      case "fabric": {
+        const m = new MeshStandardMaterial({ color: arg, roughness: 0.95, map: this.carpet.clone() });
+        m.map!.repeat.set(3, 3);
+        return m;
+      }
+      case "leather": return new MeshStandardMaterial({ color: arg, roughness: 0.42, map: this.speckle });
+      case "metal": return new MeshStandardMaterial({ color: arg, roughness: 0.32, metalness: 0.85 });
+      case "plastic": return new MeshStandardMaterial({ color: arg, roughness: 0.45 });
+      case "glow": return new MeshStandardMaterial({ color: arg, emissive: arg, emissiveIntensity: 0.9, roughness: 0.8 });
+      case "tex": {
+        const fabricLike = arg?.startsWith("fabric_") || arg?.startsWith("braided") || arg?.startsWith("round") || arg?.startsWith("oriental");
+        const cutout = arg?.startsWith("braided") || arg?.startsWith("round"); // oval and round rugs: transparent corners
+        return new MeshStandardMaterial({ map: furnitureTexture(arg ?? "palette"), roughness: fabricLike ? 0.95 : arg === "palette" ? 0.6 : 0.8, alphaTest: cutout ? 0.5 : 0 });
+      }
+      case "atlas": return atlasMaterial(arg ?? "matte");
+      case "screen": return new MeshStandardMaterial({ color: "#0b0d10", roughness: 0.15, metalness: 0.4 });
       default: return new MeshStandardMaterial({ color: new Color(arg ?? "#ff00ff") });
     }
   }
