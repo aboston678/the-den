@@ -17,7 +17,7 @@ const VIEWS: [string, string, number, number, number, number, number, number][] 
   ["driveway", "noon", near.x, near.z, ahead.x, ahead.z, 4.5, 0.12],
   ["woods", "noon", -92, -60, -80, -50, 4.5, 0.1],
   ["dock", "dusk", 106, 0, 125, 0, 5, 0.1],
-  ["bear", "noon", 6, -36, 6, -50, 3, 0.05],
+  ["bear", "noon", 0, -19, 0, -40, 3.2, 0.05],
 ];
 
 async function shoot(page: Page, style: string) {

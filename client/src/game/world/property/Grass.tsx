@@ -1,7 +1,7 @@
 import { CLEARING, DRIVEWAY, DRIVEWAY_WIDTH, SCENERY, heightAt, houseCutRects, lawnMask, noise2 } from "@den/shared";
 import { useFrame } from "@react-three/fiber";
 import { useMemo } from "react";
-import { BufferAttribute, BufferGeometry, Color, DoubleSide, Matrix4, MeshStandardMaterial } from "three";
+import { BufferAttribute, BufferGeometry, Color, DoubleSide, Matrix4, MeshStandardMaterial, ShaderChunk } from "three";
 import { useQuality } from "../../quality.ts";
 import { ignoreLampsAndFlashlights } from "../lighting.ts";
 import { InstancedLod, type LodLevel } from "./InstancedLod.tsx";
@@ -63,7 +63,11 @@ function grassMaterial() {
         float gust = sin(uTime * 1.7 + root.x * 0.35 + root.y * 0.2) * 0.6 + sin(uTime * 3.1 + root.x * 1.3) * 0.25;
         transformed.xz += vec2(0.09, 0.05) * gust * position.y * 2.0;`);
     // Lit on both sides by the same upward normal.
-    shader.fragmentShader = shader.fragmentShader.replace("float faceDirection = gl_FrontFacing ? 1.0 : - 1.0;", "float faceDirection = 1.0;");
+    // (The chunk is still an #include here, so swap in its text with that one line changed.)
+    shader.fragmentShader = shader.fragmentShader.replace(
+      "#include <normal_fragment_begin>",
+      ShaderChunk.normal_fragment_begin.replace("float faceDirection = gl_FrontFacing ? 1.0 : - 1.0;", "float faceDirection = 1.0;"),
+    );
   };
   const key = m.customProgramCacheKey;
   m.customProgramCacheKey = () => `${key.call(m)}|grass`;
