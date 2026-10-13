@@ -9,6 +9,7 @@ import { Sky as SkyMesh } from "three/addons/objects/Sky.js";
 import { indoor } from "../house/lights.ts";
 import { TOON } from "../artStyle.ts";
 import { useQuality } from "../quality.ts";
+import { ToonClouds } from "./ToonClouds.tsx";
 import { playerState } from "../state.ts";
 import { gameClock } from "./clock.ts";
 import { current, lookAt } from "./look.ts";
@@ -44,6 +45,45 @@ function nightDome() {
   });
   const mesh = new Mesh(new SphereGeometry(DOME_R, 32, 16), mat);
   mesh.renderOrder = -2;
+  mesh.frustumCulled = false;
+  return mesh;
+}
+
+/**
+ * Cartoon art style: a painted daytime sky, deep blue overhead fading to pale blue at the horizon,
+ * with a soft glow round the sun. It covers the realistic sky by day and lets sunsets show through.
+ * (Only on screen: the scene's reflections and fill light still come from the realistic sky.)
+ */
+function dayDome() {
+  const mat = new ShaderMaterial({
+    uniforms: {
+      opacity: { value: 0 }, horizon: { value: new Color("#c6e4f8") }, zenith: { value: new Color("#2a7fe0") },
+      sunDir: { value: new Vector3(0, 1, 0) },
+    },
+    vertexShader: /* glsl */ `
+      varying vec3 vDir;
+      void main() {
+        vDir = normalize(position);
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }`,
+    fragmentShader: /* glsl */ `
+      uniform float opacity; uniform vec3 horizon; uniform vec3 zenith; uniform vec3 sunDir;
+      varying vec3 vDir;
+      void main() {
+        float h = clamp(vDir.y, 0.0, 1.0);
+        vec3 c = mix(horizon, zenith, smoothstep(0.0, 0.55, pow(h, 0.7)));
+        float s = max(dot(vDir, normalize(sunDir)), 0.0);
+        c += vec3(1.0, 0.93, 0.75) * (pow(s, 900.0) * 6.0 + pow(s, 24.0) * 0.25);
+        gl_FragColor = vec4(c, opacity);
+        #include <colorspace_fragment>
+      }`,
+    side: BackSide,
+    transparent: true,
+    depthWrite: false,
+    fog: false,
+  });
+  const mesh = new Mesh(new SphereGeometry(DOME_R + 10, 32, 16), mat);
+  mesh.renderOrder = -3; // under the night dome, which takes over at dusk
   mesh.frustumCulled = false;
   return mesh;
 }
@@ -109,8 +149,8 @@ function makeSky() {
   u.rayleigh!.value = TOON ? 1.8 : 1.2;
   u.mieCoefficient!.value = 0.004;
   u.mieDirectionalG!.value = 0.8;
-  u.cloudCoverage!.value = TOON ? 0.34 : 0.22; // a few fair-weather summer clouds
-  u.cloudDensity!.value = TOON ? 0.55 : 0.35;
+  u.cloudCoverage!.value = TOON ? 0.05 : 0.22; // a few fair-weather summer clouds (cartoon: painted ones, ToonClouds.tsx)
+  u.cloudDensity!.value = 0.35;
   return sky;
 }
 
@@ -130,6 +170,7 @@ export function DayNightSky() {
   const parts = useMemo(() => {
     const sky = makeSky();
     const dome = nightDome();
+    const day = TOON ? dayDome() : null;
     const starField = stars();
     const moonSprite = moon();
     // A second copy of the sky (sharing materials) that the scene's reflections are rendered from.
@@ -137,7 +178,7 @@ export function DayNightSky() {
     envScene.add(new Mesh(sky.geometry, sky.material).copy(sky, false), new Mesh(dome.geometry, dome.material));
     const target = new WebGLCubeRenderTarget(128, { type: HalfFloatType });
     const cubeCamera = new CubeCamera(1, 2000, target);
-    return { sky, dome, starField, moonSprite, envScene, target, cubeCamera };
+    return { sky, dome, day, starField, moonSprite, envScene, target, cubeCamera };
   }, []);
   const light = useRef<DirectionalLight>(null);
   const hemi = useRef<HemisphereLight>(null);
@@ -170,6 +211,12 @@ export function DayNightSky() {
 
     // Keep the sky things centred on the camera so they never get closer as you walk.
     for (const o of [sky, dome, starField]) o.position.copy(camera.position);
+    if (parts.day) {
+      parts.day.position.copy(camera.position);
+      const u = (parts.day.material as ShaderMaterial).uniforms;
+      u.opacity!.value = Math.min(1, Math.max(0, look.sky.daylight * 1.4 - 0.2)) * (1 - look.sky.glow * 0.85);
+      (u.sunDir!.value as Vector3).set(s.x, s.y, s.z);
+    }
     // The night sky only takes over once the sunset colours have gone.
     (dome.material as ShaderMaterial).uniforms.opacity!.value = Math.min(1, Math.max(0, (look.night - 0.35) / 0.5));
     (starField.material as PointsMaterial).opacity = Math.max(0, (look.night - 0.6) / 0.4) * 0.95;
@@ -224,8 +271,10 @@ export function DayNightSky() {
     <>
       <primitive object={parts.sky} />
       <primitive object={parts.dome} />
+      {parts.day && <primitive object={parts.day} />}
       <primitive object={parts.starField} />
       <primitive object={parts.moonSprite} />
+      {TOON && <ToonClouds />}
       <hemisphereLight ref={hemi} />
       <primitive object={shadowTarget} />
       <directionalLight

@@ -26,9 +26,16 @@ const BAND = /* glsl */ `
 	dotNL = smoothstep( 0.0, 0.14, dotNL ) * ( 0.78 + 0.22 * smoothstep( 0.35, 0.75, dotNL ) );
 `;
 
-/** Each texture pixel is mostly its blurred surroundings: shapes and colours stay, fine photographic grain goes. */
+/**
+ * Each texture pixel is mostly its blurred surroundings: shapes and colours stay, fine photographic
+ * grain goes. Materials painted for this style (leaf cards) opt out with the NO_SOFT_MAP define.
+ */
 const SOFT_MAP = /* glsl */ `
+	#ifdef NO_SOFT_MAP
+	vec4 sampledDiffuseColor = texture2D( map, vMapUv );
+	#else
 	vec4 sampledDiffuseColor = mix( texture2D( map, vMapUv ), texture( map, vMapUv, 3.0 ), 0.65 );
+	#endif
 `;
 
 /** A touch more colour, before tone mapping. */

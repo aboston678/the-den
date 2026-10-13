@@ -2,6 +2,8 @@ import { Boundary } from "./Boundary.tsx";
 import { Boat } from "./Boat.tsx";
 import { Dock } from "./Dock.tsx";
 import { Forest } from "./Forest.tsx";
+import { Grass } from "./Grass.tsx";
+import { TOON } from "../../artStyle.ts";
 import { House } from "../../house/House.tsx";
 import { Roads } from "./Roads.tsx";
 import { StoneWalls } from "./StoneWalls.tsx";
@@ -20,6 +22,7 @@ export function Property() {
       <Boat />
       <StoneWalls />
       <Forest />
+      {TOON && <Grass />}
       <House />
       <Boundary />
     </>

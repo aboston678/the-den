@@ -13,7 +13,7 @@ const OUT = "review/style";
 const near = DRIVEWAY.pointAt(DRIVEWAY.length - 45), ahead = DRIVEWAY.pointAt(DRIVEWAY.length - 30);
 /** name, time of day, bear x/z, where the camera looks (x/z), camera distance, pitch */
 const VIEWS: [string, string, number, number, number, number, number, number][] = [
-  ["house", "noon", 6, -36, 2, 0, 5, 0.06],
+  ["house", "noon", -6, -26, 2, 0, 6, 0.0],
   ["driveway", "noon", near.x, near.z, ahead.x, ahead.z, 4.5, 0.12],
   ["woods", "noon", -92, -60, -80, -50, 4.5, 0.1],
   ["dock", "dusk", 106, 0, 125, 0, 5, 0.1],

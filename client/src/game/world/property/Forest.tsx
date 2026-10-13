@@ -9,7 +9,7 @@ import { useQuality } from "../../quality.ts";
 import { current } from "../../sky/look.ts";
 import { bakeImpostor } from "./impostor.ts";
 import { InstancedLod, type LodLevel, type LodPart } from "./InstancedLod.tsx";
-import { toonParts } from "./toonTrees.ts";
+import { toonParts, toonRock } from "./toonTrees.ts";
 import { FERNS, ROCKS, SAPLING_KINDS, SHRUBS, TREE_KINDS, type Placement, type Scatter, scatterAll } from "./scatter.ts";
 import { ignoreLampsAndFlashlights, ignorePointLights } from "../lighting.ts";
 import { removeBody } from "../physics.ts";
@@ -129,6 +129,7 @@ export function Forest() {
       { maxDist: q.smallFar, castShadow: false, parts: [...forestParts(trees, `${kind}_lod1_bark`), ...forestParts(trees, `${kind}_lod1_leaves`)] },
     ];
     const single = (name: string, maxDist: number, castShadow: boolean): LodLevel[] => [{ maxDist, castShadow, parts: forestParts(props, name) }];
+    if (TOON) for (const k of [...ROCKS, "boulder"]) for (const p of forestParts(props, k)) toonRock(p.material as MeshStandardMaterial);
 
     const list: { name: string; items: Placement[]; levels: LodLevel[] }[] = [
       ...TREE_KINDS.map((k) => ({ name: k, items: scatter.trees[k], levels: treeLevels(k) })),

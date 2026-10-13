@@ -1,5 +1,6 @@
 import { START_TIME, type SkyState, skyAt } from "@den/shared";
 import { Color } from "three";
+import { TOON } from "../artStyle.ts";
 
 // How the world looks at a given time of day: light colours and strengths, fog, exposure
 // (GAME_SPEC §9). Mid-morning matches the fixed sun the game had before 1.10.
@@ -39,6 +40,8 @@ export interface Look {
 }
 
 const INDOOR_HEMI_SKY = new Color("#d9ccb6");
+const TOON_SUN = new Color("#ffe2b0");
+const TOON_FOG = new Color("#b9d8f2");
 const INDOOR_HEMI_GROUND = new Color("#6e5d4a");
 
 /**
@@ -75,6 +78,13 @@ export function lookAt(time: number, out: Look = newLook(), indoors = 0): Look {
   out.exposure = lerp(1.75, 1.0, d);
   out.night = 1 - d;
 
+  if (TOON) {
+    // Cartoon art style: brighter, bluer shade (shadows read as soft colour, not darkness), warmer
+    // sunshine, and a clear light-blue haze.
+    out.hemi.intensity *= lerp(1, 1.7, d);
+    out.light.color.lerp(TOON_SUN, 0.3 * d);
+    out.fog.lerp(TOON_FOG, 0.6 * d * (1 - sky.glow));
+  }
   if (indoors > 0) {
     out.hemi.sky.lerp(INDOOR_HEMI_SKY, indoors);
     out.hemi.ground.lerp(INDOOR_HEMI_GROUND, indoors);

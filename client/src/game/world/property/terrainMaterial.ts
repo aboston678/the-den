@@ -17,7 +17,7 @@ const BIAS = TOON ? ", 2.5" : "";
 const LAWN = TOON ? "vec3(0.74, 1.16, 0.46)" : "vec3(0.80, 1.02, 0.62)";
 const BUMPS = TOON ? "0.35" : "1.0";
 /** Cartoon: each ground layer is painted in one colour, the photo texture only adds a little light and dark. */
-const PAINT = ["#6fc041", "#5d8a35", "#7d9a3c", "#8a6b45", "#7c7058"].map((hex) => {
+const PAINT = ["#6fc041", "#5d8a35", "#7d9a3c", "#7f8a44", "#7c7058"].map((hex) => {
   const c = new Color(hex);
   return `vec3(${c.r.toFixed(3)}, ${c.g.toFixed(3)}, ${c.b.toFixed(3)})`;
 });
