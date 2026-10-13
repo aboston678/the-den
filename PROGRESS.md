@@ -104,6 +104,7 @@ Starting balance: 1,210 (2026-10-11)
 | 2026-10-12 | Phase 2 furniture concepts ×10 (0.25 each; job ids in `assets/concepts/furniture/README.md`) | `gpt_image_2_5` | 2.5 | 1,022 |
 | 2026-10-12 | Concepts ×10: four-poster bed, Chesterfield, recliner, canoe, Andrew's boat (from his photo, brand removed), 5 fish (0.25 each; job ids in `assets/models/phase2-3d-jobs.json`) | `gpt_image_2_5` | 2.5 | 1,019.5 |
 | 2026-10-12 | Image→3D ×20: 14 furniture pieces, boat, 5 fish (9 each; Andrew approved the batch; job ids in `assets/models/phase2-3d-jobs.json`) | `tripo_h3_1_image_to_3d` | 180 | 839.5 |
+| 2026-10-13 | Style test concepts ×4: cartoon bear, house, driveway, dock (0.25 each; job ids in `assets/concepts/style/README.md`; Andrew approved) | `gpt_image_2_5` | 1 | 838.5 |
 
 ## Decision log
 | Date | Decision | Why |
