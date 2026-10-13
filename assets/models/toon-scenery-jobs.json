@@ -1,0 +1,12 @@
+{
+  "_readme": "Higgsfield tripo_h3_1_image_to_3d jobs for the cartoon scenery (2026-10-13, 9 credits each, Andrew approved the batch of 7). source = starting picture job id (assets/concepts/scenery/README.md). Download results with the job id; never resubmit without checking status.",
+  "jobs": [
+    { "name": "pine", "job": "a2ab5d8d-fb09-4873-aec7-5826b7d4bf38", "source": "6ed16d25-a252-4d31-bd33-cd1c6481c2f7", "faces": 30000 },
+    { "name": "birch", "job": "67db5363-837d-4504-8409-adca90356767", "source": "d2f7229e-0a8d-445d-beea-e75429491a04", "faces": 30000 },
+    { "name": "maple", "job": "4387eaa8-011d-408a-8984-a72b329a21e5", "source": "29d4868b-5221-4aec-9528-c08f9f987920", "faces": 30000 },
+    { "name": "bush", "job": "1a3dcac0-6b7d-4819-a2d2-7002785c2703", "source": "d221c924-dc2d-4de6-90b1-697a653d638f", "faces": 20000 },
+    { "name": "fern", "job": "ca9eeca0-b02b-4923-b6b6-ef299be5b153", "source": "5cc7fcae-88de-475b-b2f6-d7f1e495319f", "faces": 20000 },
+    { "name": "boulder", "job": "67f2b947-6429-4413-a3f8-0c0a78eb0d81", "source": "ae1244bf-367f-4241-8b72-9a6e7e947c16", "faces": 10000 },
+    { "name": "rock", "job": "1cbf9b92-b373-4879-9356-f84d90fc70e4", "source": "29477792-ff4b-488d-a31f-4800d87f1fd3", "faces": 10000 }
+  ]
+}
