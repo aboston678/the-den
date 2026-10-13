@@ -28,7 +28,8 @@ const BAND = /* glsl */ `
 
 /**
  * Each texture pixel is mostly its blurred surroundings: shapes and colours stay, fine photographic
- * grain goes. Materials painted for this style (leaf cards) opt out with the NO_SOFT_MAP define.
+ * grain goes. Materials already painted for this style (the cartoon scenery models) opt out with the
+ * NO_SOFT_MAP define.
  */
 const SOFT_MAP = /* glsl */ `
 	#ifdef NO_SOFT_MAP

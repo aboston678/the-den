@@ -4,12 +4,11 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { useRapier } from "@react-three/rapier";
 import { useEffect, useMemo } from "react";
 import { Box3, Color, DoubleSide, type Group, Matrix4, type Mesh, MeshStandardMaterial, Quaternion, Euler, Vector3 } from "three";
-import { TOON } from "../../artStyle.ts";
 import { useQuality } from "../../quality.ts";
 import { current } from "../../sky/look.ts";
 import { bakeImpostor } from "./impostor.ts";
 import { InstancedLod, type LodLevel, type LodPart } from "./InstancedLod.tsx";
-import { toonParts, toonRock } from "./toonTrees.ts";
+import { roadsideBushes, toonParts, useToonScenery } from "./toonTrees.ts";
 import { FERNS, ROCKS, SAPLING_KINDS, SHRUBS, TREE_KINDS, type Placement, type Scatter, scatterAll } from "./scatter.ts";
 import { ignoreLampsAndFlashlights, ignorePointLights } from "../lighting.ts";
 import { removeBody } from "../physics.ts";
@@ -37,14 +36,15 @@ function partsOf(scene: Group, name: string): LodPart[] {
 }
 
 /**
- * The parts to draw for a node of the model files: the model's own, or with the cartoon art style,
- * a stand-in the size of the real tree (lod0) or bush where there is one (toonTrees.ts).
+ * The parts to draw for a node of the model files: the model's own, or with the cartoon art style
+ * (`toon` = the cartoon scenery file), a stand-in the size of the real tree (its lod0), bush, fern
+ * or rock where there is one (toonTrees.ts).
  */
-function forestParts(scene: Group, name: string): LodPart[] {
-  if (!TOON) return partsOf(scene, name);
+function forestParts(scene: Group, toon: Group | null, name: string): LodPart[] {
+  if (!toon) return partsOf(scene, name);
   const tree = /^(.+)_lod\d_/.exec(name);
   const box = boundsOf(tree ? [...partsOf(scene, `${tree[1]}_lod0_bark`), ...partsOf(scene, `${tree[1]}_lod0_leaves`)] : partsOf(scene, name));
-  return toonParts(name, box) ?? partsOf(scene, name);
+  return toonParts(toon, name, box) ?? partsOf(scene, name);
 }
 
 /** Bounding box of a set of parts (in the model's own space). */
@@ -95,6 +95,7 @@ const scatter_ = () => (scatterCache ??= scatterAll());
 export function Forest() {
   const trees = useGLTF(TREES_URL).scene as Group;
   const props = useGLTF(PROPS_URL).scene as Group;
+  const toon = useToonScenery();
   const scatter = useMemo(scatter_, []);
   const gl = useThree((st) => st.gl);
   const q = useQuality();
@@ -103,8 +104,8 @@ export function Forest() {
   const impostors = useMemo(() => {
     prepareFoliage(trees);
     prepareFoliage(props);
-    return new Map<string, ReturnType<typeof bakeImpostor>>(TREE_KINDS.map((k) => [k, bakeImpostor(gl, [...forestParts(trees, `${k}_lod1_bark`), ...forestParts(trees, `${k}_lod1_leaves`)])]));
-  }, [trees, props, gl]);
+    return new Map<string, ReturnType<typeof bakeImpostor>>(TREE_KINDS.map((k) => [k, bakeImpostor(gl, [...forestParts(trees, toon, `${k}_lod1_bark`), ...forestParts(trees, toon, `${k}_lod1_leaves`)])]));
+  }, [trees, props, toon, gl]);
   useEffect(() => () => impostors.forEach((i) => {
     i.geometry.dispose();
     (i.material.uniforms.map!.value as { dispose(): void }).dispose();
@@ -114,22 +115,27 @@ export function Forest() {
   const kinds = useMemo(() => {
     const [near, mid, far] = q.treeLods;
     const treeLevels = (kind: string): LodLevel[] => [
-      { maxDist: near, castShadow: true, parts: [...forestParts(trees, `${kind}_lod0_bark`), ...forestParts(trees, `${kind}_lod0_leaves`)] },
+      {
+        maxDist: near,
+        castShadow: true,
+        parts: [...forestParts(trees, toon, `${kind}_lod0_bark`), ...forestParts(trees, toon, `${kind}_lod0_leaves`)],
+        // Cartoon trees are solid models (no see-through leaf cards), so even close up the far-detail one casts the same shadow.
+        shadowProxy: toon ? [...forestParts(trees, toon, `${kind}_lod2_bark`), ...forestParts(trees, toon, `${kind}_lod2_leaves`)] : undefined,
+      },
       {
         maxDist: mid,
         castShadow: q.treeShadowLevels > 1,
-        parts: [...forestParts(trees, `${kind}_lod1_bark`), ...forestParts(trees, `${kind}_lod1_leaves`)],
+        parts: [...forestParts(trees, toon, `${kind}_lod1_bark`), ...forestParts(trees, toon, `${kind}_lod1_leaves`)],
         // Their shadows come from the far-detail tree: a shadow doesn't show the difference, and it's a quarter of the work.
-        shadowProxy: q.treeShadowLevels > 1 ? [...forestParts(trees, `${kind}_lod2_bark`), ...forestParts(trees, `${kind}_lod2_leaves`)] : undefined,
+        shadowProxy: q.treeShadowLevels > 1 ? [...forestParts(trees, toon, `${kind}_lod2_bark`), ...forestParts(trees, toon, `${kind}_lod2_leaves`)] : undefined,
       },
       { maxDist: far, castShadow: false, parts: [{ ...impostors.get(kind)!, matrix: new Matrix4() }] },
     ];
     const saplingLevels = (kind: string): LodLevel[] => [
-      { maxDist: q.smallFar * 0.55, castShadow: true, parts: [...forestParts(trees, `${kind}_lod0_bark`), ...forestParts(trees, `${kind}_lod0_leaves`)] },
-      { maxDist: q.smallFar, castShadow: false, parts: [...forestParts(trees, `${kind}_lod1_bark`), ...forestParts(trees, `${kind}_lod1_leaves`)] },
+      { maxDist: q.smallFar * 0.55, castShadow: true, parts: [...forestParts(trees, toon, `${kind}_lod0_bark`), ...forestParts(trees, toon, `${kind}_lod0_leaves`)] },
+      { maxDist: q.smallFar, castShadow: false, parts: [...forestParts(trees, toon, `${kind}_lod1_bark`), ...forestParts(trees, toon, `${kind}_lod1_leaves`)] },
     ];
-    const single = (name: string, maxDist: number, castShadow: boolean): LodLevel[] => [{ maxDist, castShadow, parts: forestParts(props, name) }];
-    if (TOON) for (const k of [...ROCKS, "boulder"]) for (const p of forestParts(props, k)) toonRock(p.material as MeshStandardMaterial);
+    const single = (name: string, maxDist: number, castShadow: boolean): LodLevel[] => [{ maxDist, castShadow, parts: forestParts(props, toon, name) }];
 
     const list: { name: string; items: Placement[]; levels: LodLevel[] }[] = [
       ...TREE_KINDS.map((k) => ({ name: k, items: scatter.trees[k], levels: treeLevels(k) })),
@@ -140,12 +146,14 @@ export function Forest() {
       { name: "log", items: scatter.logs, levels: single("log", 90, true) },
       { name: "stump", items: scatter.stumps, levels: single("stump", 90, true) },
       { name: "boulder", items: scatter.boulder, levels: single("boulder", 200, true) },
+      // Cartoon style: bushes along the driveway (sized like shrub_a; not solid, see useForestColliders).
+      ...(toon ? [{ name: "roadside_bush", items: roadsideBushes(), levels: [{ maxDist: PROP_FAR, castShadow: true, parts: toonParts(toon, "shrub_a", boundsOf(partsOf(props, "shrub_a")))! }] }] : []),
     ];
     return list.map((k) => {
       const box = boundsOf(k.levels[0]!.parts);
       return { ...k, box, radius: box.getSize(new Vector3()).length() / 2 };
     });
-  }, [trees, props, scatter, impostors, q]);
+  }, [trees, props, toon, scatter, impostors, q]);
 
   // Impostor cards are lit like the trees around them: sky light plus some sun.
   useFrame(() => {

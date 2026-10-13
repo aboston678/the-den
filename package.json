@@ -23,7 +23,8 @@
     "build:audio": "node tools/fetch-audio.mjs && node tools/build-audio.mjs && node tools/build-music.mjs",
     "build:tv": "node tools/build-tv.mjs",
     "build:furniture": "node tools/build-furniture.mjs",
-    "build:fish": "node tools/build-furniture.mjs --fish"
+    "build:fish": "node tools/build-furniture.mjs --fish",
+    "build:toon": "node tools/build-toon-textures.mjs && node tools/build-toon-scenery.mjs"
   },
   "devDependencies": {
     "@gltf-transform/core": "^4.5.1",

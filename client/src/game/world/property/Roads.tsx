@@ -1,6 +1,6 @@
 import { APRON, DRIVEWAY, DRIVEWAY_WIDTH, drivewayY, heightAt } from "@den/shared";
 import { useMemo } from "react";
-import { BufferAttribute, BufferGeometry, MeshStandardMaterial } from "three";
+import { BufferAttribute, BufferGeometry, MeshStandardMaterial, Vector2 } from "three";
 import { TOON } from "../../artStyle.ts";
 import { useOutdoorMaps } from "./textures.ts";
 
@@ -43,7 +43,7 @@ function drivewayGeometry() {
 export function Roads() {
   const maps = useOutdoorMaps("asphalt");
   const material = useMemo(
-    () => new MeshStandardMaterial({ ...maps, color: TOON ? "#c4bdb2" : "#9a9894", polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }),
+    () => new MeshStandardMaterial({ ...maps, color: TOON ? "#cfc8bc" : "#9a9894", normalScale: TOON ? new Vector2(0.15, 0.15) : new Vector2(1, 1), polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }),
     [maps],
   );
   const driveway = useMemo(drivewayGeometry, []);

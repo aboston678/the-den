@@ -10,23 +10,23 @@ export const TERRAIN_LAYERS = ["lawn", "forest", "forest_edge", "mud", "streambe
 const TILE = [3.2, 4.5, 4.0, 3.5, 2.5];
 
 /**
- * Cartoon art style: the textures are read blurrier (fewer, softer details), the lawn is a brighter
- * green and the bumps are gentler.
+ * Cartoon art style: the lawn, forest floor and forest edge are painted textures already
+ * (textures.ts), used as they are; the mud and stream bed are still photos, so they're read
+ * blurrier and painted one colour each, with the photo adding only a little light and dark.
+ * The bumps are gentler too.
  */
-const BIAS = TOON ? ", 2.5" : "";
-const LAWN = TOON ? "vec3(0.74, 1.16, 0.46)" : "vec3(0.80, 1.02, 0.62)";
-const BUMPS = TOON ? "0.35" : "1.0";
-/** Cartoon: each ground layer is painted in one colour, the photo texture only adds a little light and dark. */
-const PAINT = ["#6fc041", "#5d8a35", "#7d9a3c", "#7f8a44", "#7c7058"].map((hex) => {
+const LAWN = TOON ? "vec3(1.0)" : "vec3(0.80, 1.02, 0.62)";
+const BUMPS = TOON ? "0.3" : "1.0";
+const PAINT = ["#7f8a44", "#7c7058"].map((hex) => {
   const c = new Color(hex);
   return `vec3(${c.r.toFixed(3)}, ${c.g.toFixed(3)}, ${c.b.toFixed(3)})`;
 });
 const PAINT_LAYER = TOON
-  ? `{
-          const vec3 PAINT[5] = vec3[5](${PAINT.join(", ")});
+  ? `if (i >= 3) {
+          const vec3 PAINT[2] = vec3[2](${PAINT.join(", ")});
           float lum = dot(c.rgb, vec3(0.2126, 0.7152, 0.0722));
           float avg = dot(texture(uColour, vec3(vWPos.xz / 40.0, float(i)), 8.0).rgb, vec3(0.2126, 0.7152, 0.0722));
-          c.rgb = PAINT[i] * clamp(1.0 + (lum - avg) / max(avg, 0.02) * 0.35, 0.75, 1.25);
+          c.rgb = PAINT[i - 3] * clamp(1.0 + (lum - avg) / max(avg, 0.02) * 0.35, 0.75, 1.25);
         }`
   : "";
 
@@ -66,8 +66,8 @@ export function createTerrainMaterial(colour: DataArrayTexture, normal: DataArra
 
         // Colour + roughness, mixed with a bigger rotated copy so the tiling doesn't show.
         vec4 layerColour(int i, vec2 p) {
-          vec4 a = texture(uColour, vec3(p / TILE[i], float(i))${BIAS});
-          vec4 b = texture(uColour, vec3(TURN * p / (TILE[i] * 3.7), float(i))${BIAS});
+          vec4 a = texture(uColour, vec3(p / TILE[i], float(i)));
+          vec4 b = texture(uColour, vec3(TURN * p / (TILE[i] * 3.7), float(i)));
           return mix(a, b, 0.35);
         }
         vec3 layerNormal(int i, vec2 p) {
