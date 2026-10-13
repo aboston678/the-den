@@ -3,7 +3,7 @@
 Claude Code updates this file after every milestone: tick the box, add a short note, and say what's next.
 **[ANDREW APPROVES]** = stop, show Andrew, and wait for his OK.
 
-**Current status:** Phase 2 on branch `phase-2`: 2.1, 2.2 and 2.4 built (furniture, greenhouse, TVs, boat, fishing). 2.5 sign-in and 2.6 friends + leaderboard done. Next: the combined Phase 2 review with Andrew, then 2.7 deploy + friend test. Waiting on Andrew for the Google sign-in setup (`docs/setup-google-signin.md`), needed by 2.5. Then 2.6, one combined review, 2.7 deploy.
+**Current status:** Phase 2 on branch `phase-2`: 2.1–2.6 built (2.3 dogs dropped). Andrew did the Phase 2 review (2026-10-13): he isn't happy with the graphics and is thinking about a Fortnite-like look. Pop-in/stutter fix done (no credits). Next: a cheap style test (concept pictures + one restyled corner of the game) for Andrew to compare; if he likes it, a full restyle plan with credit costs before 2.7 and the bowling alley.
 
 ---
 
@@ -52,6 +52,8 @@ Run as one batch (Andrew, 2026-10-12; full plan in `docs/phase-2-plan.md`): all 
   - Built 2026-10-13. Andrew set up Supabase + Google (click-by-click, `docs/setup-google-signin.md`) and ran the database script (`supabase/migrations/20261013_phase2.sql`: profiles, friendships, stats, catches, bowling/catan tables, row-level security on all, `record_catch()` for the server only, private `private-media` storage). Home screen: Sign in with Google → first time, pick a username (3–16, letters/numbers/_; unique ignoring case) → it's your name tag; Sign out. The server checks every joining player's sign-in with Supabase and looks up their username (`server/src/auth.ts`); in production you can't join without signing in. TVs get a private 6-hour link to the clips once you're signed in (clip uploaded; public access refused, checked). Development builds keep a name box so tests and local play work without Google. Tests: username rules, server sign-in check (`auth.test.ts`), the button goes to Google (`e2e/auth.spec.ts`). A real Google sign-in is for Andrew to try at the review.
 - [x] **2.6 Friends + leaderboard.** Friend requests, leaderboard tabs (All/Friends), fish caught live; bowling and Catan columns ready.
   - Built 2026-10-13. The game server saves every fish a signed-in bear lands (`record_catch`: the catch, +1 fish caught, all-time personal best per species; `server/src/stats.ts`, tested) before announcing it. Home screen (signed in): LEADERBOARD (Fish caught / Bowling / Catan; All players / Friends; ties share a rank; refreshes every 20 s and whenever a fish is landed; bowling and Catan say when they open) and FRIENDS (find bears by username, send/accept/decline/cancel requests, remove friends; a badge counts waiting requests). Everything goes through the player's own sign-in, so the database's rules decide what they can see and change. The panels' real queries were checked against the live database. Tests: ranking/friends rules (`socialRules.test.ts`), the panels with made-up bears (`e2e/social.spec.ts`, `?mocksocial` in dev builds), screenshots `docs/screenshots/2.6/`. Real accounts get tried at the review.
+- Phase 2 review (Andrew, 2026-10-13): graphics not as good as he hoped, and things "load in" as you run by. Fixed the pop-in (below); a Fortnite-like style test is next.
+  - Pop-in fix 2026-10-13: trees, saplings, ferns and rocks now dissolve smoothly between detail levels instead of swapping at a line (`world/property/lodFade.ts`); the sun's shadow area is pushed ahead of where you look and held still (no shimmer); the furniture's shaders are prepared at load (the 0.2–0.3 s freeze when you reached the house is gone) and it shows from a little further (12/15/30 m by preset). Driveway sprint: worst frame 300 ms → 17 ms; Medium frame rates unchanged. Tool: `e2e/tools-popin.spec.ts`; before/after videos in `review/pop-in/` (not in git).
 - [ ] **2.7 Deploy + friend test.**
 
 ## Phase 3: Bowling alley
@@ -151,6 +153,8 @@ Starting balance: 1,210 (2026-10-11)
 
 ## Session notes
 (Newest first. 1–3 lines per session: what got done, what's next, anything Andrew needs to do.)
+
+- **2026-10-13 · Session 5.** Andrew reviewed Phase 2: wants better graphics, maybe a Fortnite-like style. Fixed pop-in and the stutter near the house (no credits). Next: style test (3–4 concept pictures under 1 credit each + one restyled corner in the game), then Andrew decides on the switch.
 
 - **2026-10-13 · Session 4 (cont.).** Andrew finished the Google sign-in setup: Supabase project `the-den` (East US) with Google sign-in on (Google Cloud project "The Den", app published), redirect URLs for localhost, the Vercel site and its previews; keys in Railway + Vercel; public values and the secret key in the local `.env` (gitignored; secret read from his clipboard, never shown). Checked: Google provider on, secret key works. Next: 2.5 sign-in in the game.
 - **2026-10-12 · Session 4.** Phase 1 done. Phase 2 planned as one batch. Credit batch approved and spent (182.5; 20 models). Dogs dropped (Andrew: no purchase). TV = Andrew's private clips; boat at the dock. 2.1 + 2.2 built and committed on `phase-2`. Next: 2.4 fishing; Andrew to do the Google sign-in setup when convenient.

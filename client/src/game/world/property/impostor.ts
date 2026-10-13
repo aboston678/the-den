@@ -3,6 +3,7 @@ import {
   Scene, ShaderMaterial, UniformsLib, UniformsUtils, Vector3, type WebGLRenderer, WebGLRenderTarget,
 } from "three";
 import type { LodPart } from "./InstancedLod.tsx";
+import { LOD_FADE_FRAGMENT, LOD_FADE_FRAGMENT_PARS, LOD_FADE_VERTEX, LOD_FADE_VERTEX_PARS } from "./lodFade.ts";
 
 // Far trees as "impostors" (GAME_SPEC §17): each tree kind is photographed once from the side into
 // a small picture, and far-away copies are drawn as a single card that always turns to face the
@@ -60,9 +61,11 @@ export function bakeImpostor(gl: WebGLRenderer, parts: LodPart[]): Impostor {
     uniforms: UniformsUtils.merge([UniformsLib.fog, { map: { value: null }, light: { value: new Color(1, 1, 1) } }]),
     vertexShader: /* glsl */ `
       #include <fog_pars_vertex>
+      ${LOD_FADE_VERTEX_PARS}
       varying vec2 vUv;
       void main() {
         vUv = uv;
+        ${LOD_FADE_VERTEX}
         // Turn the card to face the camera (round the vertical axis only), keeping the copy's size.
         vec3 origin = (modelMatrix * instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
         float scale = length(instanceMatrix[0].xyz);
@@ -78,8 +81,10 @@ export function bakeImpostor(gl: WebGLRenderer, parts: LodPart[]): Impostor {
       #include <fog_pars_fragment>
       uniform sampler2D map;
       uniform vec3 light;
+      ${LOD_FADE_FRAGMENT_PARS}
       varying vec2 vUv;
       void main() {
+        ${LOD_FADE_FRAGMENT}
         vec4 t = texture2D(map, vUv);
         if (t.a < 0.5) discard;
         gl_FragColor = vec4(t.rgb * light, 1.0);
@@ -90,5 +95,6 @@ export function bakeImpostor(gl: WebGLRenderer, parts: LodPart[]): Impostor {
     fog: true,
   });
   material.uniforms.map!.value = rt.texture;
+  material.userData.lodFade = true; // the dissolve is built in above
   return { geometry, material };
 }

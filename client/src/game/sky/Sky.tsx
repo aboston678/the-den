@@ -2,8 +2,8 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import {
   AdditiveBlending, BackSide, BufferGeometry, CanvasTexture, Color, CubeCamera, type DirectionalLight, Float32BufferAttribute,
-  Fog, HalfFloatType, type HemisphereLight, Mesh, MeshBasicMaterial, Object3D, Points, PointsMaterial, Scene, ShaderMaterial,
-  SphereGeometry, Sprite, SpriteMaterial, WebGLCubeRenderTarget,
+  Fog, HalfFloatType, type HemisphereLight, Matrix4, Mesh, MeshBasicMaterial, Object3D, Points, PointsMaterial, Scene, ShaderMaterial,
+  SphereGeometry, Sprite, SpriteMaterial, Vector3, WebGLCubeRenderTarget,
 } from "three";
 import { Sky as SkyMesh } from "three/addons/objects/Sky.js";
 import { indoor } from "../house/lights.ts";
@@ -113,6 +113,13 @@ function makeSky() {
   return sky;
 }
 
+/** How far ahead of the bear the shadow box is centred, as a share of its half-width. */
+const SHADOW_AHEAD = 0.4;
+const shadowTmp = {
+  fwd: new Vector3(), centre: new Vector3(), dir: new Vector3(), origin: new Vector3(), up: new Vector3(0, 1, 0),
+  basis: new Matrix4(), inverse: new Matrix4(),
+};
+
 /** Everything in the sky, plus the fog, sky light and exposure that go with the time of day. */
 export function DayNightSky() {
   const { scene, gl, camera } = useThree();
@@ -178,17 +185,24 @@ export function DayNightSky() {
       hemi.current.intensity = look.hemi.intensity;
     }
 
-    // Sun or moon: its shadow box follows the bear, snapped to whole shadow-map texels so edges don't shimmer.
+    // Sun or moon: its shadow box follows the bear, pushed ahead toward where the camera looks (the
+    // shadows behind you aren't on screen), and snapped to whole shadow-map texels as the light
+    // sees them, so shadow edges hold still instead of shimmering while you move.
     const l = light.current;
     if (l) {
       const texel = (SHADOW_HALF * 2) / SHADOW_MAP;
       const p = playerState.position;
-      const x = Math.round(p.x / texel) * texel, z = Math.round(p.z / texel) * texel;
-      const dir = look.light.dir;
+      camera.getWorldDirection(shadowTmp.fwd).setY(0);
+      if (shadowTmp.fwd.lengthSq() > 1e-6) shadowTmp.fwd.normalize();
+      const centre = shadowTmp.centre.set(p.x, p.y, p.z).addScaledVector(shadowTmp.fwd, SHADOW_HALF * SHADOW_AHEAD);
       // Never let the light skim the ground flat: shadows would stretch for kilometres.
-      const y = Math.max(dir.y, 0.08);
-      shadowTarget.position.set(x, p.y, z);
-      l.position.set(x + dir.x * 120, p.y + y * 120, z + dir.z * 120);
+      const dir = shadowTmp.dir.set(look.light.dir.x, Math.max(look.light.dir.y, 0.08), look.light.dir.z).normalize();
+      // Into the light's own view (the same turn the shadow camera makes), round, and back out.
+      shadowTmp.basis.lookAt(dir, shadowTmp.origin, shadowTmp.up);
+      centre.applyMatrix4(shadowTmp.inverse.copy(shadowTmp.basis).transpose());
+      centre.set(Math.round(centre.x / texel) * texel, Math.round(centre.y / texel) * texel, centre.z).applyMatrix4(shadowTmp.basis);
+      shadowTarget.position.copy(centre);
+      l.position.copy(centre).addScaledVector(dir, 120);
       shadowTarget.updateMatrixWorld();
       l.color.copy(look.light.color);
       l.intensity = look.light.intensity;

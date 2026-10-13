@@ -71,6 +71,8 @@ export function PerfProbe() {
       });
       return [...by.entries()].sort((a, b) => b[1].tris - a[1].tris).slice(0, 25).map(([k, v]) => `${k}: ${Math.round(v.tris / 1000)}k tris, ${v.meshes} draws`);
     };
+    /** Names of the compiled shader programs (to spot shaders compiled mid-game, which stutter). */
+    window.__den.programNames = () => (gl.info.programs ?? []).map((p) => (p as { name: string }).name);
     frames.length = 0;
   }, [gl, scene]);
   useFrame((_, dt) => {

@@ -4,6 +4,7 @@ import { useFrame } from "@react-three/fiber";
 import { useRapier } from "@react-three/rapier";
 import { useEffect, useMemo, useRef } from "react";
 import { type Group, InstancedMesh, type Material, Matrix4, type Mesh } from "three";
+import { quality } from "../../quality.ts";
 import { playerState } from "../../state.ts";
 import { invisibleColliders } from "../../world/invisible.ts";
 import { removeBody } from "../../world/physics.ts";
@@ -12,12 +13,13 @@ import { toWorld } from "../space.ts";
 
 // The furniture in the rooms: hero pieces (Higgsfield models in furniture.glb, one instanced mesh
 // per model, so the four Catan chairs are a single draw) and the code-built meshes, all hidden when
-// you're outdoors away from the house. Plus a solid box for every piece you can bump into. The
+// you're outdoors away from the house (further than the graphics preset's furnitureFar: far enough
+// that the rooms are already furnished before you can make them out through the windows). Plus a solid box for every piece you can bump into. The
 // camera ignores furniture (it would keep snapping in). Positions are floorplan metres.
 
 export const FURNITURE_URL = "/models/furniture.glb";
-/** Outdoors, furniture is only drawn within this distance of the house walls (world metres): you can look in the windows. */
-const SHOW_WITHIN = 9;
+/** Drawn for the first few frames wherever you are, so its shaders and textures are ready before you walk up (no stutter). */
+const WARM_FRAMES = 3;
 const HOUSE_MIN = toWorld([0, 0, 0]), HOUSE_MAX = toWorld([34, 0, 11.5]);
 
 function heroMeshes(scene: Group) {
@@ -51,6 +53,7 @@ export function Furniture({ built }: { built: Mesh[] }) {
   const { scene } = useGLTF(FURNITURE_URL);
   const meshes = useMemo(() => heroMeshes(scene as Group), [scene]);
   const group = useRef<Group>(null);
+  const warm = useRef(WARM_FRAMES);
   const { world, rapier } = useRapier();
 
   useEffect(() => {
@@ -74,7 +77,7 @@ export function Furniture({ built }: { built: Mesh[] }) {
     if (!group.current) return;
     const p = playerState.position;
     const dx = Math.max(HOUSE_MIN[0] - p.x, 0, p.x - HOUSE_MAX[0]), dz = Math.max(HOUSE_MIN[2] - p.z, 0, p.z - HOUSE_MAX[2]);
-    group.current.visible = indoor.level !== null || Math.hypot(dx, dz) < SHOW_WITHIN;
+    group.current.visible = warm.current-- > 0 || indoor.level !== null || Math.hypot(dx, dz) < quality().furnitureFar;
   });
 
   return (

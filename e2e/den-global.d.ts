@@ -26,6 +26,7 @@ interface Window {
     audioLevel: () => { rms: number; peak: number };
     perf: () => { fps: number; p95ms: number; calls: number; triangles: number; textureMB: number; programs: number; pixelRatio: number; size: string };
     perfBreakdown: () => string[];
+    programNames?: () => string[];
     sky: () => { phase: string; daylight: number; exteriorLights: number };
     remotes: () => { id: string; name: string; x: number; z: number; action: string; flashlight: boolean; tagVisible: boolean; connected: boolean; fish: { rod: boolean; state: string; species: string } }[];
     /** Fishing (2.4): cast with a power 0…1, our fishing state, catches, and a quick bite (dev only). */
