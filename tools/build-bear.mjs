@@ -5,7 +5,12 @@
 //   3. remove the jump's own lift and walks' own forward travel (the game does the moving)
 //   4. rename the built-in Idle, drop unused data, resample keyframes, meshopt + WebP
 //
-// Usage: node tools/build-bear.mjs   ->   client/public/models/bear.glb
+// Usage: node tools/build-bear.mjs          ->   client/public/models/bear.glb
+//        node tools/build-bear.mjs --toon   ->   client/public/models/bear-toon.glb
+//
+// --toon: the cartoon bear (art-style remake, 2026-10-13). It's already round, so it isn't
+// fattened, and it reuses the realistic bear's clips, moved across with tools/transfer-clips.mjs
+// (a different mesh, so retarget-clip.mjs's exact method doesn't apply).
 
 import { execFileSync } from "node:child_process";
 import { readFileSync, statSync } from "node:fs";
@@ -19,17 +24,19 @@ import sharp from "sharp";
 import { removeDrift } from "./lib/remove-drift.mjs";
 import { removeLift } from "./lib/remove-lift.mjs";
 
-const ORIGINAL = "assets/models/bear/bear-base-original.glb";
+const TOON = process.argv.includes("--toon");
+const ORIGINAL = TOON ? "assets/models/bear-toon/bear-base-original.glb" : "assets/models/bear/bear-base-original.glb";
 const CLIPS = "assets/models/bear/clips";
-const OUT = process.env.BEAR_OUT ?? "client/public/models/bear.glb";
+const OUT = process.env.BEAR_OUT ?? (TOON ? "client/public/models/bear-toon.glb" : "client/public/models/bear.glb");
 const fat = join(tmpdir(), "den-bear-fat.glb");
 const animated = join(tmpdir(), "den-bear-animated.glb");
 
 const run = (...args) => execFileSync("node", args, { stdio: "inherit" });
-run("tools/fatten-bear.mjs", "0.22", "0.15", ORIGINAL, fat);
+if (!TOON) run("tools/fatten-bear.mjs", "0.22", "0.15", ORIGINAL, fat);
 
 const { clips } = JSON.parse(readFileSync(join(CLIPS, "manifest.json"), "utf8"));
-run("tools/retarget-clip.mjs", fat, animated, ...Object.entries(clips).map(([name, c]) => `${name}=${join(CLIPS, c.file)}`));
+const clipArgs = Object.entries(clips).filter(([name]) => !TOON || name !== "Pet").map(([name, c]) => `${name}=${join(CLIPS, c.file)}`); // Pet: dogs dropped
+run(TOON ? "tools/transfer-clips.mjs" : "tools/retarget-clip.mjs", TOON ? ORIGINAL : fat, animated, ...clipArgs);
 
 await MeshoptEncoder.ready;
 await MeshoptDecoder.ready;

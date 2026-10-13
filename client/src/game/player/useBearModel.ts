@@ -1,9 +1,11 @@
 import { useGLTF } from "@react-three/drei";
 import { useMemo } from "react";
 import { clone as cloneSkinned } from "three/examples/jsm/utils/SkeletonUtils.js";
+import { TOON } from "../artStyle.ts";
 import { BearAnimator } from "./BearAnimator.ts";
 
-const BEAR_URL = "/models/bear.glb";
+/** The realistic bear, or the cartoon one with the cartoon art style (same skeleton names and clips). */
+const BEAR_URL = TOON ? "/models/bear-toon.glb" : "/models/bear.glb";
 useGLTF.preload(BEAR_URL);
 
 /** A fresh copy of the animated bear (each player needs its own skeleton and animator). */
