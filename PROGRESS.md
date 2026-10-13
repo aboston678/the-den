@@ -3,7 +3,7 @@
 Claude Code updates this file after every milestone: tick the box, add a short note, and say what's next.
 **[ANDREW APPROVES]** = stop, show Andrew, and wait for his OK.
 
-**Current status:** Phase 2 on branch `phase-2`: 2.1, 2.2 and 2.4 built (furniture, greenhouse, TVs, boat, fishing). Next: 2.5 Google sign-in (setup done by Andrew 2026-10-13). Waiting on Andrew for the Google sign-in setup (`docs/setup-google-signin.md`), needed by 2.5. Then 2.6, one combined review, 2.7 deploy.
+**Current status:** Phase 2 on branch `phase-2`: 2.1, 2.2 and 2.4 built (furniture, greenhouse, TVs, boat, fishing). 2.5 sign-in done. Next: 2.6 friends + leaderboard. Waiting on Andrew for the Google sign-in setup (`docs/setup-google-signin.md`), needed by 2.5. Then 2.6, one combined review, 2.7 deploy.
 
 ---
 
@@ -48,7 +48,8 @@ Run as one batch (Andrew, 2026-10-12; full plan in `docs/phase-2-plan.md`): all 
 - ~~**2.3 Dogs.**~~ Dropped (Andrew, 2026-10-12): no good free dogs, and he chose not to buy the ~$155 set.
 - [x] **2.4 Fishing.** Rod bucket, cast, 10–45 s bites, spam-R tension reeling, 5 species, catch card, synced for everyone.
   - Built 2026-10-12 (review at the end of Phase 2). Rules in `shared/src/fishing.ts` (species table, weight curve, 10–45 s bites, 2.5 s to strike, the tension fight; tests show a careful player lands a 7 lb bass in ~13 s and mashing R snaps it). The server runs rods, casts (must land on the stream, ≤25 m), bites, fights and catches (`server/src/rooms/fishing.ts`, tested) and announces catches to the party. In game: E at the bucket takes/returns a rod (it's put away when you go indoors), hold left mouse to charge and cast where the camera looks, FISH ON! → spam R with a tension meter, catch card with lb/oz and personal best (per species, this session; saved for good in 2.6), the bear holds the fish up (celebrates for 2 lb+). Everyone sees the rod, line, bobber, splashes, the fight and the fish; toasts for others' catches. 5 fish models (`npm run build:fish`). Sounds made in code (whoosh, plop, splash, reel clicks, snap). Tests: `e2e/fishing.spec.ts` (two bears), screenshots `docs/screenshots/2.4/`.
-- [ ] **2.5 Google sign-in.** Supabase project + Google login (walk Andrew through it), usernames, profiles.
+- [x] **2.5 Google sign-in.** Supabase project + Google login (walk Andrew through it), usernames, profiles.
+  - Built 2026-10-13. Andrew set up Supabase + Google (click-by-click, `docs/setup-google-signin.md`) and ran the database script (`supabase/migrations/20261013_phase2.sql`: profiles, friendships, stats, catches, bowling/catan tables, row-level security on all, `record_catch()` for the server only, private `private-media` storage). Home screen: Sign in with Google → first time, pick a username (3–16, letters/numbers/_; unique ignoring case) → it's your name tag; Sign out. The server checks every joining player's sign-in with Supabase and looks up their username (`server/src/auth.ts`); in production you can't join without signing in. TVs get a private 6-hour link to the clips once you're signed in (clip uploaded; public access refused, checked). Development builds keep a name box so tests and local play work without Google. Tests: username rules, server sign-in check (`auth.test.ts`), the button goes to Google (`e2e/auth.spec.ts`). A real Google sign-in is for Andrew to try at the review.
 - [ ] **2.6 Friends + leaderboard.** Friend requests, leaderboard tabs (All/Friends), fish caught live; bowling and Catan columns ready.
 - [ ] **2.7 Deploy + friend test.**
 
@@ -144,6 +145,8 @@ Starting balance: 1,210 (2026-10-11)
 | 2026-10-12 | The boat is scenery: an invisible box round it, no climbing aboard | Stepping off it would drop a bear into deep water past the wading wall |
 | 2026-10-12 | Fishing: cast direction = where the camera looks, distance = how long you hold (3–25 m); R with no fish on winds the lure in; personal bests per species | Plays well with a mouse; a bass PB and a sunfish PB are different things |
 | 2026-10-12 | Fishing sounds are made in code (whoosh, plop, splash, reel ratchet, snap) | No downloads or approvals needed; matches the wind/fire approach |
+| 2026-10-13 | Production requires Google sign-in to join (server-checked); development builds keep a name box | Tests and local play shouldn't need a Google account; the live game has no guest mode (GAME_SPEC §2) |
+| 2026-10-13 | Usernames are unique ignoring case (BigBear = bigbear) | Avoids look-alike name tags |
 
 ## Session notes
 (Newest first. 1–3 lines per session: what got done, what's next, anything Andrew needs to do.)

@@ -25,7 +25,7 @@ The Den is a private, browser-based, multiplayer 3D game for Andrew and his frie
 | Map | Real property (see `reference/`): wooded driveway, lawn, house, mixed forest, stream with a dock. Summer. |
 | House | Built from `docs/floorplan.json` and the listing photos, at **1.25× real scale** (doors, rooms, stairs, bowling alley, everything). |
 | Day/night | 30 min day → 4 min dusk → 30 min night → 4 min dawn (68 min loop), synced for the party. House lights always on inside. Flashlight at night. |
-| Accounts | Phase 2: **Sign in with Google** (Supabase). Everyone signs in; no guest mode. Phase 1 uses a temporary nickname box. |
+| Accounts | Phase 2: **Sign in with Google** (Supabase). Everyone signs in; no guest mode (the server refuses players who aren't signed in). Development builds keep a name box for testing. |
 | Leaderboard | Fish caught (total), bowling high score (best game), Catan wins (total). Tabs: All / Friends. |
 | Board game | **Catan**, full base-game rules, 2–4 players, in the formal dining room. Private game, so the name stays. Our own art, not the official board art. |
 | Bowling | Basement, 2 lanes, ball return, real physics with spin, Wii-Bowling-style scoring and feel. |
