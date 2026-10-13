@@ -8,9 +8,20 @@ export const MSG = {
   start: "start", // host only: lobby -> playing
   door: "door", // { id }: open or close a door you're standing next to
   devTime: "devTime", // { time }: jump the day/night clock (dev and tests only; ignored in production)
+  rod: "rod", // { take }: take a rod from the bucket at the dock, or put it back (GAME_SPEC §13)
+  cast: "cast", // { x, z }: cast the lure to this point on the water
+  reel: "reel", // one press of R: reel in (strikes on a bite, fights a hooked fish)
+  reelIn: "reelIn", // wind the lure back in without a fish
+  devFish: "devFish", // { biteIn, species?, weight? }: next bite after this many seconds (dev and tests only)
 } as const;
 
-export const BEAR_ACTIONS = ["locomotion", "jump", "fall", "roar", "dance"] as const;
+/** Messages the server sends to everyone in the party. */
+export const SERVER_MSG = {
+  /** { id, name, species, weight, best }: someone landed a fish. */
+  caught: "caught",
+} as const;
+
+export const BEAR_ACTIONS = ["locomotion", "jump", "fall", "roar", "dance", "cast", "reel", "celebrate"] as const;
 export type BearAction = (typeof BEAR_ACTIONS)[number];
 
 export interface Pose {

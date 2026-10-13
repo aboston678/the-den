@@ -17,6 +17,16 @@ export const Player = schema(
     flashlight: t.boolean().default(false),
     aimYaw: t.float32(),
     aimPitch: t.float32(),
+    // Fishing (GAME_SPEC §13), run by the server so everyone sees the same line, bite and fight.
+    rod: t.boolean().default(false),
+    fishing: t.string().default(""), // FishState: "" | cast | bite | fight | landed | snapped | missed
+    lureX: t.float32(),
+    lureZ: t.float32(),
+    tension: t.float32(),
+    line: t.float32(),
+    surges: t.uint16(),
+    catchSpecies: t.string().default(""),
+    catchWeight: t.float32(),
   },
   "Player",
 );

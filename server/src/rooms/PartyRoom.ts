@@ -7,6 +7,7 @@ import {
   NET_TICK_HZ,
   type Pose,
   RECONNECT_WINDOW_S,
+  SERVER_MSG,
   START_TIME,
   type WorldName,
   doorById,
@@ -20,6 +21,9 @@ import {
 } from "@den/shared";
 import { devToolsOn } from "../config.ts";
 import { PartyState, Player } from "./PartyState.ts";
+import { Fishing } from "./fishing.ts";
+
+const num = (v: unknown) => (typeof v === "number" ? v : Number.NaN);
 
 /** A party code no other live room is using. */
 async function uniqueRoomCode() {
@@ -38,6 +42,7 @@ export class PartyRoom extends Room<{ state: PartyState }> {
   maxClients = MAX_PLAYERS;
   state = new PartyState();
   private lastPoseAt = new Map<string, number>();
+  private fishing = new Fishing();
 
   async onCreate(options?: { world?: unknown; time?: unknown }) {
     this.roomId = await uniqueRoomCode();
@@ -71,6 +76,38 @@ export class PartyRoom extends Room<{ state: PartyState }> {
       const near = Math.hypot(player.x - door.world.x, player.z - door.world.z) <= DOOR_REACH + 1.5 && Math.abs(player.y - door.world.y) < 2.5;
       if (near) this.state.doors.set(door.id, !this.state.doors.get(door.id));
     });
+
+    // Fishing (GAME_SPEC §13): the server runs the bites and fights; ticks at the network rate.
+    const playing = (client: Client) => (this.state.phase === "playing" ? this.state.players.get(client.sessionId) : undefined);
+    this.onMessage(MSG.rod, (client, message: { take?: unknown }) => {
+      const p = playing(client);
+      if (p) this.fishing.rod(client.sessionId, p, message?.take === true);
+    });
+    this.onMessage(MSG.cast, (client, message: { x?: unknown; z?: unknown }) => {
+      const p = playing(client);
+      if (p) this.fishing.cast(client.sessionId, p, num(message?.x), num(message?.z), Date.now());
+    });
+    this.onMessage(MSG.reel, (client) => {
+      const p = playing(client);
+      if (p) this.fishing.reel(client.sessionId, p, Date.now());
+    });
+    this.onMessage(MSG.reelIn, (client) => {
+      const p = playing(client);
+      if (p) this.fishing.reelIn(client.sessionId, p);
+    });
+    this.onMessage(MSG.devFish, (client, message: { biteIn?: unknown; species?: unknown; weight?: unknown }) => {
+      if (!devToolsOn()) return;
+      const biteIn = Math.max(0, Math.min(60, num(message?.biteIn) || 0));
+      this.fishing.force(client.sessionId, biteIn, typeof message?.species === "string" ? message.species : undefined,
+        Number.isFinite(num(message?.weight)) ? num(message?.weight) : undefined);
+    });
+    let lastFishTick = Date.now();
+    this.clock.setInterval(() => {
+      const now = Date.now();
+      const caught = this.fishing.tick(this.state.players as unknown as Map<string, Player>, now, (now - lastFishTick) / 1000);
+      lastFishTick = now;
+      for (const c of caught) this.broadcast(SERVER_MSG.caught, c);
+    }, 1000 / NET_TICK_HZ);
 
     this.onMessage(MSG.devTime, (_client, message: { time?: unknown }) => {
       const time = parseTime(message?.time);
@@ -106,6 +143,7 @@ export class PartyRoom extends Room<{ state: PartyState }> {
 
   onLeave(client: Client) {
     this.state.players.delete(client.sessionId);
+    this.fishing.remove(client.sessionId);
     this.lastPoseAt.delete(client.sessionId);
     if (this.state.hostId === client.sessionId) {
       // Next host: the remaining bear with the lowest slot, preferring connected ones.
