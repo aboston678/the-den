@@ -3,7 +3,7 @@
 Claude Code updates this file after every milestone: tick the box, add a short note, and say what's next.
 **[ANDREW APPROVES]** = stop, show Andrew, and wait for his OK.
 
-**Current status:** Phase 1 done 🎉 (online at https://the-den-pwg7.vercel.app). **Phase 2 started (branch `phase-2`)**, run as one batch: up-front approval round first (credits ✅, Supabase/Google setup), then 2.1, 2.2, 2.4–2.6 (dogs dropped) built straight through, one combined review, then 2.7 deploy.
+**Current status:** Phase 2 on branch `phase-2`: 2.1 + 2.2 built (furniture, greenhouse, TVs, boat). Next: 2.4 fishing. Waiting on Andrew for the Google sign-in setup (`docs/setup-google-signin.md`), needed by 2.5. Then 2.6, one combined review, 2.7 deploy.
 
 ---
 
@@ -43,7 +43,8 @@ Run as one batch (Andrew, 2026-10-12; full plan in `docs/phase-2-plan.md`): all 
 
 - [x] **2.1 Furnish the main floor** from the photos. **[ANDREW APPROVES]**
   - Built 2026-10-12 (review at the end of Phase 2). Layout in `shared/src/house/furniture.ts` (every room + deck umbrella table + porch rockers), tested so nothing blocks a door, the stairs or the fireplace and nothing overlaps. 14 Higgsfield hero pieces (`tools/build-furniture.mjs` → `furniture.glb`, 3.7 MB) drawn instanced; everything else built in code (`client/src/game/house/furniture/`: kitchen, pantry, bookshelves full of books, tables, chairs, lamps, fan, chandelier, rugs, paintings, curtains), plain colours on 4 shared colour-sheet materials. Furniture is solid (camera ignores it) and only drawn inside or near the house. Medium: 48–60 fps, ≤379 draw calls, 429 MB textures. Tour: `e2e/furniture-tour.spec.ts`, screenshots `docs/screenshots/2.1/`.
-- [ ] **2.2 Furnish upstairs, basement den, greenhouse** (winter stockpile + canoe), **TVs** looping Andrew's 3 video clips, **Andrew's boat tied to the dock**. **[ANDREW APPROVES]**
+- [x] **2.2 Furnish upstairs, basement den, greenhouse** (winter stockpile + canoe), **TVs** looping Andrew's 3 video clips, **Andrew's boat tied to the dock**. **[ANDREW APPROVES]**
+  - Built 2026-10-12 (review at the end of Phase 2). Upstairs (all 6 spaces, tall pieces kept where the sloped roof allows), basement den (Chesterfield, recliner, TV, globe, nautical chart, pine armoire, floral drapes, reading corner), greenhouse (plant benches, shelves, hanging baskets, donut-hole boxes + canned pasta rings with made-up labels, salmon on ice, smoked salmon, crates, the canoe on sawhorses). Andrew's boat tied alongside the dock, bobbing (`world/property/Boat.tsx`). TVs (`furniture/Tvs.tsx`) play the home-video loop with sound from the screen, only when you're near; online they stay dark until sign-in supplies a private link (2.5), in dev they play the local copy. Fixed: hero models ignored their compressed-position scale (the canoe was tiny and under the floor). Medium: ≤390 draw calls, 497 MB textures; frame rates were noisy (other apps busy), great room at night 41–49 with or without furniture; re-measure at the review. Screenshots `docs/screenshots/2.1/`, `2.2/`.
 - ~~**2.3 Dogs.**~~ Dropped (Andrew, 2026-10-12): no good free dogs, and he chose not to buy the ~$155 set.
 - [ ] **2.4 Fishing.** Rod bucket, cast, 10–45 s bites, spam-R tension reeling, 5 species, catch card, synced for everyone.
 - [ ] **2.5 Google sign-in.** Supabase project + Google login (walk Andrew through it), usernames, profiles.
@@ -138,11 +139,13 @@ Starting balance: 1,210 (2026-10-11)
 | 2026-10-12 | TV clips kept private: out of git and the public site, served from private Supabase Storage to signed-in players only (GAME_SPEC §8.4 updated) | They show Andrew's friends; the game link isn't secret. Andrew chose this over publishing them |
 | 2026-10-12 | Dogs dropped from the game (GAME_SPEC §12 and mentions removed; loading tip replaced) | No good free realistic animated dogs; the best paid set was ~$155 and Andrew chose not to buy |
 | 2026-10-12 | Furniture doesn't cast shadows; room furniture is hidden outdoors more than 9 m from the house | Each shadow-casting piece costs a draw per shadow pass; Medium went over its 400 draw-call budget. Under the roof the shadows barely show |
+| 2026-10-12 | TV screens stay dark online until sign-in (2.5) provides a private link to the clips; the local dev copy (`client/public/video/`) is gitignored and in `client/.vercelignore` | Keeps Andrew's friends' videos off the public website |
+| 2026-10-12 | The boat is scenery: an invisible box round it, no climbing aboard | Stepping off it would drop a bear into deep water past the wading wall |
 
 ## Session notes
 (Newest first. 1–3 lines per session: what got done, what's next, anything Andrew needs to do.)
 
-- **2026-10-12 · Session 4.** Phase 1 done (friend test confirmed). Phase 2 planned as one batch (plan agreed with Andrew: ~10 paid hero furniture pieces, order unchanged). Next: the up-front approval round (credit batch price check, dog model options, Supabase + Google steps).
+- **2026-10-12 · Session 4.** Phase 1 done. Phase 2 planned as one batch. Credit batch approved and spent (182.5; 20 models). Dogs dropped (Andrew: no purchase). TV = Andrew's private clips; boat at the dock. 2.1 + 2.2 built and committed on `phase-2`. Next: 2.4 fishing; Andrew to do the Google sign-in setup when convenient.
 
 - **2026-10-12 · Session 3 (cont. 4).** Andrew played online: works. Feedback: woods too big → smaller map; walk looked funny → 3 new walks tried (24 credits), he picked walking_2; distance fuzzy/shadows popping → sharper far trees + shadows reach 55 m. Work on branch `feedback-1` until verified, then merged to main (goes live). Still to do for 1.13: the two-computer test with a friend.
 - **2026-10-12 · Session 3 (cont. 3).** 1.13: Andrew set up Railway + Vercel; game online, tests pass live. Next: Andrew + a friend play from two computers ([ANDREW APPROVES]). Remind Andrew before Railway's 30-day trial ends.
