@@ -7,7 +7,7 @@ This is the source of truth. Build what is written here. If something here won't
 
 ## 1. The game in one paragraph
 
-The Den is a private, browser-based, multiplayer 3D game for Andrew and his friends (max 6 per party). Everyone plays the same realistic upright grizzly bear. You load in at the end of a wooded driveway in summer Maine, walk out of the trees to a big white farmhouse on a lawn, and hang out: open doors, explore every room, roar at each other, dance, pet the three house dogs (Merlin, Raptor, Luna), fish off the dock in the stream, bowl on the two-lane alley in the basement, and play full-rules Catan around the dining-room table. A 30-minute day and 30-minute night cycle runs the whole time. Stats (fish caught, bowling high score, Catan wins) go on a leaderboard you can filter to friends.
+The Den is a private, browser-based, multiplayer 3D game for Andrew and his friends (max 6 per party). Everyone plays the same realistic upright grizzly bear. You load in at the end of a wooded driveway in summer Maine, walk out of the trees to a big white farmhouse on a lawn, and hang out: open doors, explore every room, roar at each other, dance, fish off the dock in the stream, bowl on the two-lane alley in the basement, and play full-rules Catan around the dining-room table. A 30-minute day and 30-minute night cycle runs the whole time. Stats (fish caught, bowling high score, Catan wins) go on a leaderboard you can filter to friends.
 
 **Visual target:** grounded, cinematic, photoreal-leaning, modern indie quality (think the lighting mood of The Long Dark / Sons of the Forest). Not cartoon, not low-poly, not retro. Polish comes from good assets, lighting, post-processing and sound, not from feature count.
 
@@ -29,7 +29,7 @@ The Den is a private, browser-based, multiplayer 3D game for Andrew and his frie
 | Leaderboard | Fish caught (total), bowling high score (best game), Catan wins (total). Tabs: All / Friends. |
 | Board game | **Catan**, full base-game rules, 2–4 players, in the formal dining room. Private game, so the name stays. Our own art, not the official board art. |
 | Bowling | Basement, 2 lanes, ball return, real physics with spin, Wii-Bowling-style scoring and feel. |
-| Dogs | Merlin (German Shepherd), Raptor (black Lab), Luna (English Springer Spaniel). Inside the house only. |
+| Dogs | None (dropped by Andrew, 2026-10-12; see §12). |
 | Fishing | From the dock or anywhere on the stream bank. Bite after 10–45 s. Spam R to reel against a tension meter. |
 | Voice/text chat | None. |
 | Hosting | Game website on **Vercel**; multiplayer server on **Railway**; accounts + database on **Supabase**. |
@@ -54,7 +54,7 @@ The Den is a private, browser-based, multiplayer 3D game for Andrew and his frie
 - **Physics/collision:** Rapier. Bear = kinematic character controller (capsule). Bowling ball + pins = dynamic rigid bodies.
 - **UI:** React DOM overlays (menus, HUD). Fonts self-hosted via @fontsource (display: a bold condensed face like Bebas Neue or Oswald; body: Inter).
 - **Networking:** Colyseus. One room per party. Room has `phase: "lobby" | "playing"`. Client sends inputs/pose at 20 Hz; server patches state at 20 Hz; clients interpolate remote players with a ~100 ms buffer.
-- **Authority:** Bear movement is client-authoritative (server clamps speed/teleports). Server is authoritative for: time of day, doors, dogs, fishing bite timers and results, bowling turns/scores, the Catan game, and all stat writes.
+- **Authority:** Bear movement is client-authoritative (server clamps speed/teleports). Server is authoritative for: time of day, doors, fishing bite timers and results, bowling turns/scores, the Catan game, and all stat writes.
 - **Tests:** Vitest for `/shared` (Catan rules, bowling scoring, fishing rolls) and server logic. Playwright for browser smoke tests and screenshots (see CLAUDE.md).
 
 ---
@@ -103,7 +103,7 @@ The Den is a private, browser-based, multiplayer 3D game for Andrew and his frie
 | Roar (Y) | Chest_Pound_Taunt (88) | plus roar sound |
 | Dance (B) | All_Night_Dance (64) | Andrew may pick any clip from the Dancing category instead |
 | Open door | open_door (285) | |
-| Pet a dog | Male_Bend_Over_Pick_Up (276) | use the reach-down portion |
+| (unused) | Male_Bend_Over_Pick_Up (276) | was for petting dogs; dogs dropped 2026-10-12 |
 | Sit down | Stand_to_Sit_Transition_M (57) | Catan chair |
 | Sitting idle | Chair_Sit_Idle_M (33) | |
 | Stand up | Sit_to_Stand_Transition_M (53) | |
@@ -135,8 +135,7 @@ Base + 14 extra clips ≈ 47.5 + 112 = **~160 credits**.
 | Mouse | Look (pointer lock) |
 | Shift (hold) | Sprint |
 | Space | Jump |
-| E | Interact: open/close doors, pet dogs, take/return fishing rod, sit at the Catan table, join a bowling lane |
-| G | Dog follow / stay (nearest dog) |
+| E | Interact: open/close doors, take/return fishing rod, sit at the Catan table, join a bowling lane |
 | Y | Roar |
 | B | Dance |
 | F | Flashlight on/off |
@@ -155,7 +154,7 @@ Show a context prompt like `[E] Open door` when an interactable is within ~2 m a
 - **Party flow:** Home screen → CREATE PARTY generates a 5-character code (letters A–Z without I and O, digits 2–9) → friends pick JOIN PARTY and type the code → everyone's bears line up on the home screen → the host presses PLAY → everyone loads into the map at the spawn.
 - Max 6. If the host leaves, the next player becomes host. Joining mid-game is allowed (you spawn at the driveway).
 - Reconnect window 30 s (Colyseus reconnection) so a page blip doesn't kick you.
-- **Synced state:** players (pose, animation, flags: flashlight, holding rod, sitting, dancing), doors (open/closed), dogs (position, animation, follow target), time of day, fishing (each player's line/bobber/fish state), bowling (lane state, scores, the active roll's ball + pin transforms), Catan (full game state).
+- **Synced state:** players (pose, animation, flags: flashlight, holding rod, sitting, dancing), doors (open/closed), time of day, fishing (each player's line/bobber/fish state), bowling (lane state, scores, the active roll's ball + pin transforms), Catan (full game state).
 - Test with at least two browser contexts on every multiplayer milestone.
 
 ---
@@ -205,7 +204,7 @@ TVs in the basement den and the common area. Both loop **Andrew's three home vid
 
 - **Menu/loading music:** `assets/audio/allen-weiss.mp3` (3:13, original Suno track Andrew made). Starts after the "Click to enter" splash (browsers block sound until the first click), plays through the loading screen and home screen (loops), fades out over ~3 s when the match loads.
 - **Ambience:** day: birds, wind in the pines, distant woodpecker (northern flicker), hermit thrush; dawn chorus at sunrise. Night: crickets, tree frogs (no free spring-peeper recording exists; Andrew chose tree frogs, 2026-10-12), the occasional loon call from the stream. Positional stream water near the stream. Inside: quiet room tone, fireplace crackle.
-- **Sound effects:** footsteps by surface (grass, dirt, asphalt, wood, carpet, tile), roar, doors, garage door, dog barks/panting, cast whoosh, reel clicks, splash, line snap, bowling roll/pin crash/ball return, dice, UI clicks.
+- **Sound effects:** footsteps by surface (grass, dirt, asphalt, wood, carpet, tile), roar, doors, garage door, cast whoosh, reel clicks, splash, line snap, bowling roll/pin crash/ball return, dice, UI clicks.
 - Sources: public-domain (US National Park Service) and CC0 libraries first; simple sounds (wind, room hum, fire crackle) made in code. Higgsfield's sound-effect model only works inside its own website builder, so it isn't an option for loose sound files; anything else missing goes to Andrew.
 - Settings: Music, Effects, Ambience volume sliders.
 
@@ -217,7 +216,7 @@ TVs in the basement den and the common area. Both loop **Andrew's three home vid
 
 1. **Splash:** black screen, "Click to start" (browsers only play sound after a click). Every page load, including a refresh.
 2. **Intro (lyric video, Andrew 2026-10-12):** the 19-second song clip plays while the camera glides slowly over the 3D property at dusk. The lyrics come on screen one line at a time as they're sung ("There is a bear in [town], Maine" / "and he does not have a coat" / "on purpose"); the THE DEN logo (Higgsfield art, Andrew's pick #2) fades in when the music starts (~14 s); at the end you land in the home screen and the full song carries on from that point and loops. **Skip intro** button bottom right. Plays from the start on every page load; a refreshed player still rejoins their party afterwards.
-   **Loading screen** (Play → spawn): the logo, a real progress bar and rotating tips ("Press Y to roar", "Press F for your flashlight", "Merlin, Raptor and Luna live inside. Press E to pet them."), fading into the game. The AI loading video is dropped: Andrew chose the 3D property for the intro instead (saves ~20+ credits).
+   **Loading screen** (Play → spawn): the logo, a real progress bar and rotating tips ("Press Y to roar", "Press F for your flashlight"), fading into the game. The AI loading video is dropped: Andrew chose the 3D property for the intro instead (saves ~20+ credits).
 3. **Home screen (Fortnite-style):** your bear on a slowly rotating round pedestal (drag to spin it) in a moody lit scene; party members' bears stand beside yours with name tags (up to 6). Buttons: PLAY (host), CREATE PARTY, JOIN PARTY, SETTINGS, plus LEADERBOARD, FRIENDS and SIGN OUT from Phase 2. Party code shown big with a copy button.
 4. **Settings:** graphics preset (Auto/Low/Medium/High), music/effects/ambience volume, mouse sensitivity, invert Y.
 5. **HUD (minimal):** interaction prompt, fishing UI, bowling UI, small time-of-day icon, party list on Tab.
@@ -225,15 +224,9 @@ TVs in the basement den and the common area. Both loop **Andrew's three home vid
 
 ---
 
-## 12. Dogs (Phase 2)
+## 12. Dogs: dropped (Andrew, 2026-10-12)
 
-- **Merlin** (German Shepherd), **Raptor** (black Labrador), **Luna** (English Springer Spaniel, liver-and-white).
-- Higgsfield can only rig two-legged characters, so the dogs must be **realistic, rigged, animated dog models from elsewhere** (needs at least walk, trot, idle, sit, lie down, tail wag). Find free CC-BY/CC0 options first; if none look good enough, give Andrew 2–3 links to buy. **[ANDREW APPROVES]** any purchase (budget ≤ $150 total). Log licenses in `docs/ASSETS.md`.
-- **Inside only, main floor only** (no stairs).
-- **Wander:** every 10–25 s pick a random spot in a random main-floor room, walk there, then idle/sit/lie down for a while. Keep ~1 m from bears. Occasionally drink from a water bowl in the kitchen. Bark now and then (every 30–90 s at random) and when a bear roars nearby.
-- **Pet (E within 1.8 m):** bear plays the pet clip, the dog sits, wags, little heart particles, happy whine. The dog hangs around that bear for ~10 s.
-- **Follow (G within 4 m, nearest dog):** dog trots after you 1.5–2.5 m behind. G again = "Stay". If you leave the main floor (outside, upstairs, basement), the dog waits at the doorway/stairs, then goes back to wandering after 20 s.
-- Name tag when you look at a dog within 6 m. Server drives the dogs so everyone sees the same thing.
+The house dogs (Merlin, Raptor, Luna) are out of the game. No free realistic animated dog models were good enough and Andrew chose not to buy any (~$155). Could be revisited later.
 
 ---
 
@@ -378,7 +371,7 @@ Voice or text chat · mobile/touch · controllers · other bear species or skins
 Detailed checklist with approval checkpoints: `PROGRESS.md`.
 
 1. **Walk the property with friends** — bear, multiplayer, map, house shell with working doors, day/night, menus, deployed link.
-2. **The house comes alive** — furniture, greenhouse, TVs, dogs, fishing, Google sign-in, friends, leaderboard.
+2. **The house comes alive** — furniture, greenhouse, TVs, fishing, Google sign-in, friends, leaderboard.
 3. **Bowling alley.**
 4. **Catan.**
 5. **Polish** — sound, visuals, performance on the slowest friend's laptop, bug bash.

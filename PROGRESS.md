@@ -3,7 +3,7 @@
 Claude Code updates this file after every milestone: tick the box, add a short note, and say what's next.
 **[ANDREW APPROVES]** = stop, show Andrew, and wait for his OK.
 
-**Current status:** Phase 1 done 🎉 (online at https://the-den-pwg7.vercel.app). **Phase 2 started (branch `phase-2`)**, run as one batch: up-front approval round first (credits, dog models, Supabase/Google setup), then 2.1 → 2.6 built straight through, one combined review, then 2.7 deploy.
+**Current status:** Phase 1 done 🎉 (online at https://the-den-pwg7.vercel.app). **Phase 2 started (branch `phase-2`)**, run as one batch: up-front approval round first (credits ✅, Supabase/Google setup), then 2.1, 2.2, 2.4–2.6 (dogs dropped) built straight through, one combined review, then 2.7 deploy.
 
 ---
 
@@ -39,11 +39,11 @@ Goal: Andrew sends friends a link; everyone makes or joins a party, loads in at 
   - Done 2026-10-12: Andrew confirmed the two-computer friend test.
 
 ## Phase 2: The house comes alive
-Run as one batch (Andrew, 2026-10-12; full plan in `docs/phase-2-plan.md`): all approvals up front (credit batch, dog models, Supabase + Google setup), then 2.1–2.6 built in order with a commit + push after each, then one combined **[ANDREW APPROVES]** review before 2.7.
+Run as one batch (Andrew, 2026-10-12; full plan in `docs/phase-2-plan.md`): all approvals up front (credit batch, Supabase + Google setup), then 2.1–2.6 built in order with a commit + push after each, then one combined **[ANDREW APPROVES]** review before 2.7.
 
 - [ ] **2.1 Furnish the main floor** from the photos. **[ANDREW APPROVES]**
 - [ ] **2.2 Furnish upstairs, basement den, greenhouse** (winter stockpile + canoe), **TVs** looping Andrew's 3 video clips, **Andrew's boat tied to the dock**. **[ANDREW APPROVES]**
-- [ ] **2.3 Dogs.** Find animated dog models (free first, else 2–3 purchase links; **[ANDREW APPROVES]** any purchase). Merlin, Raptor, Luna: wander, pet (E), follow/stay (G), barks.
+- ~~**2.3 Dogs.**~~ Dropped (Andrew, 2026-10-12): no good free dogs, and he chose not to buy the ~$155 set.
 - [ ] **2.4 Fishing.** Rod bucket, cast, 10–45 s bites, spam-R tension reeling, 5 species, catch card, synced for everyone.
 - [ ] **2.5 Google sign-in.** Supabase project + Google login (walk Andrew through it), usernames, profiles.
 - [ ] **2.6 Friends + leaderboard.** Friend requests, leaderboard tabs (All/Friends), fish caught live; bowling and Catan columns ready.
@@ -135,6 +135,7 @@ Starting balance: 1,210 (2026-10-11)
 | 2026-10-12 | Phase 2 runs as one batch: every approval up front, one combined review at the end instead of a stop per milestone; work on branch `phase-2`, merged to main at 2.7 | Andrew's call; main auto-deploys, so the branch keeps the live game stable |
 | 2026-10-12 | TVs loop Andrew's 3 home video clips instead of the AI pigeon/salmon images; his wakeboard boat (no brand name) tied to the dock; Phase 2 credit batch approved (~173 + ~9 boat) (GAME_SPEC §4, §8.4, §18 updated) | Andrew's request |
 | 2026-10-12 | TV clips kept private: out of git and the public site, served from private Supabase Storage to signed-in players only (GAME_SPEC §8.4 updated) | They show Andrew's friends; the game link isn't secret. Andrew chose this over publishing them |
+| 2026-10-12 | Dogs dropped from the game (GAME_SPEC §12 and mentions removed; loading tip replaced) | No good free realistic animated dogs; the best paid set was ~$155 and Andrew chose not to buy |
 
 ## Session notes
 (Newest first. 1–3 lines per session: what got done, what's next, anything Andrew needs to do.)

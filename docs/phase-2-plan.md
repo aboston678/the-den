@@ -2,7 +2,7 @@
 
 ## Context
 Phase 1 is finished: Andrew confirmed the two-computer friend test (1.13) on 2026-10-12, so 1.13 gets ticked.
-Phase 2 (GAME_SPEC §8.2–8.4, §12, §13, §14) adds furniture, greenhouse, TVs, the three dogs, fishing,
+Phase 2 (GAME_SPEC §8.2–8.4, §13, §14) adds furniture, greenhouse, TVs (Andrew's private clips), his boat, fishing,
 Google sign-in, friends and the leaderboard. **Andrew's call (2026-10-12): run Phase 2 as one batch, not
 stop-and-approve per milestone.** So every decision, credit spend and dashboard task is pulled to the
 **start**, then I build 2.1 → 2.6 straight through (still committing + pushing after each milestone so
@@ -26,10 +26,7 @@ Answers so far: ~10 paid hero furniture pieces for the main floor (~90 credits);
    - 5 fish (sunfish, perch, crappie, smallmouth, largemouth) via concept → Tripo: ~46.
    - 2 TV images (pigeons, salmon) `gpt_image_2_5` 16:9: ~0.5.
    - Total ask ≈ 175 credits (1,024.5 available). No retries without asking.
-2. **Dogs (§12):** I research realistic rigged dogs (walk/trot/idle/sit/lie/tail wag) — free CC0/CC-BY first
-   (Sketchfab, etc.), ideally one good rig re-coloured into GSD / black Lab / liver-white Springer. Show
-   Andrew the options; if none is good enough, 2–3 purchase links (≤ $150 total); **Andrew buys and drops
-   the file in a folder** (numbered steps). Done early so it's ready by 2.3.
+2. ~~Dogs~~: dropped.
 3. **Supabase + Google setup (§14, ~15 min of clicking):** numbered click-by-click steps, one action per
    step: create Supabase project, Google Cloud OAuth client, enable Google in Supabase, add redirect URLs
    (localhost + the Vercel site), paste the table SQL I give him into the SQL editor, put keys in the
@@ -40,7 +37,7 @@ Answers so far: ~10 paid hero furniture pieces for the main floor (~90 credits);
 
 ### 2.1 Furnish the main floor
 - **Placement data in `/shared`**: `shared/src/house/furniture.ts` — per room: piece id, model, floorplan
-  x/z, rotation, footprint box. Shared because the server's dog navigation needs the footprints. Unit test:
+  x/z, rotation, footprint box.  Unit test:
   nothing overlaps walls/doorways/stairs, every door swing stays clear.
 - **Models**: hero GLBs + Poly Haven CC0 furniture (audit the catalog first; extend `tools/fetch-polyhaven.mjs`)
   packed by a new `tools/build-furniture.mjs` (same pattern as `tools/build-outdoor-props.mjs`: simplify,
@@ -53,7 +50,7 @@ Answers so far: ~10 paid hero furniture pieces for the main floor (~90 credits);
   per level; hide a level's furniture when you're outside and far away (reuse `insideHouse()` /
   `indoor` from `client/src/game/house/lights.ts`). `e2e/perf.spec.ts` must stay green.
 - Formal dining room keeps exactly 4 chairs (Catan), though the photo shows more. Leave chair "seat anchors"
-  for Phase 4. Kitchen gets the dogs' water bowl.
+  for Phase 4.
 
 ### 2.2 Upstairs, basement den, greenhouse, TVs
 - Same system for the 5 upstairs rooms + basement den (Chesterfield, recliner, globe table, nautical chart,
@@ -63,16 +60,8 @@ Answers so far: ~10 paid hero furniture pieces for the main floor (~90 credits);
   sawhorses, crates/jars/firewood.
 - TVs (den + common area): screen material crossfades the two images every ~8 s.
 
-### 2.3 Dogs
-- `shared/src/house/navgrid.ts`: main-floor walk grid from floorplan + furniture footprints, A* path, unit-tested.
-- Server: `server/src/dogs/` dog brain (wander 10–25 s, idle/sit/lie, water bowl, random barks, bark at roars,
-  keep ~1 m from bears); `Dog` schema in `PartyState.ts`; messages `pet` / `follow` checked for distance like
-  `MSG.door`. Follow trots 1.5–2.5 m behind; waits at doorways/stairs if you leave the main floor, back to
-  wandering after 20 s.
-- Client: `client/src/game/dogs/`: one shared rig, three textures, interpolated like remote bears, heart
-  particles, name tag within 6 m (reuse `ui/NameTags.tsx`), `[E] Pet Luna` / `[G] Follow` prompts via
-  `ui/ActionPrompt.tsx`. Trim the bear's Pet clip to the reach-down part (noted in 1.5). CC0 bark/pant/whine
-  sounds, logged in `docs/ASSETS.md`.
+### 2.3 Dogs: dropped (Andrew, 2026-10-12)
+No good free dogs; he chose not to buy any. Skip straight to 2.4.
 
 ### 2.4 Fishing
 - `shared/src/fishing.ts`: species table, weight = min + (max−min)·r^2.2, bite 10–45 s, tension/surge model,
@@ -97,21 +86,21 @@ Answers so far: ~10 paid hero furniture pieces for the main floor (~90 credits);
   Friends tabs; refreshes when a party member lands a fish), SIGN OUT.
 
 ## Step 3: One combined review [ANDREW APPROVES]
-Screenshot tour of every furnished room + greenhouse + TVs, a short clip of the dogs and a catch, sign-in and
+Screenshot tour of every furnished room + greenhouse + TVs, a short clip of a catch, sign-in and
 leaderboard screens. Fix what he flags.
 
 ## Step 4: 2.7 Deploy + friend test
 Merge `phase-2` → main (auto-deploys Vercel + Railway), check `/health` commit, run e2e against the live site,
-Andrew + a friend sign in, fish, pet dogs, see each other on the leaderboard. 🎉
+Andrew + a friend sign in, fish, see each other on the leaderboard. 🎉
 
 ## Still a hard stop mid-batch (CLAUDE.md rules)
 Any credit spend beyond the approved batch or any retry; any purchase; any spec change that turns out
 necessary (explain, then log in the decision log).
 
 ## Verification (every milestone)
-- `npm test` (new unit tests: furniture placement, navgrid, dog brain, fishing tables/fight, username) and
+- `npm test` (new unit tests: furniture placement, fishing tables/fight, username) and
   `npm run typecheck`.
-- Playwright: new `e2e/furniture.spec.ts` (can't walk through furniture, doors still clear), `e2e/dogs.spec.ts`
-  and `e2e/fishing.spec.ts` with **two browser contexts** seeing the same dog / line / catch (dev-only
+- Playwright: new `e2e/furniture.spec.ts` (can't walk through furniture, doors still clear)
+  and `e2e/fishing.spec.ts` with **two browser contexts** seeing the same line / catch (dev-only
   quick-bite), `e2e/auth.spec.ts` with the dev bypass; tours with screenshots; console must be free of WebGL
   errors; `e2e/perf.spec.ts` stays inside Medium's budgets (close the browser pane before measuring).

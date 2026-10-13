@@ -11,7 +11,7 @@ const TIPS = [
   "Doors open with E, for the whole party.",
   "A full day and night takes 68 minutes. The house lights stay on.",
   "Hold Tab to see who's in your party.",
-  "Merlin, Raptor and Luna live inside. Press E to pet them (coming soon).",
+  "Grab a rod from the bucket at the dock to go fishing (coming soon).",
 ];
 
 export function LoadingScreen() {
