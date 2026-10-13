@@ -1,4 +1,5 @@
-import { type DataArrayTexture, MeshStandardMaterial } from "three";
+import { Color, type DataArrayTexture, MeshStandardMaterial } from "three";
+import { TOON } from "../../artStyle.ts";
 
 // The ground's shader: five CC0 textures (lawn, forest floor, forest edge, mud, stream bed) blended
 // per vertex by the weights from surfaceAt() (shared/src/world/terrain.ts), tiled in world metres.
@@ -7,6 +8,27 @@ import { type DataArrayTexture, MeshStandardMaterial } from "three";
 /** Texture-array layer order, and how many metres one tile of each covers. */
 export const TERRAIN_LAYERS = ["lawn", "forest", "forest_edge", "mud", "streambed"] as const;
 const TILE = [3.2, 4.5, 4.0, 3.5, 2.5];
+
+/**
+ * Cartoon art style: the textures are read blurrier (fewer, softer details), the lawn is a brighter
+ * green and the bumps are gentler.
+ */
+const BIAS = TOON ? ", 2.5" : "";
+const LAWN = TOON ? "vec3(0.74, 1.16, 0.46)" : "vec3(0.80, 1.02, 0.62)";
+const BUMPS = TOON ? "0.35" : "1.0";
+/** Cartoon: each ground layer is painted in one colour, the photo texture only adds a little light and dark. */
+const PAINT = ["#6fc041", "#5d8a35", "#7d9a3c", "#8a6b45", "#7c7058"].map((hex) => {
+  const c = new Color(hex);
+  return `vec3(${c.r.toFixed(3)}, ${c.g.toFixed(3)}, ${c.b.toFixed(3)})`;
+});
+const PAINT_LAYER = TOON
+  ? `{
+          const vec3 PAINT[5] = vec3[5](${PAINT.join(", ")});
+          float lum = dot(c.rgb, vec3(0.2126, 0.7152, 0.0722));
+          float avg = dot(texture(uColour, vec3(vWPos.xz / 40.0, float(i)), 8.0).rgb, vec3(0.2126, 0.7152, 0.0722));
+          c.rgb = PAINT[i] * clamp(1.0 + (lum - avg) / max(avg, 0.02) * 0.35, 0.75, 1.25);
+        }`
+  : "";
 
 export function createTerrainMaterial(colour: DataArrayTexture, normal: DataArrayTexture) {
   const mat = new MeshStandardMaterial({ roughness: 1, metalness: 0 });
@@ -44,8 +66,8 @@ export function createTerrainMaterial(colour: DataArrayTexture, normal: DataArra
 
         // Colour + roughness, mixed with a bigger rotated copy so the tiling doesn't show.
         vec4 layerColour(int i, vec2 p) {
-          vec4 a = texture(uColour, vec3(p / TILE[i], float(i)));
-          vec4 b = texture(uColour, vec3(TURN * p / (TILE[i] * 3.7), float(i)));
+          vec4 a = texture(uColour, vec3(p / TILE[i], float(i))${BIAS});
+          vec4 b = texture(uColour, vec3(TURN * p / (TILE[i] * 3.7), float(i))${BIAS});
           return mix(a, b, 0.35);
         }
         vec3 layerNormal(int i, vec2 p) {
@@ -59,7 +81,8 @@ export function createTerrainMaterial(colour: DataArrayTexture, normal: DataArra
         for (int i = 0; i < 5; i++) {
           if (w[i] < 0.01) continue;
           vec4 c = layerColour(i, vWPos.xz);
-          if (i == 0) c.rgb *= vec3(0.80, 1.02, 0.62); // greener, lusher lawn (summer, GAME_SPEC §1)
+          if (i == 0) c.rgb *= ${LAWN}; // greener, lusher lawn (summer, GAME_SPEC §1)
+          ${PAINT_LAYER}
           cr += c * w[i];
           nt += layerNormal(i, vWPos.xz) * w[i];
           total += w[i];
@@ -67,7 +90,7 @@ export function createTerrainMaterial(colour: DataArrayTexture, normal: DataArra
         cr /= max(total, 1e-4);
         diffuseColor.rgb *= cr.rgb * vSplatB.y;
         tRough = cr.a;
-        tNormal = normalize(nt + vec3(0.0, 0.0, 0.001));`)
+        tNormal = normalize(nt * vec3(${BUMPS}, ${BUMPS}, 1.0) + vec3(0.0, 0.0, 0.001));`)
       .replace("#include <roughnessmap_fragment>", "float roughnessFactor = mix(0.75, 1.0, tRough);")
       .replace("#include <normal_fragment_maps>", `{
         // Tangent frame from world axes (the textures are tiled on world x/z).

@@ -1,6 +1,7 @@
 import { APRON, DRIVEWAY, DRIVEWAY_WIDTH, drivewayY, heightAt } from "@den/shared";
 import { useMemo } from "react";
 import { BufferAttribute, BufferGeometry, MeshStandardMaterial } from "three";
+import { TOON } from "../../artStyle.ts";
 import { useOutdoorMaps } from "./textures.ts";
 
 // The asphalt driveway (GAME_SPEC §4): a strip laid on the ground along the driveway path, and
@@ -42,7 +43,7 @@ function drivewayGeometry() {
 export function Roads() {
   const maps = useOutdoorMaps("asphalt");
   const material = useMemo(
-    () => new MeshStandardMaterial({ ...maps, color: "#9a9894", polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }),
+    () => new MeshStandardMaterial({ ...maps, color: TOON ? "#c4bdb2" : "#9a9894", polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }),
     [maps],
   );
   const driveway = useMemo(drivewayGeometry, []);

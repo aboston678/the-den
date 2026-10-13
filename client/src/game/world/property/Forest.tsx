@@ -4,10 +4,12 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { useRapier } from "@react-three/rapier";
 import { useEffect, useMemo } from "react";
 import { Box3, Color, DoubleSide, type Group, Matrix4, type Mesh, MeshStandardMaterial, Quaternion, Euler, Vector3 } from "three";
+import { TOON } from "../../artStyle.ts";
 import { useQuality } from "../../quality.ts";
 import { current } from "../../sky/look.ts";
 import { bakeImpostor } from "./impostor.ts";
 import { InstancedLod, type LodLevel, type LodPart } from "./InstancedLod.tsx";
+import { toonParts } from "./toonTrees.ts";
 import { FERNS, ROCKS, SAPLING_KINDS, SHRUBS, TREE_KINDS, type Placement, type Scatter, scatterAll } from "./scatter.ts";
 import { ignoreLampsAndFlashlights, ignorePointLights } from "../lighting.ts";
 import { removeBody } from "../physics.ts";
@@ -32,6 +34,17 @@ function partsOf(scene: Group, name: string): LodPart[] {
     if (mesh.isMesh) parts.push({ geometry: mesh.geometry, material: mesh.material as MeshStandardMaterial, matrix: mesh.matrixWorld.clone() });
   });
   return parts;
+}
+
+/**
+ * The parts to draw for a node of the model files: the model's own, or with the cartoon art style,
+ * a stand-in the size of the real tree (lod0) or bush where there is one (toonTrees.ts).
+ */
+function forestParts(scene: Group, name: string): LodPart[] {
+  if (!TOON) return partsOf(scene, name);
+  const tree = /^(.+)_lod\d_/.exec(name);
+  const box = boundsOf(tree ? [...partsOf(scene, `${tree[1]}_lod0_bark`), ...partsOf(scene, `${tree[1]}_lod0_leaves`)] : partsOf(scene, name));
+  return toonParts(name, box) ?? partsOf(scene, name);
 }
 
 /** Bounding box of a set of parts (in the model's own space). */
@@ -90,7 +103,7 @@ export function Forest() {
   const impostors = useMemo(() => {
     prepareFoliage(trees);
     prepareFoliage(props);
-    return new Map<string, ReturnType<typeof bakeImpostor>>(TREE_KINDS.map((k) => [k, bakeImpostor(gl, [...partsOf(trees, `${k}_lod1_bark`), ...partsOf(trees, `${k}_lod1_leaves`)])]));
+    return new Map<string, ReturnType<typeof bakeImpostor>>(TREE_KINDS.map((k) => [k, bakeImpostor(gl, [...forestParts(trees, `${k}_lod1_bark`), ...forestParts(trees, `${k}_lod1_leaves`)])]));
   }, [trees, props, gl]);
   useEffect(() => () => impostors.forEach((i) => {
     i.geometry.dispose();
@@ -101,21 +114,21 @@ export function Forest() {
   const kinds = useMemo(() => {
     const [near, mid, far] = q.treeLods;
     const treeLevels = (kind: string): LodLevel[] => [
-      { maxDist: near, castShadow: true, parts: [...partsOf(trees, `${kind}_lod0_bark`), ...partsOf(trees, `${kind}_lod0_leaves`)] },
+      { maxDist: near, castShadow: true, parts: [...forestParts(trees, `${kind}_lod0_bark`), ...forestParts(trees, `${kind}_lod0_leaves`)] },
       {
         maxDist: mid,
         castShadow: q.treeShadowLevels > 1,
-        parts: [...partsOf(trees, `${kind}_lod1_bark`), ...partsOf(trees, `${kind}_lod1_leaves`)],
+        parts: [...forestParts(trees, `${kind}_lod1_bark`), ...forestParts(trees, `${kind}_lod1_leaves`)],
         // Their shadows come from the far-detail tree: a shadow doesn't show the difference, and it's a quarter of the work.
-        shadowProxy: q.treeShadowLevels > 1 ? [...partsOf(trees, `${kind}_lod2_bark`), ...partsOf(trees, `${kind}_lod2_leaves`)] : undefined,
+        shadowProxy: q.treeShadowLevels > 1 ? [...forestParts(trees, `${kind}_lod2_bark`), ...forestParts(trees, `${kind}_lod2_leaves`)] : undefined,
       },
       { maxDist: far, castShadow: false, parts: [{ ...impostors.get(kind)!, matrix: new Matrix4() }] },
     ];
     const saplingLevels = (kind: string): LodLevel[] => [
-      { maxDist: q.smallFar * 0.55, castShadow: true, parts: [...partsOf(trees, `${kind}_lod0_bark`), ...partsOf(trees, `${kind}_lod0_leaves`)] },
-      { maxDist: q.smallFar, castShadow: false, parts: [...partsOf(trees, `${kind}_lod1_bark`), ...partsOf(trees, `${kind}_lod1_leaves`)] },
+      { maxDist: q.smallFar * 0.55, castShadow: true, parts: [...forestParts(trees, `${kind}_lod0_bark`), ...forestParts(trees, `${kind}_lod0_leaves`)] },
+      { maxDist: q.smallFar, castShadow: false, parts: [...forestParts(trees, `${kind}_lod1_bark`), ...forestParts(trees, `${kind}_lod1_leaves`)] },
     ];
-    const single = (name: string, maxDist: number, castShadow: boolean): LodLevel[] => [{ maxDist, castShadow, parts: partsOf(props, name) }];
+    const single = (name: string, maxDist: number, castShadow: boolean): LodLevel[] => [{ maxDist, castShadow, parts: forestParts(props, name) }];
 
     const list: { name: string; items: Placement[]; levels: LodLevel[] }[] = [
       ...TREE_KINDS.map((k) => ({ name: k, items: scatter.trees[k], levels: treeLevels(k) })),

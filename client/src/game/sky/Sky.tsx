@@ -7,6 +7,7 @@ import {
 } from "three";
 import { Sky as SkyMesh } from "three/addons/objects/Sky.js";
 import { indoor } from "../house/lights.ts";
+import { TOON } from "../artStyle.ts";
 import { useQuality } from "../quality.ts";
 import { playerState } from "../state.ts";
 import { gameClock } from "./clock.ts";
@@ -104,12 +105,12 @@ function makeSky() {
   const sky = new SkyMesh();
   sky.scale.setScalar(900);
   const u = sky.material.uniforms;
-  u.turbidity!.value = 5;
-  u.rayleigh!.value = 1.2;
+  u.turbidity!.value = TOON ? 2.2 : 5; // cartoon art style: a deeper, cleaner blue and puffier clouds
+  u.rayleigh!.value = TOON ? 1.8 : 1.2;
   u.mieCoefficient!.value = 0.004;
   u.mieDirectionalG!.value = 0.8;
-  u.cloudCoverage!.value = 0.22; // a few fair-weather summer clouds
-  u.cloudDensity!.value = 0.35;
+  u.cloudCoverage!.value = TOON ? 0.34 : 0.22; // a few fair-weather summer clouds
+  u.cloudDensity!.value = TOON ? 0.55 : 0.35;
   return sky;
 }
 

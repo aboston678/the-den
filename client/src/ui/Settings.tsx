@@ -1,5 +1,5 @@
 import { useQuality } from "../game/quality.ts";
-import { type GraphicsPreset, updateSettings, useSettings } from "./settings.ts";
+import { type GraphicsPreset, type Settings, updateSettings, useSettings } from "./settings.ts";
 
 // The settings panel (GAME_SPEC §11.4), from the home screen or the pause menu.
 
@@ -33,6 +33,20 @@ export function SettingsPanel({ onClose }: { onClose: () => void }) {
           <output />
         </label>
         <p className="note setting-note">Low runs on older laptops; High adds glow and soft shadows for strong graphics cards.</p>
+        <label className="setting">
+          <span>Art style</span>
+          <select
+            value={s.artStyle} data-testid="setting-art-style"
+            onChange={(e) => {
+              updateSettings({ artStyle: e.target.value as Settings["artStyle"] });
+              location.reload(); // shaders and trees are built for one style
+            }}
+          >
+            <option value="realistic">Realistic (current)</option>
+            <option value="cartoon">Cartoon (test)</option>
+          </select>
+          <output />
+        </label>
         <Slider label="Music" value={s.music} testId="setting-music" onChange={(music) => updateSettings({ music })} />
         <Slider label="Effects" value={s.effects} testId="setting-effects" onChange={(effects) => updateSettings({ effects })} />
         <Slider label="Ambience" value={s.ambience} testId="setting-ambience" onChange={(ambience) => updateSettings({ ambience })} />
