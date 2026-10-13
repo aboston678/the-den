@@ -4,3 +4,4 @@ export * from "./nickname.ts";
 export * from "./party.ts";
 export * from "./world/index.ts";
 export * from "./house/floorplan.ts";
+export * from "./house/furniture.ts";
