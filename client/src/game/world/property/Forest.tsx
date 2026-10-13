@@ -8,7 +8,7 @@ import { useQuality } from "../../quality.ts";
 import { current } from "../../sky/look.ts";
 import { bakeImpostor } from "./impostor.ts";
 import { InstancedLod, type LodLevel, type LodPart } from "./InstancedLod.tsx";
-import { roadsideBushes, toonParts, useToonScenery } from "./toonTrees.ts";
+import { foliageGlow, roadsideBushes, toonParts, useToonScenery } from "./toonTrees.ts";
 import { FERNS, ROCKS, SAPLING_KINDS, SHRUBS, TREE_KINDS, type Placement, type Scatter, scatterAll } from "./scatter.ts";
 import { ignoreLampsAndFlashlights, ignorePointLights } from "../lighting.ts";
 import { removeBody } from "../physics.ts";
@@ -160,6 +160,7 @@ export function Forest() {
     const l = current.light, h = current.hemi;
     impostorLight.copy(h.sky).multiplyScalar(h.intensity * 1.1).add(tmpColor.copy(l.color).multiplyScalar(l.intensity * 0.28 * Math.max(0.2, l.dir.y)));
     for (const i of impostors.values()) (i.material.uniforms.light!.value as Color).copy(impostorLight);
+    foliageGlow.value = 1 - current.night;
   });
 
   useForestColliders(scatter, kinds);

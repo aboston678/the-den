@@ -44,9 +44,32 @@ function material(src: MeshStandardMaterial, piece: string, tint?: string) {
   m.defines = { ...m.defines, NO_SOFT_MAP: "" };
   if (ROCKY.has(piece)) ignorePointLights(m);
   else ignoreLampsAndFlashlights(m);
+  if (!ROCKY.has(piece)) glow(m);
   prepared.set(key, m);
   return m;
 }
+
+/**
+ * Leaves give off a little of their own colour, so the woods' shade reads as soft colour (the way
+ * cartoon films light foliage) instead of near-black under the canopy. Follows each copy's painted
+ * texture or corner colours, so near and far detail levels match.
+ */
+function glow(m: MeshStandardMaterial) {
+  const before = m.onBeforeCompile;
+  m.onBeforeCompile = (shader, renderer) => {
+    before.call(m, shader, renderer);
+    shader.fragmentShader = shader.fragmentShader.replace(
+      "#include <emissivemap_fragment>",
+      "#include <emissivemap_fragment>\ntotalEmissiveRadiance += diffuseColor.rgb * 0.22 * daylightGlow;",
+    );
+    shader.fragmentShader = shader.fragmentShader.replace("#include <common>", "#include <common>\nuniform float daylightGlow;");
+    shader.uniforms.daylightGlow = foliageGlow;
+  };
+  const key = m.customProgramCacheKey;
+  m.customProgramCacheKey = () => `${key.call(m)}|glow`;
+}
+/** 1 by day, fading to 0 at night (glowing trees in the dark would look odd); set each frame by the forest. */
+export const foliageGlow = { value: 1 };
 
 /** One detail level of a piece, scaled to (sx, sy, sz) and stood at `y`. */
 function piecePart(scene: Group, piece: string, lod: number, s: Vector3, y: number, tint?: string): LodPart[] {
