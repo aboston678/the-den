@@ -21,7 +21,8 @@
     "build:bear": "node tools/build-bear.mjs",
     "build:outdoor": "node tools/fetch-polyhaven.mjs && node tools/build-outdoor-textures.mjs && node tools/build-outdoor-props.mjs && node --import ./tools/lib/register-asset-imports.mjs tools/build-trees.mjs",
     "build:audio": "node tools/fetch-audio.mjs && node tools/build-audio.mjs && node tools/build-music.mjs",
-    "build:tv": "node tools/build-tv.mjs"
+    "build:tv": "node tools/build-tv.mjs",
+    "build:furniture": "node tools/build-furniture.mjs"
   },
   "devDependencies": {
     "@gltf-transform/core": "^4.5.1",
