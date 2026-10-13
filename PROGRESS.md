@@ -3,7 +3,7 @@
 Claude Code updates this file after every milestone: tick the box, add a short note, and say what's next.
 **[ANDREW APPROVES]** = stop, show Andrew, and wait for his OK.
 
-**Current status:** 1.13: the game is online at https://the-den-pwg7.vercel.app (server: Railway). All smoke/multiplayer/menu/house tests pass against the live site. **Waiting for Andrew + a friend** to test from two computers.
+**Current status:** Phase 1 done 🎉 (online at https://the-den-pwg7.vercel.app). **Phase 2 started (branch `phase-2`)**, run as one batch: up-front approval round first (credits, dog models, Supabase/Google setup), then 2.1 → 2.6 built straight through, one combined review, then 2.7 deploy.
 
 ---
 
@@ -34,10 +34,13 @@ Goal: Andrew sends friends a link; everyone makes or joins a party, loads in at 
   - Done 2026-10-12; Andrew approved the intro and home screen. Every page load: "Click to start" (shows a loading bar until the 3D world has loaded, so the intro never stutters) → Andrew's lyric intro: his 19 s clip, lines appear as sung, logo (#2) fades in at ~14 s, camera glides up the driveway to the house at golden dusk, Skip bottom right → home screen, with the full song carrying on seamlessly (`tools/build-music.mjs` lines the clip up with the song, 0.994 match). Home screen: your bear on a glowing pedestal (drag to spin), party bears beside you with name tags, create/join, big party code, PLAY, settings. Settings (saved): music/effects/ambience volume, mouse speed, invert Y, graphics preset (used in 1.12). Loading screen with progress + tips; pause on Esc (resume, settings, leave, all controls); HUD time-of-day icon; Tab party list. Name tags are now plain page elements (drei's Html crashed under React 19 once models were cached). Tests: `e2e/menus.spec.ts`; all tests now click Start + Skip.
 - [x] **1.12 Performance.** Graphics presets (Auto/Low/Medium/High), budgets from GAME_SPEC §17, check frame times.
   - Done 2026-10-12. Measured first at full 1080p on this M1 (same chip as the spec's MacBook Air): only 33–45 fps, 3.4–7M triangles, up to 640 draw calls. Now: graphics presets Low/Medium/High + Auto (`client/src/game/quality.ts`, chosen in Settings; Auto guesses from the graphics chip and steps down if the first 10 s are slow). Far trees are impostor cards (`world/property/impostor.ts`); indoors the forest drops to cheap levels; door pieces merged (212 → 86 draws). Medium @1080p: 60 fps everywhere except ~50 at the deepest forest edge, ≤353 draw calls, ~320 MB textures, ~25–35 MB download. Low: 60 everywhere. High (bloom, AO, indoor shadow lamp, 4096 shadows) ~18 fps on an M1, meant for stronger GPUs. `e2e/perf.spec.ts` checks Medium's budgets + Auto stepping down. Lesson: a game left running in the browser pane halves test frame rates; close it before measuring.
-- [ ] **1.13 Deploy.** Walk Andrew through Vercel + Railway setup, deploy, then Andrew and one friend test from two different computers. **[ANDREW APPROVES]** 🎉
+- [x] **1.13 Deploy.** Walk Andrew through Vercel + Railway setup, deploy, then Andrew and one friend test from two different computers. **[ANDREW APPROVES]** 🎉
   - 2026-10-12: Live. Website: https://the-den-pwg7.vercel.app (Vercel Hobby, project the-den-pwg7, Root Directory `client`, settings in `client/vercel.json`, deploys on every push to main). Game server: https://the-den-production-2d98.up.railway.app (Railway trial: 30 days or $5, then the ~$5/month Hobby plan; Andrew adds a card himself; `railway.json`, starts in production mode, health check /health). The online build talks to Railway automatically (`client/src/net/party.ts`); the server accepts the-den*.vercel.app. `BASE_URL=https://the-den-pwg7.vercel.app npx playwright test …` runs the tests against the live site (the dev-only time controls are off online, so day/night and perf specs can't run there). Railway didn't auto-deploy at first: its GitHub *app* wasn't installed (only authorized). Andrew installed it for the-den and turned on auto-deploy (2026-10-12); pushes now deploy in ~2 min. `curl https://the-den-production-2d98.up.railway.app/health` shows the live server's commit.
+  - Done 2026-10-12: Andrew confirmed the two-computer friend test.
 
 ## Phase 2: The house comes alive
+Run as one batch (Andrew, 2026-10-12; full plan in `docs/phase-2-plan.md`): all approvals up front (credit batch, dog models, Supabase + Google setup), then 2.1–2.6 built in order with a commit + push after each, then one combined **[ANDREW APPROVES]** review before 2.7.
+
 - [ ] **2.1 Furnish the main floor** from the photos. **[ANDREW APPROVES]**
 - [ ] **2.2 Furnish upstairs, basement den, greenhouse** (winter stockpile + canoe), **TVs** with the two images. **[ANDREW APPROVES]**
 - [ ] **2.3 Dogs.** Find animated dog models (free first, else 2–3 purchase links; **[ANDREW APPROVES]** any purchase). Merlin, Raptor, Luna: wander, pet (E), follow/stay (G), barks.
@@ -126,9 +129,12 @@ Starting balance: 1,210 (2026-10-11)
 | 2026-10-12 | Night frogs are NPS green tree frogs, not spring peepers (GAME_SPEC §10 updated) | No free no-strings peeper recording; Andrew chose tree frogs |
 | 2026-10-12 | Wind, room hum and fire crackle are made in code; recorded sounds from the NPS (public domain) and OpenGameArt (CC0); `ffmpeg-static` dev tool to trim/encode | Higgsfield's sound-effect model only works inside its website builder; ffmpeg isn't installed on the Mac |
 | 2026-10-11 | Basement stairs moved under the main staircase; new basement stair landing; bowling lanes shifted ~6 m east (x 22→28); back hall became a pantry | Andrew: the real stairs start under the stairs going up. Lanes had to move so the stairs don't land on the approach |
+| 2026-10-12 | Phase 2 runs as one batch: every approval up front, one combined review at the end instead of a stop per milestone; work on branch `phase-2`, merged to main at 2.7 | Andrew's call; main auto-deploys, so the branch keeps the live game stable |
 
 ## Session notes
 (Newest first. 1–3 lines per session: what got done, what's next, anything Andrew needs to do.)
+
+- **2026-10-12 · Session 4.** Phase 1 done (friend test confirmed). Phase 2 planned as one batch (plan agreed with Andrew: ~10 paid hero furniture pieces, order unchanged). Next: the up-front approval round (credit batch price check, dog model options, Supabase + Google steps).
 
 - **2026-10-12 · Session 3 (cont. 4).** Andrew played online: works. Feedback: woods too big → smaller map; walk looked funny → 3 new walks tried (24 credits), he picked walking_2; distance fuzzy/shadows popping → sharper far trees + shadows reach 55 m. Work on branch `feedback-1` until verified, then merged to main (goes live). Still to do for 1.13: the two-computer test with a friend.
 - **2026-10-12 · Session 3 (cont. 3).** 1.13: Andrew set up Railway + Vercel; game online, tests pass live. Next: Andrew + a friend play from two computers ([ANDREW APPROVES]). Remind Andrew before Railway's 30-day trial ends.
