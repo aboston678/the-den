@@ -94,6 +94,7 @@ Starting balance: 1,210 (2026-10-11)
 | 2026-10-12 | Walk retry (Andrew: walk looks funny): Slow_Orc_Walk (119), job 36cff652-c4f4-4060-a2c8-bfa2d2ae270b | `meshy_rigging` | 8 | 1,040.5 |
 | 2026-10-12 | Walk retry: Monster_Walk (112), job 02e2371b-16fc-4790-9d0c-0a3fc3c70d29 | `meshy_rigging` | 8 | 1,032.5 |
 | 2026-10-12 | Walk retry: walking_2 (566), job fdb413de-cc46-44e7-b473-224ad0a239ce | `meshy_rigging` | 8 | 1,024.5 |
+| 2026-10-12 | Phase 2 furniture concepts ×10 (0.25 each; job ids in `assets/concepts/furniture/README.md`) | `gpt_image_2_5` | 2.5 | 1,022 |
 
 ## Decision log
 | Date | Decision | Why |
