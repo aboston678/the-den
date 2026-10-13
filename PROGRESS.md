@@ -110,6 +110,7 @@ Starting balance: 1,210 (2026-10-11)
 | 2026-10-13 | Style test concepts ×4: cartoon bear, house, driveway, dock (0.25 each; job ids in `assets/concepts/style/README.md`; Andrew approved) | `gpt_image_2_5` | 1 | 838.5 |
 | 2026-10-13 | Cartoon scenery starting pictures ×10: pine, birch, maple, bush, fern, 2 rocks, 3 ground textures (0.25 each; job ids in `assets/concepts/scenery/README.md`; plan approved by Andrew) | `gpt_image_2_5` | 2.5 | 836 |
 | 2026-10-13 | Cartoon scenery image→3D ×7: pine, birch, maple, bush, fern, boulder, rock (9 each; Andrew approved the batch; job ids in `assets/models/toon-scenery-jobs.json`) | `tripo_h3_1_image_to_3d` | 63 | 773 |
+| 2026-10-13 | Cartoon bear 3D model from style concept #1: texture + PBR + A-pose + rig (2.1 m) + Idle (job 194dd196-6477-4485-9f4c-fa596644090b; approved in the plan) | `meshy_v7_image_to_3d` | 47.5 | 725.5 |
 
 ## Decision log
 | Date | Decision | Why |
