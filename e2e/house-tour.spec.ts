@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { HOUSE, LEVELS, houseToWorld } from "../shared/src/index.ts";
+import { FURNITURE, HOUSE, LEVELS, footprint, houseToWorld, isSolid } from "../shared/src/index.ts";
 import { failOnErrors, hostGame } from "./helpers.ts";
 
 // Milestone 1.9 screenshot tour: every room of the house, plus the porch, deck and greenhouse.
@@ -25,7 +25,17 @@ test("screenshot tour of every room", async ({ page }) => {
   for (const { level, room } of stops) {
     // Stand in one corner, look across to the opposite corner (the foyer and landing have the stairs on their west side).
     const flip = room.id === "foyer" || room.id === "landing";
-    const from = houseToWorld(room.x + room.w * (flip ? 0.8 : 0.25), room.z + room.d * 0.65);
+    // The usual spot, or the first nearby one that isn't on a solid piece of furniture (added in 2.1/2.2).
+    const spots = [[flip ? 0.8 : 0.25, 0.65], [0.5, 0.65], [0.5, 0.5], [0.35, 0.35], [0.65, 0.35]] as const;
+    const clear = ([u, v]: readonly [number, number]) => {
+      const x = room.x + room.w * u, z = room.z + room.d * v;
+      return !FURNITURE.some((p) => p.room === room.id && isSolid(p) && (() => {
+        const f = footprint(p, true);
+        return x > f.x0 - 0.5 && x < f.x1 + 0.5 && z > f.z0 - 0.5 && z < f.z1 + 0.5;
+      })());
+    };
+    const [u, v] = spots.find(clear) ?? spots[0];
+    const from = houseToWorld(room.x + room.w * u, room.z + room.d * v);
     const to = houseToWorld(room.x + (flip ? 0 : room.w), room.z + room.d * 0.1);
     const y = floorY(level, room.id);
     await page.evaluate(([fx, fz, tx, tz, y]) => {

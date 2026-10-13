@@ -1,11 +1,17 @@
 import { BEAR } from "@den/shared";
+import { TOON } from "./artStyle.ts";
 
 // Tuning for the character controller and camera (GAME_SPEC §5.3).
 
-/** Natural ground speed / timing of the bear's clips, measured with tools/measure-clips.mjs. */
+/**
+ * Natural ground speed / timing of the bear's clips, measured with tools/measure-clips.mjs and then
+ * tuned with e2e/controller.spec.ts (least planted-foot slide). The cartoon bear's legs are shorter:
+ * its walk measures 0.60 m/s (best: 0.62); its run measures 4.0 but slides least at 6.0, about the
+ * same as the realistic bear's. The clips' timing is the same on both bears.
+ */
 export const CLIP = {
-  walkNaturalSpeed: 0.95, // m/s at timeScale 1 (walking_2, Andrew's pick 2026-10-12; was Casual_Walk 0.71)
-  runNaturalSpeed: 6.55,
+  walkNaturalSpeed: TOON ? 0.62 : 0.95, // m/s at timeScale 1 (walking_2, Andrew's pick 2026-10-12; was Casual_Walk 0.71)
+  runNaturalSpeed: TOON ? 6.0 : 6.55,
   jumpTakeoff: 0.57, // s into the Jump clip where the feet leave the ground
   jumpLand: 1.1,
 } as const;
