@@ -33,8 +33,10 @@ function heroMeshes(scene: Group) {
   for (const [model, mats] of byModel) {
     const src = scene.getObjectByName(model) as Mesh | undefined;
     if (!src?.isMesh) continue;
+    // The GLB stores compressed (quantized) positions with a scale + offset on the node: keep it.
+    src.updateWorldMatrix(true, false);
     const mesh = new InstancedMesh(src.geometry, src.material as Material, mats.length);
-    mats.forEach((m, i) => mesh.setMatrixAt(i, m));
+    mats.forEach((m, i) => mesh.setMatrixAt(i, m.clone().multiply(src.matrixWorld)));
     mesh.instanceMatrix.needsUpdate = true;
     mesh.computeBoundingSphere();
     mesh.receiveShadow = true; // no cast shadows: indoors under the roof they barely show, and each costs a draw per shadow pass

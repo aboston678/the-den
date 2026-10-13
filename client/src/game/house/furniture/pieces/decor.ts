@@ -37,12 +37,13 @@ export const bookshelf: Builder = (k, { w, d, h }) => {
 };
 
 /** Pine double closet doors on the wall (mudroom photo). */
-export const closetDoors: Builder = (k, { w, d, h }) => {
-  k.box([-w / 2 - 0.06, 0, -d / 2], [w / 2 + 0.06, h + 0.06, -d / 2 + 0.01], "wood:#d9a868"); // casing
+export const closetDoors: Builder = (k, { w, d, h }, look) => {
+  const wood = look === "white" ? "paint:#f4f2ec" : "wood:#d39b5c";
+  k.box([-w / 2 - 0.06, 0, -d / 2], [w / 2 + 0.06, h + 0.06, -d / 2 + 0.01], look === "white" ? "paint:#f8f6f0" : "wood:#d9a868"); // casing
   for (const sx of [-1, 1]) {
     const x0 = sx < 0 ? -w / 2 : 0.005, x1 = sx < 0 ? -0.005 : w / 2;
-    k.box([x0, 0.01, -d / 2], [x1, h, d / 2], "wood:#d39b5c");
-    for (const [y0, y1] of [[0.12, 0.85], [0.95, 1.4], [1.5, h - 0.12]] as const) k.box([x0 + 0.08, y0, d / 2], [x1 - 0.08, y1, d / 2 + 0.012], "wood:#d39b5c");
+    k.box([x0, 0.01, -d / 2], [x1, h, d / 2], wood);
+    for (const [y0, y1] of [[0.12, 0.85], [0.95, 1.4], [1.5, h - 0.12]] as const) k.box([x0 + 0.08, y0, d / 2], [x1 - 0.08, y1, d / 2 + 0.012], wood);
     k.sphere([sx * 0.05, 1.0, d / 2 + 0.03], 0.02, "brass", [1, 1, 1], 6);
   }
 };
@@ -62,8 +63,8 @@ export const vanity: Builder = (k, { w, d, h }) => {
   for (const sx of [-1, 1]) k.box([sx * w / 4 - w / 4 + 0.03, 0.08, d / 2], [sx * w / 4 + w / 4 - 0.03, h - 0.1, d / 2 + 0.012], "wood:#efe8da");
 };
 
-export const mirror: Builder = (k, { w, d, h }) => {
-  k.box([-w / 2, 0, -d / 2], [w / 2, h, d / 2], "wood:#c9b28a");
+export const mirror: Builder = (k, { w, d, h }, look) => {
+  k.box([-w / 2, 0, -d / 2], [w / 2, h, d / 2], look === "gilt" ? "brass" : "wood:#c9b28a");
   k.box([-w / 2 + 0.04, 0.04, d / 2], [w / 2 - 0.04, h - 0.04, d / 2 + 0.004], "metal:#d8dde0");
 };
 
@@ -131,7 +132,8 @@ export const flowers: Builder = (k, { w, h }, look) => {
   for (let i = 0; i < 9; i++) {
     const a = rnd() * Math.PI * 2, r = rnd() * w * 0.35, y = 0.2 + rnd() * (h - 0.25);
     k.cyl(Math.cos(a) * r * 0.5, 0.18, Math.sin(a) * r * 0.5, 0.004, 0.004, y - 0.18, "plastic:#3e6e33", 4);
-    k.sphere([Math.cos(a) * r, y, Math.sin(a) * r], 0.04, "tex:palette", [1, 0.8, 1], 6, pal(look === "dried" ? 21 + (i % 2) * 2 : [26, 27, 31][i % 3]!));
+    const color = look === "dried" ? 21 + (i % 2) * 2 : look === "sun" ? 27 : [26, 27, 31][i % 3]!;
+    k.sphere([Math.cos(a) * r, y, Math.sin(a) * r], look === "sun" ? 0.06 : 0.04, "tex:palette", [1, look === "sun" ? 0.4 : 0.8, 1], 6, pal(color));
   }
 };
 

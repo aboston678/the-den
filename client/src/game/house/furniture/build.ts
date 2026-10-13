@@ -4,7 +4,9 @@ import type { GeoBuckets } from "../geometry.ts";
 import type { WallPiece } from "../walls.ts";
 import { Kit } from "./parts.ts";
 import * as decor from "./pieces/decor.ts";
+import * as greenhouse from "./pieces/greenhouse.ts";
 import * as kitchen from "./pieces/kitchen.ts";
+import * as rooms from "./pieces/rooms.ts";
 import * as soft from "./pieces/soft.ts";
 import * as tables from "./pieces/tables.ts";
 import type { Builder } from "./pieces/types.ts";
@@ -66,10 +68,29 @@ const BUILDERS: Record<CodeKind, Builder> = {
   rug_oriental: decor.rugOriental,
   patio_set: tables.patioSet,
   rocking_chair: tables.rockingChair,
+  twin_bed: rooms.twinBed,
+  daybed: rooms.daybed,
+  papasan: rooms.papasan,
+  tub: rooms.tub,
+  dresser: rooms.dresser,
+  curio_cabinet: rooms.curioCabinet,
+  armoire: rooms.armoire,
+  drapes: rooms.drapes,
+  globe: rooms.globe,
+  pennant: rooms.pennant,
+  plant_bench: greenhouse.plantBench,
+  plant_shelf: greenhouse.plantShelf,
+  hanging_basket: greenhouse.hangingBasket,
+  donut_boxes: greenhouse.donutBoxes,
+  canned_pasta: greenhouse.cannedPasta,
+  cooler_salmon: greenhouse.coolerSalmon,
+  salmon_shelf: greenhouse.salmonShelf,
+  crates: greenhouse.crates,
 };
 
 /** Curtains by room (photos): office plaid, cream tie-backs in the formal dining room, florals in the blue bedroom. */
 const CURTAINS: Record<string, { fabric: string; toFloor: boolean }> = {
+  bedroom_pink: { fabric: "fabric:#f6efe6", toFloor: false },
   office: { fabric: "tex:fabric_plaid", toFloor: true },
   formal_dining: { fabric: "fabric:#efe6d2", toFloor: true },
   bedroom_main: { fabric: "tex:fabric_floral", toFloor: false },

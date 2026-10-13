@@ -104,6 +104,26 @@ export const KINDS = {
   // deck + porch
   patio_set: { w: 1.9, d: 1.9, h: 2.4 },
   rocking_chair: { w: 0.62, d: 0.85, h: 1.05 },
+  // upstairs + basement den (2.2)
+  twin_bed: { w: 1.0, d: 2.0, h: 1.15 },
+  daybed: { w: 2.0, d: 0.95, h: 0.95 },
+  papasan: { w: 1.05, d: 1.05, h: 0.85 },
+  tub: { w: 1.5, d: 0.75, h: 0.55 },
+  dresser: { w: 1.2, d: 0.5, h: 0.9 },
+  curio_cabinet: { w: 0.55, d: 0.4, h: 1.8 },
+  armoire: { w: 1.0, d: 0.6, h: 2.0 },
+  drapes: { w: 2.6, d: 0.08, h: 2.2, mount: "wall" },
+  globe: { w: 0.32, d: 0.32, h: 0.42, mount: "surface" },
+  pennant: { w: 0.7, d: 0.02, h: 0.26, mount: "wall" },
+  // greenhouse: plants and the winter stockpile (GAME_SPEC §8.3)
+  plant_bench: { w: 1, d: 0.6, h: 0.85 },
+  plant_shelf: { w: 1, d: 0.4, h: 1.4 },
+  hanging_basket: { w: 0.45, d: 0.45, h: 0.8, mount: "ceiling" },
+  donut_boxes: { w: 1.4, d: 0.6, h: 1.3 },
+  canned_pasta: { w: 1.0, d: 0.5, h: 0.9 },
+  cooler_salmon: { w: 0.9, d: 0.5, h: 0.45 },
+  salmon_shelf: { w: 1.1, d: 0.45, h: 0.8 },
+  crates: { w: 0.9, d: 0.6, h: 0.75 },
 } satisfies Record<string, Kind>;
 
 export type KindId = keyof typeof KINDS;
@@ -141,7 +161,8 @@ export function wallFace(roomId: string, side: Side, along: number): number {
   const level = levelOfRoom(roomId)!;
   const px = side === "n" || side === "s" ? along : line + out * 0.02;
   const pz = side === "n" || side === "s" ? line + out * 0.02 : along;
-  const neighbour = level.rooms.some((o) => o.id !== roomId && px > o.x && px < o.x + o.w && pz > o.z && pz < o.z + o.d);
+  const outdoorRoom = level.outdoor.some((o) => o.id === roomId); // porch, deck, greenhouse: the house wall is an outside wall
+  const neighbour = !outdoorRoom && level.rooms.some((o) => o.id !== roomId && px > o.x && px < o.x + o.w && pz > o.z && pz < o.z + o.d);
   return line - out * (neighbour ? INTERIOR_HALF : EXTERIOR_HALF);
 }
 
@@ -289,7 +310,83 @@ const MAIN: Placement[] = [
   P("rocking_chair", "porch", 23.2, -1.1, { rot: 180 }),
 ];
 
-export const FURNITURE: Placement[] = [...MAIN];
+/** Upstairs (milestone 2.2). The roof slopes low along the front (north) walls except in the dormers. */
+const UPPER: Placement[] = [
+  // Landing: white table with a plant along the stair railing, curio cabinet, gilt mirror, lantern.
+  P("console_table", "landing", 27.12, 1.6, { rot: 90, look: "white" }),
+  P("flowers", "landing", 27.12, 1.6, { y: 0.8, look: "fern" }),
+  W("curio_cabinet", "landing", "e", 3.05),
+  W("mirror", "landing", "e", 1.0, { y: 0.9, w: 0.6, h: 0.5, look: "gilt" }),
+  P("pendant_lantern", "landing", 28.0, 2.6, { y: 2.4 }),
+  // Balcony hallway: a runner and a couple of pictures.
+  P("rug_oriental", "balcony_hall", 19.6, 4.25, { w: 3.4, d: 0.8, look: "red" }),
+  W("frame", "balcony_hall", "n", 20.6, { y: 1.4, look: "photo" }),
+  W("frame", "balcony_hall", "n", 24.7, { y: 1.4, look: "print" }),
+  // Upstairs bathroom: vanity with a mirror, tub along the east wall, toilet in the dormer.
+  W("vanity", "bathroom_up", "w", 2.4, { w: 1.0, look: "white" }),
+  W("mirror", "bathroom_up", "w", 2.4, { y: 1.1, w: 0.8, h: 0.7 }),
+  W("tub", "bathroom_up", "e", 2.55),
+  W("toilet", "bathroom_up", "n", 24.15),
+  // Skylight bedroom: white daybed, papasan chair, closet.
+  W("daybed", "bedroom_skylight", "e", 1.4),
+  P("papasan", "bedroom_skylight", 17.66, 0.75, { rot: 90 }),
+  W("closet_doors", "bedroom_skylight", "s", 17.9, { w: 1.2, look: "white" }),
+  P("rug_round", "bedroom_skylight", 19.3, 1.7, { w: 1.6, look: "blue" }),
+  // Pink bedroom: black four-poster with the floral quilt, closets, purple abstract painting.
+  W("four_poster_bed", "bedroom_pink", "e", 2.88),
+  W("nightstand", "bedroom_pink", "e", 1.4),
+  P("table_lamp", "bedroom_pink", 33.68, 1.4, { y: 0.6 }),
+  W("closet_doors", "bedroom_pink", "s", 30.4, { w: 1.3, look: "white" }),
+  W("closet_doors", "bedroom_pink", "w", 3.25, { w: 1.2, look: "white" }),
+  W("painting", "bedroom_pink", "s", 32.85, { y: 1.3, w: 0.8, h: 0.95, look: "abstract" }),
+  // Yellow bedroom: twin bed under the eaves, bookcases, cream dresser with a hutch, sunflowers, a pennant.
+  W("twin_bed", "bedroom_yellow", "s", 30.6, { look: "yellow" }),
+  W("bookshelf", "bedroom_yellow", "e", 6.95, { w: 1.6, h: 2.0 }),
+  W("dresser", "bedroom_yellow", "n", 32.4, { h: 1.9, look: "hutch" }),
+  P("flowers", "bedroom_yellow", 31.95, 4.3, { y: 0.9, look: "sun" }),
+  W("pennant", "bedroom_yellow", "w", 6.5, { y: 1.4 }),
+  P("rug_braided", "bedroom_yellow", 31.6, 6.6, { look: "blue" }),
+];
+
+/** Basement TV den (milestone 2.2): Chesterfield, recliner, TV, globe, nautical chart, pine armoire. */
+const BASEMENT: Placement[] = [
+  P("rug_oriental", "den", 19.6, 7.0, { w: 3.4, d: 2.4, look: "blue" }),
+  W("tv_stand", "den", "n", 19.8),
+  W("tv", "den", "n", 19.8, { y: 0.5, d: 0.06 }),
+  P("chesterfield", "den", 19.8, 7.65, { rot: 180 }),
+  P("recliner", "den", 17.7, 7.3, { rot: 180 }),
+  P("side_table", "den", 17.7, 8.35, { look: "round" }),
+  P("globe", "den", 17.7, 8.35, { y: 0.6 }),
+  P("side_table", "den", 21.15, 7.65),
+  P("table_lamp", "den", 21.15, 7.65, { y: 0.6 }),
+  W("armoire", "den", "e", 5.85),
+  P("floor_lamp", "den", 21.6, 9.6),
+  W("frame", "den", "s", 20.3, { y: 1.0, w: 1.0, h: 0.75, look: "map" }),
+  W("drapes", "den", "s", 17.5, { look: "floral" }),
+  // A reading corner at the west end.
+  W("bookshelf", "den", "w", 7.5, { w: 2.0, h: 2.0 }),
+  P("armchair", "den", 13.0, 7.5, { rot: 90 }),
+  P("floor_lamp", "den", 12.4, 6.55),
+  P("rug_braided", "den", 13.3, 7.5, { look: "red" }),
+];
+
+/** Greenhouse (milestone 2.2, GAME_SPEC §8.3): plants, and the bear's winter stockpile, plus the canoe. */
+const GREENHOUSE: Placement[] = [
+  P("canoe", "greenhouse", 5.6, 11.15),
+  W("plant_bench", "greenhouse", "s", 1.9, { w: 2.4 }),
+  W("plant_bench", "greenhouse", "s", 9.5, { w: 2.2 }),
+  W("plant_shelf", "greenhouse", "n", 9.9, { w: 1.6 }),
+  W("donut_boxes", "greenhouse", "n", 0.9),
+  W("canned_pasta", "greenhouse", "n", 2.5),
+  W("cooler_salmon", "greenhouse", "n", 6.0),
+  W("salmon_shelf", "greenhouse", "n", 7.4),
+  W("crates", "greenhouse", "w", 10.4),
+  P("hanging_basket", "greenhouse", 2.5, 10.2, { y: 2.9 }),
+  P("hanging_basket", "greenhouse", 5.5, 9.6, { y: 3.0 }),
+  P("hanging_basket", "greenhouse", 8.6, 10.2, { y: 2.9, look: "flowers" }),
+];
+
+export const FURNITURE: Placement[] = [...MAIN, ...UPPER, ...BASEMENT, ...GREENHOUSE];
 
 // --- geometry helpers ---
 

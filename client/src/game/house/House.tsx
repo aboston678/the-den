@@ -6,6 +6,7 @@ import { useOutdoorMaps } from "../world/property/textures.ts";
 import { Doors } from "./Doors.tsx";
 import { Furniture } from "./furniture/Furniture.tsx";
 import { buildFurniture } from "./furniture/build.ts";
+import { Tvs } from "./furniture/Tvs.tsx";
 import { HouseLights } from "./Lights.tsx";
 import { type GeoBuckets, type SolidBox, mergeBucket } from "./geometry.ts";
 import { type RailRun, Railings } from "./Railings.tsx";
@@ -140,6 +141,7 @@ export function House() {
         <Railings runs={house.runs} materials={{ rail: materials.get("oak_trim"), post: materials.get("trim") }} />
         <Doors materials={materials} />
         <Furniture built={house.furniture} />
+        <Tvs />
       </group>
       {/* Lights live in world space: a light's range isn't scaled with the house. */}
       <HouseLights windowGlow={materials.get("window_glow") as MeshBasicMaterial} />

@@ -1,4 +1,5 @@
 import { Boundary } from "./Boundary.tsx";
+import { Boat } from "./Boat.tsx";
 import { Dock } from "./Dock.tsx";
 import { Forest } from "./Forest.tsx";
 import { House } from "../../house/House.tsx";
@@ -16,6 +17,7 @@ export function Property() {
       <Roads />
       <Stream />
       <Dock />
+      <Boat />
       <StoneWalls />
       <Forest />
       <House />

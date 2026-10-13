@@ -66,11 +66,12 @@ export const sideTable: Builder = (k, { w, d, h }, look) => {
   for (let i = 0; i < 4; i++) k.box([-0.15, 0.14 + i * 0.035, -0.12], [0.15 - i * 0.02, 0.17 + i * 0.035, 0.1], "tex:palette", pal(i * 3));
 };
 
-export const consoleTable: Builder = (k, { w, d, h }) => {
-  k.box([-w / 2, h - 0.03, -d / 2], [w / 2, h, d / 2], MAHOGANY);
-  k.box([-w / 2 + 0.03, h - 0.14, -d / 2 + 0.02], [w / 2 - 0.03, h - 0.03, d / 2 - 0.02], MAHOGANY);
-  legs(k, w, d, h - 0.03, 0.035, MAHOGANY, 0.02, 0.6);
-  k.box([-w / 2 + 0.08, 0.15, -d / 2 + 0.04], [w / 2 - 0.08, 0.17, d / 2 - 0.04], MAHOGANY);
+export const consoleTable: Builder = (k, { w, d, h }, look) => {
+  const wood = look === "white" ? "paint:#f4f2ec" : MAHOGANY;
+  k.box([-w / 2, h - 0.03, -d / 2], [w / 2, h, d / 2], wood);
+  k.box([-w / 2 + 0.03, h - 0.14, -d / 2 + 0.02], [w / 2 - 0.03, h - 0.03, d / 2 - 0.02], wood);
+  legs(k, w, d, h - 0.03, 0.035, wood, 0.02, 0.6);
+  k.box([-w / 2 + 0.08, 0.15, -d / 2 + 0.04], [w / 2 - 0.08, 0.17, d / 2 - 0.04], wood);
 };
 
 /** Black drop-leaf desk (downstairs bedroom). */

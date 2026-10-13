@@ -178,6 +178,16 @@ function painting(look: string) {
         ctx.arc(x + 4, y - 32, 8, 0, Math.PI * 2);
         ctx.fill();
       }
+    } else if (look === "abstract") {
+      // soft purple-and-pink brushwork (pink bedroom)
+      ctx.fillStyle = "#c9a8d8";
+      ctx.fillRect(0, 0, 256, 256);
+      for (let i = 0; i < 60; i++) {
+        ctx.fillStyle = ["rgba(120,60,150,0.35)", "rgba(230,140,180,0.35)", "rgba(250,230,240,0.4)", "rgba(80,90,170,0.3)"][i % 4]!;
+        ctx.beginPath();
+        ctx.ellipse(rnd() * 256, rnd() * 256, 20 + rnd() * 40, 6 + rnd() * 14, rnd() * 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
     } else {
       // landscape: hills, a stand of pines, evening sky
       ctx.fillStyle = grad(["#e8c38f", "#b9cbd4"], 0, 150);
@@ -270,6 +280,50 @@ function fabric(look: string) {
   }, true);
 }
 
+/** A made-up donut-hole box: white with orange and pink dots and stripes, no words or logo. */
+function donutBox() {
+  return canvas(128, 128, (ctx) => {
+    ctx.fillStyle = "#fbf6ee";
+    ctx.fillRect(0, 0, 128, 128);
+    ctx.fillStyle = "#e8742e";
+    ctx.fillRect(0, 0, 128, 18);
+    ctx.fillRect(0, 110, 128, 18);
+    const rnd = seeded(4);
+    for (let i = 0; i < 14; i++) {
+      ctx.fillStyle = i % 2 ? "#e0548a" : "#e8742e";
+      ctx.beginPath();
+      ctx.arc(14 + rnd() * 100, 30 + rnd() * 70, 6 + rnd() * 5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  });
+}
+
+/** A made-up can label: red with a yellow band and a bowl of pasta rings, no words or logo. */
+function canLabel() {
+  return canvas(256, 128, (ctx) => {
+    ctx.fillStyle = "#c62a22";
+    ctx.fillRect(0, 0, 256, 128);
+    ctx.fillStyle = "#f2c230";
+    ctx.fillRect(0, 50, 256, 26);
+    for (const x of [40, 168]) {
+      ctx.fillStyle = "#f4f1ea";
+      ctx.beginPath();
+      ctx.ellipse(x, 98, 26, 12, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#e0782e";
+      ctx.lineWidth = 3;
+      for (let i = 0; i < 5; i++) {
+        ctx.beginPath();
+        ctx.arc(x - 14 + i * 7, 95, 4, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+    }
+    ctx.fillStyle = "#9a9da0";
+    ctx.fillRect(0, 0, 256, 6);
+    ctx.fillRect(0, 122, 256, 6);
+  });
+}
+
 const cache = new Map<string, Texture>();
 /** A generated texture by name: palette, braided_red, braided_blue, round_blue, oriental_red/_blue/_gold, art_<look>, fabric_<look>. */
 export function furnitureTexture(name: string): Texture {
@@ -282,6 +336,8 @@ export function furnitureTexture(name: string): Texture {
   else if (name === "oriental_red") t = oriental("#8a2a26", "#1f2d4a", "#c99a4a", "#e9dcc0");
   else if (name === "oriental_blue") t = oriental("#24375e", "#7d2421", "#c9a85a", "#eadfc6");
   else if (name === "oriental_gold") t = oriental("#c8b48a", "#5a3a2a", "#8a2a26", "#efe4cc");
+  else if (name === "donut_box") t = donutBox();
+  else if (name === "can_label") t = canLabel();
   else if (name.startsWith("art_")) t = painting(name.slice(4));
   else if (name.startsWith("fabric_")) t = fabric(name.slice(7));
   else t = palette();

@@ -4,7 +4,7 @@
 // loop. The clips are private: they stay out of git and client/public and are served from private
 // storage to signed-in players only. Usage: npm run build:tv
 import { execFileSync } from "node:child_process";
-import { mkdirSync, statSync } from "node:fs";
+import { copyFileSync, mkdirSync, statSync } from "node:fs";
 import ffmpeg from "ffmpeg-static";
 
 const SRC = "assets/video";
@@ -35,3 +35,8 @@ execFileSync(ffmpeg, [
 ], { stdio: "inherit" });
 
 console.log(`tv.mp4: ${(statSync(`${OUT}/tv.mp4`).size / 1e6).toFixed(1)} MB`);
+
+// A copy for local development only (client/public/video/ is gitignored, so it never reaches the
+// website; the game only asks for it in dev, client/src/game/house/furniture/Tvs.tsx).
+mkdirSync("client/public/video", { recursive: true });
+copyFileSync(`${OUT}/tv.mp4`, "client/public/video/tv.mp4");
