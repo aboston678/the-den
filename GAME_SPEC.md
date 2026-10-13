@@ -72,7 +72,7 @@ The Den is a private, browser-based, multiplayer 3D game for Andrew and his frie
 - **Forest:** dense mixed Maine woods: tall eastern white pines (dominant), red maple, red oak, paper birch, hemlock. Ferns, saplings, fallen logs, mossy boulders. Walkable between trees. Dry-stone walls along parts of the woodline. Full green summer foliage.
 - **Yard details:** big boulder on the front lawn, rhododendrons along the front foundation, shrub beds behind the house, a few huge pines near the house (photos).
 - **Stream:** ~20 m wide, slow, flowing north→south along the east side, about **110 m east of the house**. Banks 1–2 m above the water. A 3 m shallow strip along our bank is wadeable; beyond that an invisible wall. The far bank is scenery only.
-- **Dock:** wooden, 1.8 m wide, 8 m long, straight out from our bank due east of the house. A **bucket of fishing rods** sits at the base of the dock.
+- **Dock:** wooden, 1.8 m wide, 8 m long, straight out from our bank due east of the house. A **bucket of fishing rods** sits at the base of the dock. **Andrew's wakeboard boat** (blue/orange/white hull, black tower, no brand name; Higgsfield image→3D from his photo) is tied alongside the dock with lines and fenders, gently bobbing (Andrew, 2026-10-12). Scenery only, not drivable.
 - **Trail:** packed dirt + pine needles from the back lawn to the dock (~90 m).
 - **Perimeter:** invisible boundary ~10 m inside the map edge, disguised by denser trees, ferns, rocks and fog falloff.
 - **Spawn:** the start of the driveway (NW edge). Up to 6 players spawn in a short line. The house should be hidden by trees at spawn; the reveal happens as you walk out of the woods.
@@ -186,9 +186,8 @@ Shelves and benches of plants (tomatoes, herbs, ferns, hanging baskets) plus the
 - Filler is fine: crates, jars, firewood.
 
 ### 8.4 TVs
-TVs in the basement den and the common area. Each shows a slow crossfading slideshow (every ~8 s) of two images generated with `gpt_image_2_5` (16:9, ~0.25 credits each):
-1. A big flock of pigeons in flight against the sky.
-2. A school of salmon swimming upstream underwater, sunbeams through clear water.
+TVs in the basement den and the common area. Both loop **Andrew's three home video clips** (Andrew, 2026-10-12; replaces the AI pigeon/salmon slideshow): `assets/video/`, joined into one ~14 s loop by `tools/build-tv.mjs`. The clips are filmed tall, so each sits centred on the 16:9 screen with a blurred copy of itself filling the sides. Sound plays from the TV and is only heard up close in that room.
+**The clips are private** (Andrew, 2026-10-12): they show his friends, so they are never in git or the public website files. The loop is uploaded to a private Supabase Storage bucket and the game fetches a short-lived signed link only for signed-in players (so the TVs light up once 2.5 sign-in exists; until then they show a dark screen).
 
 ---
 
@@ -343,7 +342,8 @@ Weight = min + (max − min) × r^2.2 (r random 0–1), so big fish are rare. Fi
 | One bear re-do if needed | ~50 |
 | Loading video (keyframes + up to 3 tries) | ~60 |
 | Props + 5 fish (~40 models) | ~360 |
-| TV images, misc images | ~5 |
+| TV videos are Andrew's own clips (no credits); misc images | ~2 |
+| Andrew's boat at the dock (concept + image→3D) | ~9 |
 | **Reserve** (retries, sound effects, surprises) | ~575 |
 
 ---

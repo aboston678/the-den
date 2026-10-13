@@ -13,3 +13,6 @@ test-results/
 client/public/models/*-preview.glb
 assets/polyhaven/
 assets/audio/src/
+# Andrew's home videos: private, never in git or the public site (served from private storage to signed-in players, GAME_SPEC §8.4)
+assets/video/
+client/public/video/

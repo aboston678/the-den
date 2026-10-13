@@ -42,7 +42,7 @@ Goal: Andrew sends friends a link; everyone makes or joins a party, loads in at 
 Run as one batch (Andrew, 2026-10-12; full plan in `docs/phase-2-plan.md`): all approvals up front (credit batch, dog models, Supabase + Google setup), then 2.1–2.6 built in order with a commit + push after each, then one combined **[ANDREW APPROVES]** review before 2.7.
 
 - [ ] **2.1 Furnish the main floor** from the photos. **[ANDREW APPROVES]**
-- [ ] **2.2 Furnish upstairs, basement den, greenhouse** (winter stockpile + canoe), **TVs** with the two images. **[ANDREW APPROVES]**
+- [ ] **2.2 Furnish upstairs, basement den, greenhouse** (winter stockpile + canoe), **TVs** looping Andrew's 3 video clips, **Andrew's boat tied to the dock**. **[ANDREW APPROVES]**
 - [ ] **2.3 Dogs.** Find animated dog models (free first, else 2–3 purchase links; **[ANDREW APPROVES]** any purchase). Merlin, Raptor, Luna: wander, pet (E), follow/stay (G), barks.
 - [ ] **2.4 Fishing.** Rod bucket, cast, 10–45 s bites, spam-R tension reeling, 5 species, catch card, synced for everyone.
 - [ ] **2.5 Google sign-in.** Supabase project + Google login (walk Andrew through it), usernames, profiles.
@@ -95,6 +95,8 @@ Starting balance: 1,210 (2026-10-11)
 | 2026-10-12 | Walk retry: Monster_Walk (112), job 02e2371b-16fc-4790-9d0c-0a3fc3c70d29 | `meshy_rigging` | 8 | 1,032.5 |
 | 2026-10-12 | Walk retry: walking_2 (566), job fdb413de-cc46-44e7-b473-224ad0a239ce | `meshy_rigging` | 8 | 1,024.5 |
 | 2026-10-12 | Phase 2 furniture concepts ×10 (0.25 each; job ids in `assets/concepts/furniture/README.md`) | `gpt_image_2_5` | 2.5 | 1,022 |
+| 2026-10-12 | Concepts ×10: four-poster bed, Chesterfield, recliner, canoe, Andrew's boat (from his photo, brand removed), 5 fish (0.25 each; job ids in `assets/models/phase2-3d-jobs.json`) | `gpt_image_2_5` | 2.5 | 1,019.5 |
+| 2026-10-12 | Image→3D ×20: 14 furniture pieces, boat, 5 fish (9 each; Andrew approved the batch; job ids in `assets/models/phase2-3d-jobs.json`) | `tripo_h3_1_image_to_3d` | 180 | 839.5 |
 
 ## Decision log
 | Date | Decision | Why |
@@ -131,6 +133,8 @@ Starting balance: 1,210 (2026-10-11)
 | 2026-10-12 | Wind, room hum and fire crackle are made in code; recorded sounds from the NPS (public domain) and OpenGameArt (CC0); `ffmpeg-static` dev tool to trim/encode | Higgsfield's sound-effect model only works inside its website builder; ffmpeg isn't installed on the Mac |
 | 2026-10-11 | Basement stairs moved under the main staircase; new basement stair landing; bowling lanes shifted ~6 m east (x 22→28); back hall became a pantry | Andrew: the real stairs start under the stairs going up. Lanes had to move so the stairs don't land on the approach |
 | 2026-10-12 | Phase 2 runs as one batch: every approval up front, one combined review at the end instead of a stop per milestone; work on branch `phase-2`, merged to main at 2.7 | Andrew's call; main auto-deploys, so the branch keeps the live game stable |
+| 2026-10-12 | TVs loop Andrew's 3 home video clips instead of the AI pigeon/salmon images; his wakeboard boat (no brand name) tied to the dock; Phase 2 credit batch approved (~173 + ~9 boat) (GAME_SPEC §4, §8.4, §18 updated) | Andrew's request |
+| 2026-10-12 | TV clips kept private: out of git and the public site, served from private Supabase Storage to signed-in players only (GAME_SPEC §8.4 updated) | They show Andrew's friends; the game link isn't secret. Andrew chose this over publishing them |
 
 ## Session notes
 (Newest first. 1–3 lines per session: what got done, what's next, anything Andrew needs to do.)

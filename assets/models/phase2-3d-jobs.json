@@ -1,0 +1,25 @@
+{
+  "_readme": "Higgsfield tripo_h3_1_image_to_3d jobs for Phase 2 (2026-10-12, 9 credits each, Andrew approved the batch). source = concept image job id. Download results with the job id; never resubmit without checking status.",
+  "jobs": [
+    { "name": "grand-piano", "job": "7ff4c5ce-ecbd-42c5-a3d9-e29159baf77a", "source": "80ce66ea-d1ac-49c5-944c-16035edabe05", "faces": 40000 },
+    { "name": "harp", "job": "e0e35c34-bec7-4957-b614-796a554d197f", "source": "77f6698b-258d-4798-b3c4-9930ff0403d1", "faces": 30000 },
+    { "name": "wingback-chair", "job": "494f4812-78e7-4ea4-8654-cd7557e74105", "source": "6efa000f-c22e-4e1d-aeb6-8d1a8f8b3555", "faces": 30000 },
+    { "name": "camelback-sofa", "job": "3dd54faf-a28f-4dd8-bf54-a64b52cc9068", "source": "49aaa5fe-8d25-4d22-b4c2-f1b131f107b5", "faces": 30000 },
+    { "name": "china-cabinet", "job": "cc49ab93-48dc-435b-aad9-7fa75e2c9a83", "source": "264034d6-e8be-429a-8cf8-e0e1d608e21c", "faces": 30000 },
+    { "name": "chippendale-chair", "job": "36e4a03c-d929-4518-8f9c-26e69bb26f7d", "source": "93ae45ff-47a9-483b-8c4b-102904a5a722", "faces": 30000 },
+    { "name": "leather-armchair-ottoman", "job": "4ffc751d-c2cb-4567-b2d7-f1cb4d8c2bc8", "source": "388a609c-ded6-48a3-a087-847344d0c192", "faces": 30000 },
+    { "name": "pot-rack", "job": "1cca0a9c-20e2-4f62-bc46-97bd7df11278", "source": "cde85980-538a-4f83-bdec-12e7b9c2b3a7", "faces": 30000 },
+    { "name": "tiffany-lamp", "job": "e973433b-ff5d-4cc2-b222-169f16fd8e45", "source": "93327cdd-f805-4926-9816-101a94109553", "faces": 30000 },
+    { "name": "spindle-bench", "job": "fd2604db-08ba-4bc9-a9ed-524e0b29e3b9", "source": "3fe88269-bfea-4572-b602-7db58bcf4e6e", "faces": 30000 },
+    { "name": "four-poster-bed", "job": "6c52a5e8-3e8f-41d3-a88a-84b56a849c9e", "source": "124282db-5347-43d9-81c3-cd43e4772d8b", "faces": 30000 },
+    { "name": "chesterfield", "job": "bc1d3b57-2bbc-4a22-aa60-b82178ce5aee", "source": "be29e7ce-feca-4642-96a8-8081409d6326", "faces": 30000 },
+    { "name": "recliner", "job": "27b92744-17da-4441-958a-77368d72705c", "source": "2fd781ec-a4d4-4dab-af06-187e70fd83e1", "faces": 30000 },
+    { "name": "canoe", "job": "98fe633b-3148-4d49-8eb6-e990891ebca8", "source": "54ad3754-47c7-4f1c-8eb3-e7f1eb59fcbe", "faces": 20000 },
+    { "name": "boat", "job": "dfb63949-614c-4a4f-9ea0-7230c7210a8d", "source": "33815678-bcbe-4c93-abb3-ae4a62a596f9", "faces": 40000 },
+    { "name": "fish-sunfish", "job": "f23f8c63-aa15-449c-a749-8d94f340e261", "source": "6e1dc132-1c15-464e-9ba1-160ed0a50a47", "faces": 8000 },
+    { "name": "fish-yellow-perch", "job": "374d3e9d-0885-47bc-9cd3-fee6521113be", "source": "dfdd7d6b-7a82-418e-abfd-a1be13375e64", "faces": 8000 },
+    { "name": "fish-crappie", "job": "b474bd9a-0bef-4f33-987d-2ec8d8ef4260", "source": "a85e807d-ae80-468b-998d-bcd33ccd57bf", "faces": 8000 },
+    { "name": "fish-smallmouth-bass", "job": "f6374d0f-f838-40a8-b3a1-ee0dce3d22be", "source": "ef823cd4-0ca7-467d-8fa6-45c90ac36472", "faces": 8000 },
+    { "name": "fish-largemouth-bass", "job": "c6de643d-d7f8-42da-b928-854d3fba9e9d", "source": "bd526e3b-eae7-4c6b-9f6c-7eeb03bc0737", "faces": 8000 }
+  ]
+}
