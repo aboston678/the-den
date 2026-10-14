@@ -84,6 +84,7 @@ Run like Phase 3 (Andrew, 2026-10-14): 4.1 → 4.3 straight through on branch `p
 
 ## Phase 5: Polish
 Run like Phases 2–4 (Andrew, 2026-10-14): Catan leave/vote-to-end fix goes live first (branch `catan-quit`), then 5.1 → 5.3 on branch `phase-5` (commit + push after each), one review at 5.4 before it goes live. Plan: `docs/phase-5-plan.md`. Slowest laptop = Andrew's M1 MacBook Air (8 GB); friends have a Razer gaming laptop and a PC.
+- **Catan fix (before 5.1, live 2026-10-14):** players can leave mid-game (Leave game button, or E to get up, with a confirm; cards back to the bank, pieces stay) and anyone can call a **vote to end the game** (more than half of those still in say yes → game over, no winner, nothing saved; lapses after 30 s; works while waiting for a reconnect). Rules in `shared/src/catan/game.ts`/`rules.ts` (`vote.test.ts`), server `rooms/catan.ts`, HUD `ui/catan/Leave.tsx`; e2e `catan.spec.ts` (3 bears: a failed vote, Keep playing, one leaves, the other two end it). Also fixed: discards left hanging if the roller left during a 7. Full browser suite 60/60 (the medium frame-rate check and the stone-wall test failed once while the Mac was busy, then passed alone).
 - [ ] **5.1 Sound pass.**
 - [ ] **5.2 Visual polish** (fireflies, fog, grass, small details).
 - [ ] **5.3 Performance** on the slowest friend's laptop.
