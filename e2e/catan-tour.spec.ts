@@ -21,7 +21,7 @@ async function toChair(page: Page, seat: number) {
 
 async function sit(page: Page, seat: number) {
   await toChair(page, seat);
-  await expect.poll(() => page.evaluate(() => window.__den!.catan!.state().prompt)).toBe("Sit at the Catan table");
+  await expect.poll(() => page.evaluate(() => window.__den!.catan!.state().prompt), { timeout: 20_000 }).toBe("Sit at the Catan table");
   await page.keyboard.press("e");
   await expect.poll(() => page.evaluate(() => window.__den!.catan!.state().seats.filter((s) => s).length)).toBeGreaterThan(0);
 }

@@ -95,15 +95,19 @@ function scenery(t: Terrain, h: number, out: BufferGeometry[]) {
   }
 }
 
+/** Which way "up" is for whoever's looking (they face (fx, fz)): numbers are turned to read the right way up for them. */
+let facing = { fx: 0, fz: -1 };
+
 /** A flat disc on the board showing one atlas cell on top. */
 function tag(cell: number, x: number, z: number, radius: number, y = TOP + 0.002) {
   const g = new CylinderGeometry(radius, radius, 0.005, 24).toNonIndexed();
   const [u0, v0, u1, v1] = cellUv(cell);
   const pos = g.getAttribute("position"), uv = g.getAttribute("uv");
   for (let i = 0; i < uv.count; i++) {
-    // Map the disc's top face by position, so the picture lies flat and upright (north up).
+    // Map the disc's top face by position, so the picture lies flat and upright for the viewer.
     const px = pos.getX(i) / radius, pz = pos.getZ(i) / radius;
-    uv.setXY(i, u0 + ((px + 1) / 2) * (u1 - u0), v0 + ((1 - (pz + 1) / 2)) * (v1 - v0));
+    const right = px * -facing.fz + pz * facing.fx, up = px * facing.fx + pz * facing.fz;
+    uv.setXY(i, u0 + ((right + 1) / 2) * (u1 - u0), v0 + ((up + 1) / 2) * (v1 - v0));
   }
   g.translate(x, y + 0.0025, z);
   return g;
@@ -114,7 +118,9 @@ export interface BoardMeshes {
   textured: BufferGeometry;
 }
 
-export function buildBoard(board: Board): BoardMeshes {
+/** `yaw`: the way the viewer faces (their seat's), so the numbers and harbor tags read upright for them. */
+export function buildBoard(board: Board, yaw = Math.PI): BoardMeshes {
+  facing = { fx: Math.sin(yaw), fz: Math.cos(yaw) };
   const col: BufferGeometry[] = [];
   const tex: BufferGeometry[] = [];
   const { x: cx, z: cz } = CATAN_TABLE;

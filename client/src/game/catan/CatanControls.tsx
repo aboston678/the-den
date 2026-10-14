@@ -1,6 +1,6 @@
 import { CATAN_SEATS, CATAN_TABLE, nearestSeat } from "@den/shared";
 import { useFrame } from "@react-three/fiber";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Vector3 } from "three";
 import { create } from "zustand";
 import { catanSend, usePartyStore } from "../../net/party.ts";
@@ -29,11 +29,24 @@ export function boardShot(seat: number) {
 export function CatanControls() {
   // Getting up (or leaving) puts the camera and mouse back to normal.
   useEffect(() => () => release(), []);
+  /** A win we're celebrating: jump up out of the chair, then cheer (GAME_SPEC §16). */
+  const cheer = useRef<{ game: string; stage: "up" | "done" } | null>(null);
 
   useFrame(() => {
     const me = usePartyStore.getState().sessionId;
-    const { seats } = useCatan.getState();
+    const { seats, view } = useCatan.getState();
     const mySeat = me ? seats.indexOf(me) : -1;
+
+    const won = view?.phase === "over" && view.winner !== null && view.players[view.winner]?.id === me;
+    const gameKey = view ? `${view.players.map((p) => p.id).join()}|${view.log[0]}|${view.rollId}` : "";
+    if (won && cheer.current?.game !== gameKey) {
+      cheer.current = { game: gameKey, stage: "up" };
+      if (mySeat >= 0) catanSend.stand();
+    }
+    if (cheer.current?.stage === "up" && mySeat < 0 && !playerState.seated) {
+      cheer.current.stage = "done";
+      playerState.celebrateRequest = true;
+    }
     const setPrompt = (text: string | null) => {
       if (useCatanPrompt.getState().text !== text) useCatanPrompt.setState({ text });
     };

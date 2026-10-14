@@ -1,7 +1,7 @@
 import { useFrame, useThree } from "@react-three/fiber";
 import { CapsuleCollider, RigidBody, type RapierCollider, type RapierRigidBody, useRapier } from "@react-three/rapier";
-import { Suspense, useRef } from "react";
-import { type Group, Vector3 } from "three";
+import { Suspense, useMemo, useRef } from "react";
+import { type Group, type Material, Mesh, Vector3 } from "three";
 import { INTERP_DELAY_MS, sampleAt } from "../../net/interpolate.ts";
 import { usePartyStore } from "../../net/party.ts";
 import { remotes } from "../../net/remotes.ts";
@@ -61,12 +61,39 @@ function RemoteBearView({ id }: { id: string }) {
     return { show: false, colour: 0 };
   });
 
+  // Catan: while you're at the board camera, other bears sitting at the table fade a little so
+  // their heads don't hide the board. Their own material copies, dithered (no sorting, and set up
+  // once so fading never rebuilds a shader).
+  const fadeMaterials = useMemo(() => {
+    const mats: (Material & { opacity: number })[] = [];
+    model.traverse((o) => {
+      if (!(o instanceof Mesh)) return;
+      // Reuse a copy already made (React may run this twice in development).
+      let mat = o.material as Material & { opacity: number; alphaHash: boolean };
+      if (!mat.userData.fade) {
+        mat = mat.clone() as typeof mat;
+        mat.alphaHash = true;
+        mat.userData.fade = true;
+        o.material = mat;
+      }
+      mats.push(mat);
+    });
+    return mats;
+  }, [model]);
+  const fade = useRef(1);
+
   useFrame((_, rawDt) => {
     const b = remotes.get(id);
     if (!b || !body.current) return;
     const dt = Math.min(rawDt, 0.1);
     const s = sampleAt(b.snapshots, performance.now() - INTERP_DELAY_MS);
     if (!s) return;
+
+    const target = playerState.seated && cameraState.freeMouse && s.action === "sit" ? 0.45 : 1;
+    if (fade.current !== target) {
+      fade.current += Math.max(-dt * 3, Math.min(dt * 3, target - fade.current));
+      for (const m of fadeMaterials) m.opacity = fade.current;
+    }
 
     body.current.setNextKinematicTranslation({ x: s.x, y: s.y + CAPSULE_CENTER, z: s.z });
     if (visual.current) visual.current.rotation.y = s.yaw;

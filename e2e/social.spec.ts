@@ -21,7 +21,9 @@ test("leaderboard: fish caught and bowling high scores, all players or friends; 
   await expect(board.getByTestId("board-rows").locator("li").first()).toContainText("212");
   await page.screenshot({ path: "test-results/social/leaderboard-bowling.png" });
   await board.getByTestId("board-catan").click();
-  await expect(board.getByTestId("board-empty")).toContainText("Phase 4");
+  await expect(board.getByTestId("board-rows").locator("li").first()).toContainText("LunaLover");
+  await expect(board.getByTestId("board-rows").locator("li").first()).toContainText("6");
+  await page.screenshot({ path: "test-results/social/leaderboard-catan.png" });
 });
 
 test("friends: a request waiting, friends listed, search by username", async ({ page }) => {

@@ -286,8 +286,8 @@ export const catanSend = {
   start: (h: boolean) => room?.send(MSG.catanStart, h ? { h: true } : {}),
   act: (action: CatanAction) => room?.send(MSG.catanAct, { action }),
   quit: () => room?.send(MSG.catanQuit),
-  /** Dev and tests: next roll and extra cards (the server ignores it in production). */
-  dev: (dice?: [number, number], give?: Record<string, number>) => room?.send(MSG.devCatan, { dice, give }),
+  /** Dev and tests: next roll, extra cards, victory point cards (the server ignores it in production). */
+  dev: (dice?: [number, number], give?: Record<string, number>, vp?: boolean) => room?.send(MSG.devCatan, { dice, give, vp }),
 };
 
 interface NetCatan {

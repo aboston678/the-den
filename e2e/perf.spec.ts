@@ -12,6 +12,7 @@ test.afterEach(closePlayers);
 const gr = houseToWorld(24, 8);
 const lounge = houseToWorld(30.5, 9.3), loungeLook = houseToWorld(42, 2);
 const approach = houseToWorld(32.6, 1.5), pins = houseToWorld(52.5, 1.5);
+const dining = houseToWorld(30.2, 4.3), table = houseToWorld(31.9, 2.4);
 type Spot = [string, string, number, number, number, number, number?];
 const SPOTS: Spot[] = [
   ["driveway woods", "noon", -92, -60, -80, -50],
@@ -22,6 +23,7 @@ const SPOTS: Spot[] = [
   ["map edge forest", "noon", -96, 10, -130, 10],
   ["bowling lounge", "noon", lounge.x, lounge.z, loungeLook.x, loungeLook.z, -2.7 * HOUSE.scale],
   ["bowling lanes", "noon", approach.x, approach.z, pins.x, pins.z, -2.52 * HOUSE.scale],
+  ["dining room catan", "evening", dining.x, dining.z, table.x, table.z, 0],
 ];
 
 async function measure(page: Page, [, time, x, z, lx, lz, y]: Spot) {

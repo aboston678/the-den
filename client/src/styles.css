@@ -607,3 +607,81 @@ button.link { background: none; border: none; padding: 0; color: #e8742e; text-d
 .bowl-final .label { font-family: "Bebas Neue", Oswald, sans-serif; font-size: 28px; letter-spacing: 1px; }
 .bowl-final .score { font-family: "Bebas Neue", Oswald, sans-serif; font-size: 72px; line-height: 1; color: #ffd36a; }
 .bowl-final .best { margin-top: 6px; font-size: 14px; font-weight: 700; color: #e8742e; text-transform: uppercase; letter-spacing: 1px; }
+
+/* --- Catan HUD (4.3) --- */
+body.catan-seated .controls-hint { display: none; }
+.catan-hud { position: fixed; inset: 0; pointer-events: none; z-index: 20; color: var(--cream); font-family: system-ui, -apple-system, "Segoe UI", sans-serif; font-size: 14px; }
+.catan-hud > * { pointer-events: auto; }
+.catan-hud button { cursor: pointer; padding: 8px 12px; border: 1px solid rgb(239 230 210 / 0.2); border-radius: 7px; background: rgb(20 26 22 / 0.85); color: var(--cream); font: 600 14px "Oswald", system-ui, sans-serif; letter-spacing: 0.04em; }
+.catan-hud button:hover:not(:disabled) { background: rgb(45 55 48 / 0.95); }
+.catan-hud button.primary { background: var(--ember); border-color: transparent; color: #1b120b; }
+.catan-hud button.primary:hover:not(:disabled) { background: #f0843f; }
+.catan-hud button.big { padding: 12px 22px; font-size: 18px; letter-spacing: 0.1em; }
+.catan-hud button.quiet { background: transparent; border-color: transparent; color: rgb(239 230 210 / 0.7); }
+.catan-hud button.on { outline: 2px solid var(--ember); background: rgb(224 113 44 / 0.25); }
+.catan-hud button:disabled { opacity: 0.4; cursor: default; }
+.catan-hud .note { margin: 4px 0; color: rgb(239 230 210 / 0.7); font-size: 13px; }
+.catan-hud .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.catan-hud h3 { margin: 0 0 8px; font: 600 16px "Oswald", system-ui, sans-serif; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ember); }
+
+.catan-chip { display: inline-block; width: 12px; height: 12px; border-radius: 3px; border: 1px solid rgb(0 0 0 / 0.4); vertical-align: -1px; }
+.catan-players { position: absolute; top: 56px; left: 12px; display: grid; gap: 6px; width: 230px; }
+.catan-players.compact { position: static; width: auto; }
+.catan-player { padding: 7px 10px; border-radius: 8px; background: rgb(12 18 14 / 0.82); border: 2px solid transparent; }
+.catan-player.active { border-color: var(--ember); }
+.catan-player.winner { border-color: #f2c94c; }
+.catan-player.gone { opacity: 0.45; }
+.catan-player .who { display: flex; gap: 8px; align-items: center; font: 600 15px "Oswald", system-ui, sans-serif; }
+.catan-player .name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.catan-player .vp { min-width: 26px; padding: 1px 6px; border-radius: 5px; background: var(--cream); color: #1b120b; text-align: center; }
+.catan-player .stats { display: flex; gap: 10px; margin-top: 3px; font-size: 12px; color: rgb(239 230 210 / 0.75); }
+.catan-player .badges { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 3px; }
+.catan-player .badges:empty { display: none; }
+.badge-award { padding: 1px 6px; border-radius: 4px; background: #f2c94c; color: #1b120b; font-size: 11px; font-weight: 700; }
+.badge-wait { padding: 1px 6px; border-radius: 4px; background: rgb(239 230 210 / 0.2); font-size: 11px; }
+
+.catan-status { position: absolute; top: 14px; left: 50%; translate: -50% 0; padding: 8px 18px; border-radius: 999px; background: rgb(12 18 14 / 0.85); font: 600 16px "Oswald", system-ui, sans-serif; letter-spacing: 0.04em; white-space: nowrap; pointer-events: none; }
+.catan-hud.watching { inset: auto 12px auto auto; top: 56px; width: 220px; display: grid; gap: 6px; }
+.catan-hud.watching .catan-status { position: static; translate: none; white-space: normal; border-radius: 8px; font-size: 13px; }
+.catan-waiting { position: absolute; top: 58px; left: 50%; translate: -50% 0; padding: 6px 14px; border-radius: 8px; background: #8a3b1c; font-weight: 600; }
+.catan-log { position: absolute; left: 12px; bottom: 16px; width: 300px; display: grid; gap: 2px; padding: 8px 10px; border-radius: 8px; background: rgb(12 18 14 / 0.6); font-size: 12px; color: rgb(239 230 210 / 0.85); pointer-events: none; }
+.catan-error { position: absolute; left: 50%; top: 96px; translate: -50% 0; padding: 7px 14px; border-radius: 8px; background: #7d2a1e; font-weight: 600; pointer-events: none; }
+.catan-tick { position: absolute; right: 9px; bottom: 9px; width: 5px; height: 5px; border-radius: 50%; background: rgb(239 230 210 / 0.35); pointer-events: none; }
+
+.catan-bottom { position: absolute; left: 50%; bottom: 14px; translate: -50% 0; display: grid; gap: 6px; justify-items: center; }
+.catan-hand { display: flex; gap: 6px; }
+.catan-card { position: relative; width: 62px; height: 84px; padding: 0 !important; border: 2px solid rgb(255 255 255 / 0.7) !important; border-radius: 8px !important; box-shadow: 0 4px 10px rgb(0 0 0 / 0.35); color: #fff !important; text-shadow: 0 1px 2px rgb(0 0 0 / 0.6); }
+.catan-card.small { width: 48px; height: 56px; }
+.catan-card:disabled { opacity: 1 !important; cursor: default; }
+.catan-card.picked { outline: 3px solid var(--ember); outline-offset: 2px; }
+.catan-card .label { position: absolute; left: 0; right: 0; top: 6px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; }
+.catan-card.small .label { font-size: 9px; top: 4px; }
+.catan-card .count { position: absolute; left: 0; right: 0; bottom: 6px; font: 700 24px "Oswald", system-ui, sans-serif; }
+.catan-card.small .count { font-size: 18px; bottom: 3px; }
+.catan-devs { display: flex; gap: 6px; }
+.catan-dev { display: grid; gap: 1px; text-align: left; background: #3b2a5a !important; }
+.catan-dev b { font-size: 13px; }
+.catan-dev span { font-size: 11px; font-weight: 400; opacity: 0.8; }
+
+.catan-actions { position: absolute; right: 14px; bottom: 14px; display: grid; gap: 8px; justify-items: end; }
+.catan-actions .row button { display: grid; gap: 1px; text-align: left; }
+.catan-actions small { font: 400 10px system-ui, sans-serif; opacity: 0.75; letter-spacing: 0; }
+
+.catan-panel { position: absolute; padding: 14px 16px; border-radius: 12px; background: rgb(14 20 16 / 0.94); box-shadow: 0 10px 30px rgb(0 0 0 / 0.5); }
+.catan-panel .close { position: absolute; top: 6px; right: 8px; padding: 2px 8px !important; }
+.catan-trade { right: 14px; bottom: 150px; width: 380px; max-height: calc(100vh - 220px); overflow: auto; display: grid; gap: 6px; }
+.catan-trade h3:not(:first-of-type) { margin-top: 10px; }
+.catan-offer { left: 50%; top: 110px; translate: -50% 0; width: 420px; display: grid; gap: 8px; }
+.catan-offer .reply { display: flex; gap: 6px; align-items: center; }
+.catan-modal { left: 50%; top: 50%; translate: -50% -50%; width: 420px; display: grid; gap: 10px; }
+.catan-lobby { left: 50%; bottom: 60px; translate: -50% 0; width: 340px; display: grid; gap: 6px; text-align: center; }
+.catan-lobby p { margin: 0; }
+.catan-over { left: 50%; top: 70px; translate: -50% 0; width: 340px; text-align: center; }
+.catan-over h2 { margin: 0 0 10px; font: 700 34px "Oswald", system-ui, sans-serif; color: #f2c94c; letter-spacing: 0.06em; }
+.catan-over .final { display: grid; gap: 4px; font-size: 16px; }
+.catan-picker { display: flex; gap: 6px; }
+.catan-pick { display: grid; gap: 3px; justify-items: center; }
+.catan-pick .pm { display: flex; gap: 2px; }
+.catan-pick .pm button { padding: 1px 8px !important; }
+.catan-rolled { position: absolute; top: 58px; left: 50%; translate: -50% 0; padding: 5px 14px; border-radius: 8px; background: rgb(246 236 210 / 0.95); color: #1b120b; font: 600 15px "Oswald", system-ui, sans-serif; pointer-events: none; }
+.catan-rolled b { font-size: 20px; }

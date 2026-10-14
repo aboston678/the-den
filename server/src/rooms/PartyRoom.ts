@@ -191,9 +191,9 @@ export class PartyRoom extends Room<{ state: PartyState }> {
       this.catan.quit(table, client.sessionId, Date.now());
       afterCatan();
     });
-    this.onMessage(MSG.devCatan, (client, message: { dice?: unknown; give?: unknown }) => {
+    this.onMessage(MSG.devCatan, (client, message: { dice?: unknown; give?: unknown; vp?: unknown }) => {
       if (!devToolsOn()) return;
-      this.catan.dev(client.sessionId, message?.dice, message?.give);
+      this.catan.dev(table, client.sessionId, message?.dice, message?.give, message?.vp === true);
       afterCatan();
     });
     this.clock.setInterval(() => {

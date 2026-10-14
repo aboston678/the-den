@@ -154,17 +154,24 @@ export class Catan {
     return p < 0 ? null : privateView(this.game, p);
   }
 
-  /** Dev and tests: the next roll, and cards from the bank. */
-  dev(id: string, dice: unknown, give: unknown) {
+  /** Dev and tests: the next roll, cards from the bank, and the deck's victory point cards. */
+  dev(table: CatanTable, id: string, dice: unknown, give: unknown, vp = false) {
     if (Array.isArray(dice) && dice.length === 2 && dice.every((d) => Number.isInteger(d) && d >= 1 && d <= 6)) this.forced = [dice[0], dice[1]];
     const p = this.playerIndex(id);
-    if (p < 0 || !this.game || !give || typeof give !== "object") return;
+    if (p < 0 || !this.game) return;
     const pl = this.game.players[p]!;
-    for (const r of RESOURCES) {
-      const n = Math.max(0, Math.min(this.game.bank[r], Number((give as Partial<Hand>)[r]) || 0));
-      this.game.bank[r] -= n;
-      pl.hand[r] += n;
+    if (give && typeof give === "object") {
+      for (const r of RESOURCES) {
+        const n = Math.max(0, Math.min(this.game.bank[r], Number((give as Partial<Hand>)[r]) || 0));
+        this.game.bank[r] -= n;
+        pl.hand[r] += n;
+      }
     }
+    if (vp) {
+      pl.dev.push(...this.game.deck.filter((c) => c === "vp"));
+      this.game.deck = this.game.deck.filter((c) => c !== "vp");
+    }
+    this.sync(table);
   }
 
   /** Test helper: is this game on house dice? (Never sent anywhere.) */

@@ -1,14 +1,16 @@
-import { CATAN_TABLE, generateBoard, rng, type Board } from "@den/shared";
-import { useFrame } from "@react-three/fiber";
+import { CATAN_SEATS, CATAN_TABLE, generateBoard, rng, type Board } from "@den/shared";
+import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import { Color, type Group, InstancedMesh, Matrix4, Mesh, MeshStandardMaterial, Object3D, Vector3 } from "three";
 import { cameraState } from "../state.ts";
 import { boardAtlas, buildBoard } from "./boardMesh.ts";
 import { Dice } from "./Dice.tsx";
 import { installCatanDev } from "./dev.ts";
+import { Picks } from "./Picks.tsx";
 import { HEX, TILE_TOP, edgePos, hexPos, vertexPos } from "./layout.ts";
 import { cityGeometry, robberGeometry, roadGeometry, settlementGeometry } from "./pieceMeshes.ts";
 import { SEAT_COLOURS, useCatan } from "./store.ts";
+import { usePartyStore } from "../../net/party.ts";
 
 // The Catan board on the dining table (GAME_SPEC §16): everyone in the room sees it in 3D. Before
 // the first game a sample board sits there; during a game it shows the real board, every road,
@@ -27,11 +29,16 @@ export function CatanTable() {
   const view = useCatan((s) => s.view);
   const board = view?.board ?? SAMPLE;
   const boardKey = JSON.stringify(board);
-  useEffect(installCatanDev, []);
+  // Numbers face whoever's looking: your chair's way, or from the south side (the room's door) if you're standing.
+  const me = usePartyStore((s) => s.sessionId);
+  const mySeat = useCatan((s) => s.seats.indexOf(me));
+  const yaw = CATAN_SEATS[mySeat]?.yaw ?? CATAN_SEATS[2]!.yaw;
+  const { camera, gl } = useThree();
+  useEffect(() => installCatanDev(camera, gl.domElement), [camera, gl]);
 
   // The fixed board: rebuilt only when a new game deals a new board.
   const meshes = useMemo(() => {
-    const geo = buildBoard(board);
+    const geo = buildBoard(board, yaw);
     const coloured = new Mesh(geo.coloured, new MeshStandardMaterial({ vertexColors: true, roughness: 0.75 }));
     const tex = new MeshStandardMaterial({ map: boardAtlas(), roughness: 0.6 });
     tex.defines = { ...tex.defines, NO_SOFT_MAP: "" };
@@ -39,7 +46,7 @@ export function CatanTable() {
     coloured.receiveShadow = textured.receiveShadow = true;
     return { coloured, textured };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [boardKey]);
+  }, [boardKey, yaw]);
   useEffect(() => () => {
     meshes.coloured.geometry.dispose();
     meshes.textured.geometry.dispose();
@@ -116,6 +123,7 @@ export function CatanTable() {
       <primitive object={pieces.cities} />
       <primitive object={pieces.robber} />
       <Dice />
+      <Picks />
     </group>
   );
 }

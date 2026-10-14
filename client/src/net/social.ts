@@ -11,7 +11,7 @@ export type Board = "fish" | "bowling" | "catan";
 export const BOARDS: { id: Board; label: string; column: string; unit: string; soon?: string }[] = [
   { id: "fish", label: "Fish caught", column: "fish_caught", unit: "fish" },
   { id: "bowling", label: "Bowling", column: "bowling_high_score", unit: "best game" },
-  { id: "catan", label: "Catan", column: "catan_wins", unit: "wins", soon: "Catan opens in Phase 4" },
+  { id: "catan", label: "Catan", column: "catan_wins", unit: "wins" },
 ];
 
 // --- development preview (?mocksocial in a dev build): made-up bears, so the panels can be looked at without signing in ---
@@ -29,6 +29,9 @@ const MOCK_STATS = [
 const MOCK_BOWLING = [
   { userId: "m1", username: "RaptorFan", value: 212 }, { userId: "me", username: "DevBear", value: 168 }, { userId: "m5", username: "Hemlock", value: 131 },
 ];
+const MOCK_CATAN = [
+  { userId: "m2", username: "LunaLover", value: 6 }, { userId: "me", username: "DevBear", value: 4 }, { userId: "m3", username: "BassMaster", value: 1 },
+];
 
 const myId = () => (mockSocial ? "me" : useAuth.getState().userId);
 
@@ -37,7 +40,7 @@ export async function leaderboard(board: Board, scope: "all" | "friends"): Promi
   const me = myId();
   if (mockSocial) {
     const friendIds = new Set(["me", ...MOCK_FRIENDS.filter((f) => f.status === "accepted").map((f) => f.otherId)]);
-    const stats = board === "fish" ? MOCK_STATS : board === "bowling" ? MOCK_BOWLING : [];
+    const stats = board === "fish" ? MOCK_STATS : board === "bowling" ? MOCK_BOWLING : MOCK_CATAN;
     return rankRows(stats.filter((r) => scope === "all" || friendIds.has(r.userId)), me);
   }
   if (!supabase || !me) return [];

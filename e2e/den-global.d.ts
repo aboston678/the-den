@@ -67,7 +67,8 @@ interface Window {
       start: () => void;
       act: (action: import("../shared/src/catan/rules.ts").CatanAction) => void;
       quit: () => void;
-      dev: (dice?: [number, number], give?: Record<string, number>) => void;
+      dev: (dice?: [number, number], give?: Record<string, number>, vp?: boolean) => void;
+      screenOf: (kind: "vertex" | "edge" | "hex", id: number) => { x: number; y: number };
     };
   };
 }

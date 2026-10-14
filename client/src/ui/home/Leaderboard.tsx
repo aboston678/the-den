@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
+import { useCatan } from "../../game/catan/store.ts";
 import { useBowlNews, useFishStore } from "../../net/party.ts";
 import { BOARDS, type Board, type Row, leaderboard } from "../../net/social.ts";
 
 // The leaderboard (GAME_SPEC §14): fish caught, bowling high score, Catan wins; all players or
-// just you and your friends. Refreshes every 20 s while open, and right away when a fish is landed
-// or a game of bowling finishes.
+// just you and your friends. Refreshes every 20 s while open, and right away when a fish is landed,
+// a game of bowling finishes or someone wins at Catan.
 
 export function LeaderboardPanel({ onClose }: { onClose: () => void }) {
   const [board, setBoard] = useState<Board>("fish");
@@ -12,6 +13,7 @@ export function LeaderboardPanel({ onClose }: { onClose: () => void }) {
   const [rows, setRows] = useState<Row[] | null>(null);
   const catches = useFishStore((s) => s.catches.length);
   const games = useBowlNews((s) => s.games.length);
+  const wins = useCatan((s) => s.wins.length);
   const info = BOARDS.find((b) => b.id === board)!;
 
   useEffect(() => {
@@ -23,7 +25,7 @@ export function LeaderboardPanel({ onClose }: { onClose: () => void }) {
       live = false;
       clearInterval(id);
     };
-  }, [board, scope, catches, games]);
+  }, [board, scope, catches, games, wins]);
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
@@ -42,7 +44,7 @@ export function LeaderboardPanel({ onClose }: { onClose: () => void }) {
         {rows === null ? (
           <p className="note">Loading…</p>
         ) : rows.length === 0 ? (
-          <p className="note" data-testid="board-empty">{info.soon ?? `No scores ${scope === "friends" ? "from you or your friends " : ""}yet. ${board === "bowling" ? "Go bowl a game in the basement!" : "Go catch a fish!"}`}</p>
+          <p className="note" data-testid="board-empty">{info.soon ?? `No scores ${scope === "friends" ? "from you or your friends " : ""}yet. ${board === "bowling" ? "Go bowl a game in the basement!" : board === "catan" ? "Go win a game of Catan in the dining room!" : "Go catch a fish!"}`}</p>
         ) : (
           <ol className="board-rows" data-testid="board-rows">
             {rows.map((r) => (
