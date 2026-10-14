@@ -7,6 +7,7 @@ import { catanSend, usePartyStore } from "../../net/party.ts";
 import { consumePress } from "../input/keyboard.ts";
 import { cameraState, playerState } from "../state.ts";
 import { myPlayer, useCatan } from "./store.ts";
+import { openPanel } from "./ui.ts";
 
 // Sitting at the Catan table (GAME_SPEC §16): E next to a free chair asks the server for it; once
 // the server seats you, the bear sits and the camera moves above your side of the board with the
@@ -60,9 +61,13 @@ export function CatanControls() {
         cameraState.freeMouse = true;
         if (document.pointerLockElement) document.exitPointerLock();
       }
+      // Mid-game, getting up means leaving the game, so E asks first.
       const playing = myPlayer(me) >= 0;
-      setPrompt(playing ? null : "Get up");
-      if (!playing && consumePress("KeyE")) catanSend.stand();
+      setPrompt(playing ? "Leave game" : "Get up");
+      if (consumePress("KeyE")) {
+        if (playing) openPanel("leave");
+        else catanSend.stand();
+      }
       return;
     }
 

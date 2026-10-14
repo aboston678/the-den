@@ -1,14 +1,17 @@
-// Starting a game, turn order, and taking a player out when they leave mid-game.
+// Starting a game, turn order, taking a player out when they leave mid-game, and the vote to end a
+// game early (Andrew, GAME_SPEC §16).
 
 import { updateLargestArmy, updateLongestRoad } from "./awards.ts";
 import { BANK_EACH, pay } from "./pieces.ts";
 import { generateBoard, shuffle } from "./board.ts";
 import { EDGES, VERTICES } from "./topology.ts";
-import { RESOURCES, cloneGame, emptyHand, type CatanGame, type DevCard } from "./types.ts";
+import { RESOURCES, cloneGame, emptyHand, type CatanGame, type DevCard, type Phase } from "./types.ts";
 
 export const CATAN_MIN_PLAYERS = 2;
 export const CATAN_MAX_PLAYERS = 4;
 const LOG_KEEP = 40;
+/** How long a vote to end the game stays open. */
+export const END_VOTE_S = 30;
 
 export const DEV_DECK: readonly DevCard[] = [
   ...Array<DevCard>(14).fill("knight"),
@@ -57,6 +60,7 @@ export function newGame(seated: readonly Seated[], rand: () => number): CatanGam
     longestRoad: null,
     largestArmy: null,
     winner: null,
+    endVote: null,
     log: [`Game on: ${seated.map((s) => s.name).join(", ")}`],
   };
 }
@@ -115,7 +119,39 @@ export function startNextTurn(g: CatanGame) {
   g.phase = "roll";
 }
 
-/** Takes a player out (disconnected too long). Their cards go back to the bank; their pieces stay. */
+/** Yes votes that end the game early: more than half of the players still in. */
+export const endVotesNeeded = (g: CatanGame) => Math.floor(activePlayers(g) / 2) + 1;
+
+/** Ends the game once enough players said yes; drops the vote once it can't pass any more. */
+export function settleEndVote(g: CatanGame) {
+  const v = g.endVote;
+  if (!v) return;
+  const still = (i: number) => !g.players[i]!.gone;
+  const yes = v.votes.filter((x, i) => x === true && still(i)).length;
+  const open = v.votes.filter((x, i) => x === null && still(i)).length;
+  const need = endVotesNeeded(g);
+  if (yes >= need) {
+    g.endVote = null;
+    g.phase = "over";
+    g.winner = null;
+    g.offer = null;
+    log(g, "The table voted to end the game");
+  } else if (yes + open < need) {
+    g.endVote = null;
+    log(g, "The vote to end the game didn't pass");
+  }
+}
+
+/** A vote nobody finished in time lapses. */
+export function expireEndVote(g: CatanGame, now: number): CatanGame {
+  if (!g.endVote || now < g.endVote.until || g.phase === "over") return g;
+  const out = cloneGame(g);
+  out.endVote = null;
+  log(out, "The vote to end the game ran out of time");
+  return out;
+}
+
+/** Takes a player out (left, or disconnected too long). Their cards go back to the bank; their pieces stay. */
 export function removePlayer(g: CatanGame, p: number): CatanGame {
   const out = cloneGame(g);
   const pl = out.players[p];
@@ -133,8 +169,11 @@ export function removePlayer(g: CatanGame, p: number): CatanGame {
   if (activePlayers(out) < CATAN_MIN_PLAYERS) {
     out.phase = "over";
     out.winner = null;
+    out.endVote = null;
     return out;
   }
+  settleEndVote(out);
+  if ((out.phase as Phase) === "over") return out;
   if (out.turn === p) {
     if (out.phase === "setup") {
       advanceSetup(out);
@@ -143,6 +182,7 @@ export function removePlayer(g: CatanGame, p: number): CatanGame {
       out.freeRoads = 0;
       out.offer = null;
       out.stealFrom = [];
+      out.discards = out.discards.map(() => 0);
       nextTurn(out);
       out.phase = "roll";
     }

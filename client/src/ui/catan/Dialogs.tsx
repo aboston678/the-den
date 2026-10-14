@@ -4,6 +4,7 @@ import { catanSend } from "../../net/party.ts";
 import { isHeld } from "../../game/input/keyboard.ts";
 import { closeAll } from "../../game/catan/ui.ts";
 import { Card, Chip, Picker, RESOURCES, RESOURCE_LABELS, total } from "./common.tsx";
+import { endedByVote } from "./Leave.tsx";
 
 // The Catan HUD's pop-ups (GAME_SPEC §16): discarding after a 7, picking who to rob, Year of
 // Plenty and Monopoly, the table before a game starts, and the end of the game.
@@ -109,6 +110,7 @@ export function GameOver({ view, me, onClose }: { view: CatanView; me: number; o
     <div className="catan-panel catan-over" data-testid="catan-over">
       <button type="button" className="close" data-testid="catan-over-close" onClick={onClose}>×</button>
       <h2>{w === null ? "Game over" : w === me ? "You win!" : `${view.players[w]!.name} wins!`}</h2>
+      {endedByVote(view) && <p className="note" data-testid="catan-over-vote">Game ended by vote. No winner this time.</p>}
       <div className="final">
         {view.players
           .map((p, i) => ({ p, vp: view.finalVp?.[i] ?? p.vp }))

@@ -6,6 +6,7 @@ import { closeAll, useCatanUi } from "../game/catan/ui.ts";
 import { playerState } from "../game/state.ts";
 import { usePartyStore } from "../net/party.ts";
 import { Discard, GameOver, Lobby, Monopoly, Steal, Waiting, YearOfPlenty } from "./catan/Dialogs.tsx";
+import { EndVote, GameMenu, LeaveConfirm } from "./catan/Leave.tsx";
 import { Players } from "./catan/Players.tsx";
 import { OfferCard, TradePanel } from "./catan/Trade.tsx";
 import { Actions, DevCards, Hand, statusLine } from "./catan/Turn.tsx";
@@ -64,6 +65,7 @@ export function CatanHud() {
     return (
       <div className="catan-hud watching" data-testid="catan-hud">
         <div className="catan-status">{statusLine(view, -1)}</div>
+        {view.endVote && <div className="catan-status">Voting on ending the game…</div>}
         <Players view={view} me={-1} compact />
       </div>
     );
@@ -101,6 +103,9 @@ export function CatanHud() {
         </>
       )}
       {view && running && <OfferCard view={view} mine={mine} me={index} />}
+      {view && running && index >= 0 && <GameMenu view={view} />}
+      {view && running && <EndVote view={view} me={index} />}
+      {view && running && index >= 0 && panel === "leave" && <LeaveConfirm view={view} />}
       {error && now - error.at < ERROR_MS && <div className="catan-error" data-testid="catan-error">{error.text}</div>}
       {tick && <div className="catan-tick" />}
     </div>

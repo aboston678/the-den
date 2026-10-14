@@ -1,5 +1,5 @@
 import {
-  CATAN_MAX_PLAYERS, CATAN_MIN_PLAYERS, CATAN_RECONNECT_S, CATAN_SEATS, SIT_REACH, apply, newGame, parseAction, privateView, publicView, removePlayer,
+  CATAN_MAX_PLAYERS, CATAN_MIN_PLAYERS, CATAN_RECONNECT_S, CATAN_SEATS, SIT_REACH, apply, expireEndVote, newGame, parseAction, privateView, publicView, removePlayer,
   type CatanGame, type CatanPrivate, type Hand, RESOURCES,
 } from "@den/shared";
 import { rollDice } from "@den/shared/catan-dice";
@@ -56,10 +56,11 @@ export class Catan {
     return true;
   }
 
-  /** Get up. Not while you're playing a game that's still going (quit it first). */
-  stand(table: CatanTable, id: string): boolean {
+  /** Get up. Mid-game that means leaving the game (the browser asks first). */
+  stand(table: CatanTable, id: string, now = Date.now()): boolean {
     const seat = table.seats.indexOf(id);
-    if (seat < 0 || this.playerIndex(id) >= 0) return false;
+    if (seat < 0) return false;
+    this.quit(table, id, now);
     table.seats[seat] = "";
     return true;
   }
@@ -85,10 +86,13 @@ export class Catan {
   act(table: CatanTable, id: string, raw: unknown, now: number): string | null {
     const p = this.playerIndex(id);
     if (!this.game || p < 0) return "You're not in this game";
-    if (this.dropped.size > 0) return "Waiting for a player to reconnect";
     const action = parseAction(raw);
     if (!action) return "That move doesn't make sense";
+    // While the table waits for someone to reconnect, the only thing to do is vote to stop.
+    const vote = action.type === "proposeEnd" || action.type === "voteEnd";
+    if (this.dropped.size > 0 && !vote) return "Waiting for a player to reconnect";
     const ctx = {
+      now,
       rand: this.rand,
       roll: () => {
         const dice = this.forced ?? rollDice(this.house ? "house" : "fair", this.rand);
@@ -133,6 +137,13 @@ export class Catan {
   /** Removes players who didn't come back in time; returns a finished game once. */
   tick(table: CatanTable, now: number): CatanResult | null {
     for (const [id, until] of this.dropped) if (now >= until) this.quit(table, id, now);
+    if (this.game?.endVote) {
+      const g = expireEndVote(this.game, now);
+      if (g !== this.game) {
+        this.game = g;
+        this.sync(table);
+      }
+    }
     const g = this.game;
     if (!g || g.phase !== "over" || this.reported) return null;
     this.reported = true;

@@ -3,7 +3,7 @@
 // `ctx.roll`, so the rules never know or care how the server rolls them.
 
 import { updateLargestArmy, updateLongestRoad } from "./awards.ts";
-import { advanceSetup, log, setupOrder, startNextTurn } from "./game.ts";
+import { END_VOTE_S, advanceSetup, log, settleEndVote, setupOrder, startNextTurn } from "./game.ts";
 import { COSTS, WIN_VP, canRoad, canSettle, has, pay, piecesLeft, robbable, totalVp, tradeRatios } from "./pieces.ts";
 import { EDGES, HEXES, HEX_VERTICES, VERTEX_HEXES, VERTICES } from "./topology.ts";
 import { RESOURCES, TERRAIN_RESOURCE, cloneGame, emptyHand, handSize, type CatanGame, type DevCard, type Hand, type Phase, type Resource, type TradeReply } from "./types.ts";
@@ -28,11 +28,15 @@ export type CatanAction =
   | { type: "reply"; offer: number; reply: TradeReply }
   | { type: "confirmTrade"; with: number }
   | { type: "cancelOffer" }
-  | { type: "endTurn" };
+  | { type: "endTurn" }
+  | { type: "proposeEnd" }
+  | { type: "voteEnd"; yes: boolean };
 
 export interface RuleContext {
   rand: () => number;
   roll: () => [number, number];
+  /** Clock (ms) for the vote to end the game; tests can leave it out. */
+  now?: number;
 }
 
 export type ApplyResult = { ok: true; game: CatanGame } | { ok: false; error: string };
@@ -63,7 +67,10 @@ export function parseAction(raw: unknown): CatanAction | null {
     case "playRoadBuilding":
     case "cancelOffer":
     case "endTurn":
+    case "proposeEnd":
       return { type: a.type };
+    case "voteEnd":
+      return typeof a.yes === "boolean" ? { type: a.type, yes: a.yes } : null;
     case "placeSettlement":
     case "buildSettlement":
     case "buildCity":
@@ -332,6 +339,20 @@ function run(g: CatanGame, p: number, a: CatanAction, ctx: RuleContext) {
     case "endTurn": {
       check(mine && g.phase === "main", "You can't end your turn now");
       startNextTurn(g);
+      return;
+    }
+    case "proposeEnd": {
+      check(!g.endVote, "There's already a vote going");
+      g.endVote = { by: p, votes: g.players.map((_, i) => (i === p ? true : null)), until: (ctx.now ?? 0) + END_VOTE_S * 1000 };
+      log(g, `${pl.name} wants to end the game`);
+      settleEndVote(g);
+      return;
+    }
+    case "voteEnd": {
+      check(g.endVote, "There's no vote going");
+      check(g.endVote.votes[p] === null, "You've already voted");
+      g.endVote.votes[p] = a.yes;
+      settleEndVote(g);
       return;
     }
   }

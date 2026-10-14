@@ -4,7 +4,7 @@
 
 import { longestRoad } from "./awards.ts";
 import { piecesLeft, publicVp, totalVp } from "./pieces.ts";
-import { handSize, type Board, type Building, type CatanGame, type DevCard, type Hand, type Phase, type TradeOffer } from "./types.ts";
+import { handSize, type Board, type Building, type CatanGame, type EndVote, type DevCard, type Hand, type Phase, type TradeOffer } from "./types.ts";
 
 export interface PublicPlayer {
   id: string;
@@ -43,6 +43,8 @@ export interface CatanView {
   longestRoad: number | null;
   largestArmy: number | null;
   winner: number | null;
+  /** A vote to end the game early, if one is going. */
+  endVote: EndVote | null;
   /** Final scores (with VP cards) once the game is over. */
   finalVp: number[] | null;
   log: string[];
@@ -91,6 +93,7 @@ export function publicView(g: CatanGame): CatanView {
     longestRoad: g.longestRoad,
     largestArmy: g.largestArmy,
     winner: g.winner,
+    endVote: g.endVote,
     finalVp: g.phase === "over" ? g.players.map((_, i) => totalVp(g, i)) : null,
     log: g.log,
   };

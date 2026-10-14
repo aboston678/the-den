@@ -7,7 +7,7 @@ import { useCatan } from "./store.ts";
 // and which panels are open. The board's click markers (Picks.tsx) and the HUD both read it.
 
 export type Tool = "road" | "settlement" | "city" | null;
-export type Panel = "trade" | "yearOfPlenty" | "monopoly" | null;
+export type Panel = "trade" | "yearOfPlenty" | "monopoly" | "leave" | null;
 
 export const useCatanUi = create<{ tool: Tool; panel: Panel }>(() => ({ tool: null, panel: null }));
 

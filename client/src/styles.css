@@ -685,3 +685,6 @@ body.catan-seated .controls-hint { display: none; }
 .catan-pick .pm button { padding: 1px 8px !important; }
 .catan-rolled { position: absolute; top: 58px; left: 50%; translate: -50% 0; padding: 5px 14px; border-radius: 8px; background: rgb(246 236 210 / 0.95); color: #1b120b; font: 600 15px "Oswald", system-ui, sans-serif; pointer-events: none; }
 .catan-rolled b { font-size: 20px; }
+.catan-menu { position: absolute; top: 14px; right: 14px; display: flex; gap: 6px; }
+.catan-menu button { padding: 5px 10px !important; font-size: 12px !important; background: rgb(20 26 22 / 0.7) !important; }
+.catan-vote { left: 50%; top: 110px; translate: -50% 0; width: 440px; display: grid; gap: 8px; border: 2px solid var(--ember); }

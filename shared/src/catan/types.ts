@@ -67,6 +67,13 @@ export interface TradeOffer {
   replies: Record<number, TradeReply>;
 }
 
+/** A vote to end the game early: who called it, each player's answer (null = not yet), and when it lapses (ms). */
+export interface EndVote {
+  by: number;
+  votes: (boolean | null)[];
+  until: number;
+}
+
 export type Phase = "setup" | "roll" | "discard" | "robber" | "steal" | "main" | "over";
 
 export interface CatanGame {
@@ -103,6 +110,7 @@ export interface CatanGame {
   longestRoad: number | null;
   largestArmy: number | null;
   winner: number | null;
+  endVote: EndVote | null;
   log: string[];
 }
 

@@ -209,3 +209,65 @@ test("two bears play Catan; a third watches", async ({ page: ann, browser }) => 
   await expect.poll(async () => (await state(winner)).seats.includes(turnId), { timeout: 15_000 }).toBe(false);
   await expect.poll(() => winner.evaluate(() => window.__den!.player.action), { timeout: 15_000 }).toBe("celebrate");
 });
+
+// Stopping early (Andrew, GAME_SPEC §16): leave with a confirm, or a majority vote to end the game.
+test("players can leave a game, or vote to end it", async ({ page: ann, browser }) => {
+  test.setTimeout(300_000);
+  failOnErrors(ann);
+  const code = await hostGame(ann, "Ann");
+  const bob = await newPlayer(browser);
+  await joinGame(bob, code, "Bob");
+  await waitForBear(bob);
+  const cat = await newPlayer(browser);
+  await joinGame(cat, code, "Cat");
+  await waitForBear(cat);
+  await sitDown(ann, 2);
+  await sitDown(bob, 0);
+  await sitDown(cat, 1);
+  const catId = (await state(ann)).seats[1]!;
+  await ann.getByTestId("catan-start").click();
+  await expect.poll(async () => (await view(ann))?.phase).toBe("setup");
+
+  // A vote that fails: Ann calls it (2 of 3 needed), Bob and Cat say no.
+  await ann.getByTestId("catan-vote-end").click();
+  await expect(bob.getByTestId("catan-end-vote")).toContainText("Ann wants to end the game");
+  await expect(bob.getByTestId("catan-end-vote")).toContainText("1 of 2");
+  await expect(ann.getByTestId("catan-end-vote")).toContainText("You voted yes");
+  await bob.waitForTimeout(600);
+  await shot(bob, "9-vote");
+  await bob.getByTestId("catan-vote-no").click();
+  await cat.getByTestId("catan-vote-no").click();
+  await expect(ann.getByTestId("catan-end-vote")).toBeHidden();
+  expect((await view(ann)).phase).toBe("setup");
+
+  // E asks before getting up mid-game; Keep playing stays seated.
+  await expect.poll(async () => (await state(bob)).prompt).toBe("Leave game");
+  await bob.keyboard.press("e");
+  await expect(bob.getByTestId("catan-leave-confirm")).toBeVisible();
+  await bob.getByTestId("catan-leave-cancel").click();
+  await expect(bob.getByTestId("catan-leave-confirm")).toBeHidden();
+  expect((await view(ann)).players.every((p) => !p.gone)).toBe(true);
+
+  // Cat leaves with the button: out of the game and out of the chair; the others play on.
+  await cat.getByTestId("catan-leave").click();
+  await cat.waitForTimeout(400);
+  await shot(cat, "10-leave-confirm");
+  await cat.getByTestId("catan-leave-go").click();
+  await expect.poll(async () => (await view(ann)).players.find((p) => p.id === catId)?.gone).toBe(true);
+  await expect.poll(async () => (await state(ann)).seats[1]).toBe("");
+  expect((await view(ann)).phase).not.toBe("over");
+
+  // Ann calls a vote again; with 2 left, Bob's yes ends it with no winner.
+  await ann.getByTestId("catan-vote-end").click();
+  await bob.getByTestId("catan-vote-yes").click();
+  await expect.poll(async () => (await view(ann)).phase).toBe("over");
+  expect((await view(ann)).winner).toBeNull();
+  for (const p of [ann, bob]) await expect(p.getByTestId("catan-over-vote")).toBeVisible();
+  await bob.waitForTimeout(500);
+  await shot(bob, "11-ended-by-vote");
+
+  // Both can get up again.
+  await expect.poll(async () => (await state(bob)).prompt).toBe("Get up");
+  await bob.keyboard.press("e");
+  await expect.poll(async () => (await state(ann)).seats[0]).toBe("");
+});

@@ -84,12 +84,29 @@ describe("catan table: starting", () => {
     expect(catan.start(t, "s1", players, false)).toBe(false); // already running
   });
 
-  it("players in a game can't stand up; watchers can", () => {
+  it("getting up mid-game leaves the game: cards back to the bank, the others play on", () => {
+    const x = started(["Ann", "Bob", "Cat"]);
+    setup(x);
+    const before = view(x.t);
+    const cards = before.players.find((p) => p.id === "s0")!.cards;
+    const bankTotal = (b: CatanView["bank"]) => Object.values(b).reduce((a, n) => a + n, 0);
+    expect(x.catan.stand(x.t, "s0", 0)).toBe(true);
+    const v = view(x.t);
+    const ann = v.players.find((p) => p.id === "s0")!;
+    expect([...x.t.seats]).toEqual(["", "s1", "s2", ""]);
+    expect(ann.gone).toBe(true);
+    expect(ann.cards).toBe(0);
+    expect(bankTotal(v.bank)).toBe(bankTotal(before.bank) + cards);
+    expect(v.phase).not.toBe("over");
+    expect(x.catan.privateFor("s0")).toBeNull();
+  });
+
+  it("with 2 players, getting up ends the game with no winner", () => {
     const x = started(["Ann", "Bob"]);
-    expect(x.catan.stand(x.t, "s0")).toBe(false);
-    x.catan.quit(x.t, "s0", 0);
+    expect(x.catan.stand(x.t, "s1", 0)).toBe(true);
     expect(view(x.t).phase).toBe("over");
-    expect(x.catan.stand(x.t, "s0")).toBe(true);
+    expect(x.catan.tick(x.t, 0)!.winnerId).toBeNull();
+    expect(x.catan.stand(x.t, "s0", 0)).toBe(true);
   });
 
   it("only the player whose turn it is can move, and bad moves say why", () => {
@@ -172,6 +189,37 @@ describe("catan table: what gets sent", () => {
     const red = (t: number[]) => t[6]! + t[8]!;
     expect(rare(totals.house)).toBeGreaterThan(red(totals.house) * 3);
     expect(red(totals.fair)).toBeGreaterThan(rare(totals.fair) * 3);
+  });
+});
+
+describe("catan table: voting to end", () => {
+  it("a majority ends the game with no winner, reported once (so nothing is saved)", () => {
+    const x = started(["Ann", "Bob", "Cat"]);
+    expect(x.catan.act(x.t, "s2", { type: "proposeEnd" }, 1000)).toBeNull();
+    expect(view(x.t).endVote?.votes).toEqual(view(x.t).players.map((p) => (p.id === "s2" ? true : null)));
+    expect(x.catan.act(x.t, "s0", { type: "voteEnd", yes: true }, 2000)).toBeNull();
+    expect(view(x.t).phase).toBe("over");
+    const r = x.catan.tick(x.t, 2000)!;
+    expect(r.winnerId).toBeNull();
+    expect(x.catan.tick(x.t, 2000)).toBeNull();
+  });
+
+  it("a vote lapses after 30 s on the server's clock", () => {
+    const x = started(["Ann", "Bob", "Cat"]);
+    x.catan.act(x.t, "s1", { type: "proposeEnd" }, 1000);
+    x.catan.tick(x.t, 30_999);
+    expect(view(x.t).endVote).not.toBeNull();
+    x.catan.tick(x.t, 31_000);
+    expect(view(x.t).endVote).toBeNull();
+    expect(view(x.t).phase).toBe("setup");
+  });
+
+  it("you can vote while the table waits for someone to reconnect", () => {
+    const x = started(["Ann", "Bob", "Cat"]);
+    x.catan.drop(x.t, "s2", 0);
+    expect(x.catan.act(x.t, "s0", { type: "proposeEnd" }, 100)).toBeNull();
+    expect(x.catan.act(x.t, "s1", { type: "voteEnd", yes: true }, 200)).toBeNull();
+    expect(view(x.t).phase).toBe("over");
   });
 });
 
