@@ -3,7 +3,7 @@
 Claude Code updates this file after every milestone: tick the box, add a short note, and say what's next.
 **[ANDREW APPROVES]** = stop, show Andrew, and wait for his OK.
 
-**Current status:** Phase 3 (bowling alley) is **live** (main = f372e02, 2026-10-13); Andrew approved it. Waiting on Andrew + a friend to bowl together online (the last part of 3.4, and 2.7's two-computer test with it). Then Phase 4 (Catan). 676.75 credits left. Railway trial ends ~2026-11-11: Andrew needs to pick a plan before then.
+**Current status:** Phase 3 (bowling alley) is **live** (main = f372e02, 2026-10-13); Andrew approved it. Waiting on Andrew + a friend to bowl together online (the last part of 3.4, and 2.7's two-computer test with it). **Phase 4 (Catan) in progress** on branch `phase-4` (plan: `docs/phase-4-plan.md`, approved 2026-10-14). 676.75 credits left. Railway trial ends ~2026-11-11: Andrew needs to pick a plan before then.
 
 ---
 
@@ -72,6 +72,7 @@ Run like Phase 2 (Andrew, 2026-10-13): build 3.1 → 3.3 straight through on bra
   - 2026-10-13: Leaderboard's Bowling tab is live (best game per bear; refreshes when a game finishes); `e2e/social.spec.ts` checks it with made-up bears. Medium @1080p in the alley: 60 fps, ≤238 draw calls (`e2e/perf.spec.ts` has two alley spots now). Review video: `npx playwright test e2e/tools-bowling-video.spec.ts` (copy in `review/bowling/`, not in git). Full browser suite 2026-10-13: 49/49 pass (two failed in the long run and passed straight after: the alley tour was hit by a code reload mid-test, and the two-bear fishing test's 5 s wait for the other bear to see the bite timed out once under load; keep an eye on it). Andrew play-tested and approved 2026-10-13 ("everything is perfect"); his one request, his strike sound for the pins, is in (`pin-strike`). Deployed 2026-10-13: `phase-3` fast-forwarded into main (f372e02); Railway `/health` shows it, Vercel serves the alley's mural and the strike sound; the online sign-in test passes (party tests need the development name box, so they can't run online). Waiting on: **Andrew + a friend bowl together online** (sign in with Google, both join a lane, finish a game, see the high score on the leaderboard).
 
 ## Phase 4: Catan
+Run like Phase 3 (Andrew, 2026-10-14): 4.1 → 4.3 straight through on branch `phase-4` (commit + push after each), screenshots once the board is on the table, one play-test review at 4.4 before it goes live. Plan: `docs/phase-4-plan.md`. Twist: secret "house dice" (GAME_SPEC §16).
 - [ ] **4.1 Rules engine** in `/shared` with thorough unit tests.
 - [ ] **4.2 Table + board presentation,** sitting/standing at the 4 dining chairs, board camera.
 - [ ] **4.3 Turn UI:** build, trade (players, bank, harbors), development cards, robber, discards.
@@ -124,6 +125,9 @@ Starting balance: 1,210 (2026-10-11)
 ## Decision log
 | Date | Decision | Why |
 |---|---|---|
+| 2026-10-14 | Catan "house dice": a secret switch (hold H while clicking Start game) makes the dice flipped (2/12 as common as 6/8 normally are, 6/8 as rare as 2/12; 7 unchanged). Board, tokens and dots stay standard. Off by default, off again after each game, flag kept only on the server, no reveal, wins count (GAME_SPEC §16) | Andrew: a prank on a friend who'll build on 6s and 8s |
+| 2026-10-14 | Seated Catan players get 60 s to reconnect (everyone else keeps 30 s) | GAME_SPEC §16 already said 60 s; the room used 30 s for everyone |
+| 2026-10-14 | Phase 4 runs as one batch like Phase 3: build 4.1–4.3 on `phase-4`, screenshots at 4.2, one review at 4.4 | Andrew's call |
 | 2026-10-13 | Pin crash sound = Andrew's pick, a YouTube "Bowling Strike" sound effect (licence unknown; Andrew's call), replacing the made-up crash | Andrew: "the only request" after play-testing Phase 3; logged in docs/ASSETS.md |
 | 2026-10-13 | Bowling aim arrow ±3° (not ±6°); luck = aim ±0.15–0.45° by power, speed ±3%, curve ±5% (GAME_SPEC §15 updated) | ±6° pointed mostly into the gutters; the first luck setting (±1.2°) made pocket hits a coin toss, so skill now matters most |
 | 2026-10-13 | The bear's bowl is the crouch-and-release part (3.4–5.05 s) of the Bowl clip, no new clip bought | The rest of Crouch_Charge_and_Throw is an overhead throw; this part reads as a bowling release |
