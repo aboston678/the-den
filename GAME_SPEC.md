@@ -300,6 +300,7 @@ Weight = min + (max − min) × r^2.2 (r random 0–1), so big fish are rare. Fi
   - Trading: player-to-player offers (propose, accept, decline, counter) on your turn; bank 4:1; harbors 3:1 / 2:1.
   - Win at 10 VP on your own turn.
 - If a player disconnects: pause up to 60 s for reconnect, then remove them and continue (end the game if fewer than 2 remain).
+- **Leaving and ending early (Andrew, 2026-10-14).** Any player can leave mid-game (Leave game, or E to get up, with a confirm): their cards go back to the bank, their pieces stay, play continues (ends with no winner if fewer than 2 remain). Any player can call a **vote to end the game**: if more than half of the players still in vote yes, the game ends for everyone with no winner and no leaderboard change; a vote lapses after 30 s.
 - **House dice (Andrew, 2026-10-14).** A secret switch for a prank: hold **H** while clicking Start game. The board, number tokens, dots and the 6/8 rule stay standard; only the dice change, to a flipped table (out of 36 rolls: 2→5, 3→4, 4→3, 5→2, 6→1, 7→6, 8→1, 9→2, 10→3, 11→4, 12→5). Off by default and off again when the game ends. Only the person who flipped it sees a brief tiny tick; the flag and the weights stay on the server and never reach any browser. No reveal at the end; wins count on the leaderboard as normal.
 - Win → **Catan wins** +1, celebrate clip.
 
