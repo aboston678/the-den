@@ -73,7 +73,8 @@ Run like Phase 2 (Andrew, 2026-10-13): build 3.1 → 3.3 straight through on bra
 
 ## Phase 4: Catan
 Run like Phase 3 (Andrew, 2026-10-14): 4.1 → 4.3 straight through on branch `phase-4` (commit + push after each), screenshots once the board is on the table, one play-test review at 4.4 before it goes live. Plan: `docs/phase-4-plan.md`. Twist: secret "house dice" (GAME_SPEC §16).
-- [ ] **4.1 Rules engine** in `/shared` with thorough unit tests.
+- [x] **4.1 Rules engine** in `/shared` with thorough unit tests.
+  - Built 2026-10-14. `shared/src/catan/`: board shape (`topology.ts`: 19 hexes, 54 corners, 72 edges, 9 harbor slots), random board with 6/8 never touching (`board.ts`), every move checked in `rules.ts` (`apply(game, player, move, {rand, roll})` returns a new game or the reason it's refused; `parseAction` checks what a browser sends), setup snake order, production with the bank-shortage rule, 7s (discard, robber, steal), building with distance rule and piece limits, bank/harbor/player trades with counter-offers, development cards, longest road (broken by opponents) and largest army (ties keep the holder), win at 10 on your own turn, a player leaving mid-game (`game.ts`), and what each screen may see (`view.ts`: nobody's browser gets other hands or the deck). Dice in `dice.ts`, fair + house; only the server can import it (`@den/shared/catan-dice`, not in the package index). Tests: 63 rules/board/dice tests (fair and house dice checked over 360,000 rolls each) + 200 random bot games with fair and house dice that all finish without a card lost or invented. Next: 4.2 table, board and sitting.
 - [ ] **4.2 Table + board presentation,** sitting/standing at the 4 dining chairs, board camera.
 - [ ] **4.3 Turn UI:** build, trade (players, bank, harbors), development cards, robber, discards.
 - [ ] **4.4 Multiplayer, reconnect, spectators, wins to leaderboard. Deploy + friend test.** **[ANDREW APPROVES]**
