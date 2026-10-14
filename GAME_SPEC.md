@@ -143,7 +143,7 @@ Base + 14 extra clips ≈ 47.5 + 112 = **~160 credits**.
 | Y | Roar |
 | B | Dance |
 | F | Flashlight on/off |
-| Left mouse | Cast (hold to charge, release) · bowling throw |
+| Left mouse | Cast (hold to charge, release) · bowling: click to stop the power meter, then the curve meter |
 | R (spam) | Reel in a hooked fish |
 | Scroll | Camera zoom |
 | Tab (hold) | Party list |
@@ -268,11 +268,14 @@ Weight = min + (max − min) × r^2.2 (r random 0–1), so big fish are rare. Fi
 ## 15. Bowling alley (Phase 3)
 
 - **Build:** two side-by-side lanes running west→east (bowler at the west end) with gutters, foul line, arrows/dots, ball return between the lanes, ball rack with a few ball colors, pinsetter area with sweep bar, overhead score monitors, lounge seating. Regulation proportions × 1.25. Pins = lathe geometry from a regulation pin profile.
-- **Physics (Rapier):** realistic masses (ball ~7 kg, pins ~1.6 kg), low friction on the oiled front ~2/3 of the lane and higher friction on the dry back end so a spinning ball hooks late, like real bowling.
-- **Controls (Wii-Bowling feel for a mouse):**
+- **Look:** modelled on Andrew's reference photo (`reference/bowling/alley-inspiration.jpg`; look only, none of its names or wordmarks): wood lanes on a platform one step up, a ball return with a twin-screen kiosk between the lanes, three screens hung over the foul line (left and right = each lane's scorecard, middle = a painted summer-woods picture, also used as the mural behind the pins), a glowing blue strip under the pin decks, and a lounge with shoe cubbies + ball shelves, a leather sofa, a navy armchair and a copper high-top table with stools.
+- **Physics:** the ball's trip down the lane uses a small hand-written ball model (slide → hook → roll): low friction on the oiled front ~2/3 and higher friction on the dry back end, so a spinning ball hooks late. At the pins a separate Rapier world takes over for the crash (ball ~7 kg, pins ~1.6 kg, fixed 120 Hz steps so it doesn't depend on frame rate). Both run in unit tests so strike rates can be tuned (changed 2026-10-13: a reliable, tunable hook).
+- **Controls (meters, golf-game style; Andrew 2026-10-13):**
   1. Position: A/D slides the bear left/right on the approach.
   2. Aim: move the mouse left/right to swing the aim arrow (±6°).
-  3. Throw: hold left mouse to start the approach/backswing, pull the mouse back then push it forward and release. Forward mouse speed = ball speed. Sideways mouse drift at release = spin direction and amount.
+  3. Power: click to start a bouncing POWER meter, click again to stop it.
+  4. Curve: a CURVE meter then swings left ↔ right; click to stop it (middle = straight, ends = big hook either way).
+  - **Variability:** where you stop the meters is the skill; on top of that there's a small random scatter in aim (bigger the harder you throw), a little wobble on the curve, and tiny random nudges to the pins, so the same throw doesn't always leave the same pins.
 - **Pinsetter:** after the first ball, sweep fallen pins; after the frame, reset all 10. Ball comes back on the return ~5 s later.
 - **Scoring:** standard ten-pin, 10 frames, strike/spare bonuses, 10th frame up to 3 balls, max 300. Overhead monitor shows each lane's scorecard. Big "STRIKE!" / "SPARE!" banners and sounds; bear celebrates on a strike.
 - **Turns:** 1–4 bears per lane (E at that lane's ball rack to join before or between games). Others can watch.

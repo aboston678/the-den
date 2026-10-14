@@ -3,7 +3,7 @@
 Claude Code updates this file after every milestone: tick the box, add a short note, and say what's next.
 **[ANDREW APPROVES]** = stop, show Andrew, and wait for his OK.
 
-**Current status:** Phase 2 + the cartoon remake are **live** (main = 30dc3c2, 2026-10-13). Waiting on Andrew + a friend to play it from two computers (the last part of 2.7). Then Phase 3 (bowling alley). 677 credits left. Railway trial ends ~2026-11-11: Andrew needs to pick a plan before then.
+**Current status:** Phase 3 (bowling alley) under way on branch `phase-3` (2026-10-13). Phase 2 + the cartoon remake are live (main = 30dc3c2); still waiting on Andrew + a friend to play it from two computers (the last part of 2.7). 677 credits left. Railway trial ends ~2026-11-11: Andrew needs to pick a plan before then.
 
 ---
 
@@ -61,6 +61,7 @@ Run as one batch (Andrew, 2026-10-12; full plan in `docs/phase-2-plan.md`): all 
   - Deployed 2026-10-13: `phase-2` fast-forwarded into main (commit 30dc3c2); Railway `/health` shows it, Vercel serves the new build (cartoon bear on the home screen, checked by screenshot). Before merging: full e2e suite locally (all pass after two fixes: the cartoon bear's own walk/run playback speeds, and the house tour now stands clear of furniture). Online: sign-in and intro tests pass; tests that create a party need the development-only name box, so they can't run against the live site (Google sign-in required). Waiting on: **Andrew + a friend play it from two computers** (sign in with Google, party up, walk, fish, check the leaderboard and friends).
 
 ## Phase 3: Bowling alley
+Run like Phase 2 (Andrew, 2026-10-13): build 3.1 → 3.3 straight through on branch `phase-3` (commit + push after each), screenshots to Andrew once the alley is built, one play-test review at 3.4 before it goes live. Plan: `docs/phase-3-plan.md`. Look: `reference/bowling/alley-inspiration.jpg`.
 - [ ] **3.1 Build the alley:** 2 lanes, gutters, ball return, rack, pinsetter, overhead monitors, lounge.
 - [ ] **3.2 Physics + throw controls:** position/aim/throw, spin and late hook, tuned until it feels like Wii Bowling.
 - [ ] **3.3 Turns, scoring (unit-tested), sync, celebrations.**
@@ -118,6 +119,9 @@ Starting balance: 1,210 (2026-10-11)
 ## Decision log
 | Date | Decision | Why |
 |---|---|---|
+| 2026-10-13 | Bowling throw uses meters (A/D position, mouse aim, click to stop a POWER meter, click to stop a CURVE meter) instead of a mouse swing gesture (GAME_SPEC §6, §15 updated) | Andrew's pick; easy and repeatable on a laptop trackpad |
+| 2026-10-13 | Bowling physics: hand-written ball model down the lane (oil → hook), Rapier only for the ball-and-pin crash, at fixed 120 Hz steps (GAME_SPEC §15 updated) | The hook stays reliable and tunable, the crash looks real, and both run in unit tests |
+| 2026-10-13 | Phase 3 runs like Phase 2: build straight through, screenshots after the alley, one review at 3.4 | Andrew's call |
 | 2026-10-13 | **Cartoon art style becomes the game's look** (GAME_SPEC §1, §2, §5.1b, §17); realistic kept as a Settings option | Andrew wasn't happy with the realistic graphics and loved the cartoon concept pictures; a browser on a laptop can make a bright cartoon look polished far more easily than photoreal |
 | 2026-10-13 | Forest pop-in fix: copies dissolve between detail levels; shadow box ahead of the camera; furniture shaders prepared at load | Andrew: "everything loads in as you run by it" |
 | 2026-10-13 | Cartoon bear is an original design, not the film bear Andrew showed | We don't copy existing copyrighted characters; the design keeps the qualities he liked (pear shape, no neck, goofy grin) |
