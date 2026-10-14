@@ -5,6 +5,7 @@ import { closePlayers, failOnErrors, hostGame, joinGame, newPlayer, waitForBear 
 // Tool: watch a bear sit in a Catan chair from the side, over time (tuning the sit spot and clips).
 //   SEAT=1 npx playwright test e2e/tools-catan-sit.spec.ts   -> test-results/catan-sit/*.png
 
+test.skip(!process.env.SEAT, "dev tool: set SEAT=0..3 to run");
 test.afterEach(closePlayers);
 
 test("a bear sitting down, seen from the side", async ({ page, browser }) => {

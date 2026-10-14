@@ -3,7 +3,7 @@
 Claude Code updates this file after every milestone: tick the box, add a short note, and say what's next.
 **[ANDREW APPROVES]** = stop, show Andrew, and wait for his OK.
 
-**Current status:** Phase 3 (bowling alley) is **live** (main = f372e02, 2026-10-13); Andrew approved it. Waiting on Andrew + a friend to bowl together online (the last part of 3.4, and 2.7's two-computer test with it). **Phase 4 (Catan) in progress** on branch `phase-4` (plan: `docs/phase-4-plan.md`, approved 2026-10-14). 676.75 credits left. Railway trial ends ~2026-11-11: Andrew needs to pick a plan before then.
+**Current status:** Phase 3 (bowling alley) is **live** (main = f372e02, 2026-10-13); Andrew approved it. Waiting on Andrew + a friend to bowl together online (the last part of 3.4, and 2.7's two-computer test with it). **Phase 4 (Catan) built** on branch `phase-4` (plan: `docs/phase-4-plan.md`): waiting on Andrew's play-test, then deploy. 676.75 credits left. Railway trial ends ~2026-11-11: Andrew needs to pick a plan before then.
 
 ---
 
@@ -80,7 +80,7 @@ Run like Phase 3 (Andrew, 2026-10-14): 4.1 → 4.3 straight through on branch `p
 - [x] **4.3 Turn UI:** build, trade (players, bank, harbors), development cards, robber, discards.
   - Built 2026-10-14 (review at 4.4). HUD (`client/src/ui/CatanHud.tsx`, `ui/catan/`): scoreboard (points, cards, dev cards, knights, road, Longest Road / Largest Army), a line saying what the table is waiting for, your cards, Road/Settlement/City/Dev card buttons with costs (greyed out when you can't), glowing spots on the board to click (`Picks.tsx`), Roll / Trade / End turn, bank and harbor trades, offers to the table with accept / decline / counter, development cards (Knight, Road Building, Year of Plenty and Monopoly pickers), discard and steal pop-ups, game log, error notes, the winner's card, and a compact scoreboard for bears watching nearby. Start game: holding H sends the secret switch; only the starter gets a tiny faint dot for 1.5 s. The winner jumps up and cheers. Test: `e2e/catan.spec.ts` (two bears play setup by clicking, a paying roll, building, both kinds of trade, a 7 with discard and robber; a third watches; a reload mid-game gets your cards back; a win). Screenshots `docs/screenshots/4.3/`.
 - [ ] **4.4 Multiplayer, reconnect, spectators, wins to leaderboard. Deploy + friend test.** **[ANDREW APPROVES]**
-  - Already working from 4.2–4.3: reconnect pause, spectators, wins saved. Left: leaderboard's Catan tab live, frame-rate check in the dining room, full test run, check the website's files have no trace of the house dice, Andrew's play-test, deploy.
+  - 2026-10-14: reconnect pause, spectators and saved wins work (from 4.2–4.3). Leaderboard's Catan tab is live (refreshes on a win; `?mocksocial` has made-up Catan wins). After each roll the HUD shows "X rolled N" once the dice land. Medium @1080p in the dining room: 60 fps, 267 draw calls (`e2e/perf.spec.ts` spot "dining room catan"). The production website's files checked: no dice weights and no mention of house dice (only the start message's one-letter flag). Full browser suite: 52/52 pass (7 dev tools skipped). Waiting on: **Andrew's play-test**, then deploy (merge `phase-4` into main) and a friend test.
 
 ## Phase 5: Polish
 - [ ] **5.1 Sound pass.**
@@ -188,6 +188,8 @@ Starting balance: 1,210 (2026-10-11)
 
 ## Session notes
 (Newest first. 1–3 lines per session: what got done, what's next, anything Andrew needs to do.)
+
+- **2026-10-14 · Session 7.** Phase 4 Catan built on `phase-4` (4.1–4.3 + most of 4.4) with Andrew's secret house dice (hold H on Start; flipped odds; server-only). No credits spent (676.75 left). Next: Andrew play-tests (two browser windows), then deploy + friend test (and the prank).
 
 - **2026-10-13 · Session 6.** Phase 3 built (3.1–3.4): the alley from Andrew's photo, meter throwing with late hook and Rapier pins, server turns/scores, streamed balls and pins, leaderboard. Andrew play-tested: "everything is perfect"; added his strike sound. Deployed. 0.25 credits (mural); 676.75 left. Next: Andrew + a friend bowl online, then Phase 4 Catan.
 

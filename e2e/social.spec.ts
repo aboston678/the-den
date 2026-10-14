@@ -5,7 +5,7 @@ import { openGame } from "./helpers.ts";
 // accounts need a person signing in with Google, so this uses the dev preview (?mocksocial):
 // made-up bears, same panels. Rank and friends rules are unit-tested in client/src/net/socialRules.test.ts.
 
-test("leaderboard: fish caught and bowling high scores, all players or friends; Catan ready for later", async ({ page }) => {
+test("leaderboard: fish caught, bowling high scores and Catan wins, all players or friends", async ({ page }) => {
   await openGame(page, "/?mocksocial");
   await page.getByTestId("open-leaderboard").click();
   const board = page.getByTestId("leaderboard");
