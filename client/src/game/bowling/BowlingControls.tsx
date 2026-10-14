@@ -47,6 +47,8 @@ interface Run {
   /** The balls so far this game, before this one (to work out what the pinsetter does). */
   rolls: number[];
   crashed: boolean;
+  /** Where each pin stood when this ball reached them (lane x, z), to hear the moment they're hit. */
+  startPins: { x: number; z: number }[] | null;
   /** Seconds until the next streamed frame, and a sound to send with it. */
   sendIn: number;
   sound: BowlFrame["snd"];
@@ -54,7 +56,7 @@ interface Run {
 
 export function BowlingControls() {
   const { gl } = useThree();
-  const run = useRef<Run>({ ball: null, deck: null, setter: null, t: 0, before: ALL_PINS, rolls: [], crashed: false, sendIn: 0, sound: undefined });
+  const run = useRef<Run>({ ball: null, deck: null, setter: null, t: 0, before: ALL_PINS, rolls: [], crashed: false, startPins: null, sendIn: 0, sound: undefined });
 
   // Clicks drive the meters (only with the mouse captured, so the first click just captures it).
   useEffect(() => {
@@ -196,6 +198,7 @@ export function BowlingControls() {
           r.deck.launch(b);
         }
         r.crashed = false;
+        r.startPins = null;
         mode("pins");
       }
     }
@@ -249,13 +252,17 @@ function crash(r: Run, render: LaneRender, lane: LaneSpec, dt: number): boolean[
   const deck = r.deck!;
   deck.step(dt);
   deck.write(render);
-  if (!r.crashed && deck.time > 0.2) {
-    r.crashed = true;
-    const moved = render.pins.filter((p, i) => !p.gone && Math.hypot(p.p.x - PIN_SPOTS[i]!.x, p.p.z - PIN_SPOTS[i]!.z) > 0.03).length;
-    if (moved > 0) {
+  r.startPins ??= render.pins.map((p) => ({ x: p.p.x, z: p.p.z }));
+  // The crash sound (Andrew's pick) the moment the ball reaches the pins: full for a hit into the
+  // middle of the rack, softer for a ball that only clips the edge.
+  if (!r.crashed && deck.time < 1.5) {
+    const moved = render.pins.some((p, i) => !p.gone && Math.hypot(p.p.x - r.startPins![i]!.x, p.p.z - r.startPins![i]!.z) > 0.01);
+    if (moved) {
+      r.crashed = true;
+      const full = Math.abs(r.ball?.z ?? 0) < 0.3;
       const at = laneToWorld(lane, LANE.headPin, 0.3, 0);
-      void playAt(moved >= 4 ? "pin-crash" : "pin-tap", at[0], at[1], at[2], moved >= 4 ? 1.1 : 0.7, 9);
-      r.sound = moved >= 4 ? "crash" : "tap";
+      void playAt("pin-strike", at[0], at[1], at[2], full ? 1.1 : 0.6, 9);
+      r.sound = full ? "crash" : "tap";
     }
   }
   return deck.settled() ? deck.standing() : null;

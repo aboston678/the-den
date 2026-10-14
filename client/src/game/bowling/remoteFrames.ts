@@ -31,8 +31,8 @@ export const drivenHere: Record<"1" | "2", boolean> = { "1": false, "2": false }
 const SOUND: Record<string, [string, number, number, number]> = {
   // name, lane x, volume, range
   roll: ["ball-roll", 0, 0.9, 10],
-  crash: ["pin-crash", LANE.headPin, 1.1, 9],
-  tap: ["pin-tap", LANE.headPin, 0.7, 9],
+  crash: ["pin-strike", LANE.headPin, 1.1, 9],
+  tap: ["pin-strike", LANE.headPin, 0.6, 9],
   sweep: ["sweep", LANE.headPin, 0.6, 6],
   return: ["ball-return", -3.4, 0.6, 5],
 };

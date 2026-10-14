@@ -45,6 +45,10 @@ test("bowl a frame: meters, the roll, the pins, the score", async ({ page }) => 
   await expect.poll(() => mode(page), { timeout: 10_000 }).toBe("pins");
   await page.waitForTimeout(500);
   await page.screenshot({ path: "test-results/bowling/3-pins.png" });
+  // The pin crash plays (Andrew's strike sound) as soon as the ball hits.
+  if ((await page.evaluate(() => window.__den!.audio().state)) === "running") {
+    await expect.poll(() => page.evaluate(() => window.__den!.audio().recent)).toContain("pin-strike");
+  }
   await expect.poll(() => rolls(page, "1"), { timeout: 10_000 }).toHaveLength(1);
   const first = (await rolls(page, "1"))[0]!;
   expect(first).toBeGreaterThanOrEqual(7);

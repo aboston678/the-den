@@ -26,6 +26,8 @@ const SOUNDS = {
   thrush: ["hermit-thrush.mp3", 0, 7.1, "once", -20],
   flicker: ["flicker.mp3", 0, 4.2, "once", -20],
   roar: ["grizzly-a.mp3", 0.7, 4.6, "once", -14],
+  // The pins crashing (Andrew's pick, 2026-10-13; kept in git as assets/audio/bowling-strike.m4a, see docs/ASSETS.md).
+  "pin-strike": ["../bowling-strike.m4a", 0, 2.55, "once", -14],
 };
 const XFADE = 2;
 

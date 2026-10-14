@@ -152,23 +152,6 @@ export function ballRollBuffer(ctx: BaseAudioContext) {
   return toBuffer(ctx, data, rate);
 }
 
-/** Pins scattering: lots of hollow wooden knocks, thick at first and thinning out. */
-function pinsBuffer(ctx: BaseAudioContext, knocks: number, seed: number) {
-  const rate = 22050, seconds = 1.4, data = new Float32Array(Math.round(rate * seconds));
-  const r = rng(seed);
-  for (let k = 0; k < knocks; k++) {
-    const at = Math.round(rate * (-Math.log(1 - (r() * 0.5 + 0.5) * 0.98) * 0.18)); // most early, a few late
-    const f = 650 + (r() * 0.5 + 0.5) * 1100, amp = 0.4 + (r() * 0.5 + 0.5) * 0.6;
-    for (let i = 0; i < rate * 0.12 && at + i < data.length; i++) {
-      const t = i / rate;
-      data[at + i]! += amp * (Math.sin(2 * Math.PI * f * t) * 0.8 + Math.sin(2 * Math.PI * f * 2.7 * t) * 0.3 + r() * 0.5 * Math.exp(-t * 300)) * Math.exp(-t * 45);
-    }
-  }
-  return toBuffer(ctx, data, rate);
-}
-export const pinCrashBuffer = (ctx: BaseAudioContext) => pinsBuffer(ctx, 34, 67);
-export const pinTapBuffer = (ctx: BaseAudioContext) => pinsBuffer(ctx, 6, 71);
-
 /** The pinsetter's sweep: a motor whir and a soft clatter. */
 export function sweepBuffer(ctx: BaseAudioContext) {
   const rate = 22050, seconds = 1.3, data = new Float32Array(Math.round(rate * seconds));
