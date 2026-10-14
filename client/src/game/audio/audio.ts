@@ -1,7 +1,7 @@
 import { AudioListener, Object3D, PositionalAudio } from "three";
 import { settings } from "../../ui/settings.ts";
 import {
-  ballReturnBuffer, ballRollBuffer, castWhooshBuffer, lineSnapBuffer, plopBuffer, reelClickBuffer, splashBuffer, sweepBuffer,
+  ballReturnBuffer, ballRollBuffer, castWhooshBuffer, diceRollBuffer, lineSnapBuffer, plopBuffer, reelClickBuffer, splashBuffer, sweepBuffer,
 } from "./synth.ts";
 
 // Sound for the game (GAME_SPEC §10): one listener on the camera, decoded sounds cached by name,
@@ -38,6 +38,7 @@ const MADE_IN_CODE: Record<string, (ctx: BaseAudioContext) => AudioBuffer> = {
   "ball-roll": ballRollBuffer,
   sweep: sweepBuffer,
   "ball-return": ballReturnBuffer,
+  "dice-roll": diceRollBuffer,
 };
 
 /** A sound from client/public/audio/ (built by `npm run build:audio`), or one made in code. */

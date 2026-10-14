@@ -23,13 +23,31 @@ export interface CatanSeat {
   y: number;
   /** Facing the table: the bear faces (sin yaw, cos yaw). */
   yaw: number;
+  /** Where the bear's feet go while seated: in front of the chair, so its hips land on the seat. */
+  sitX: number;
+  sitZ: number;
+  /** Where the bear ends up after getting up: beside the chair, clear of the table. */
+  standX: number;
+  standZ: number;
 }
+
+/** Seated, the bear's hips sit this far behind its feet (the Chair_Sit_Idle clip, cartoon bear). */
+export const SIT_FORWARD = 0.33;
 
 /** The 4 seats, clockwise from the north side. */
 export const CATAN_SEATS: readonly CatanSeat[] = (() => {
-  const seats = chairs.map((p) => {
+  const seats = chairs.map((p): CatanSeat => {
     const w = houseToWorld(p.x, p.z);
-    return { x: w.x, z: w.z, y: roomFloorY(p.room) * HOUSE.scale, yaw: Math.atan2(CATAN_TABLE.x - w.x, CATAN_TABLE.z - w.z) };
+    const yaw = Math.atan2(CATAN_TABLE.x - w.x, CATAN_TABLE.z - w.z);
+    const fx = Math.sin(yaw), fz = Math.cos(yaw); // toward the table
+    // Clear of the table edge on this side (plus the bear's half-width), and beside the chair.
+    const halfTable = Math.abs(fx) > 0.5 ? CATAN_TABLE.w / 2 : CATAN_TABLE.d / 2;
+    const out = halfTable + 0.55;
+    return {
+      x: w.x, z: w.z, y: roomFloorY(p.room) * HOUSE.scale, yaw,
+      sitX: w.x + fx * SIT_FORWARD, sitZ: w.z + fz * SIT_FORWARD,
+      standX: CATAN_TABLE.x - fx * out + fz * 0.85, standZ: CATAN_TABLE.z - fz * out - fx * 0.85,
+    };
   });
   // Clockwise from north (seen from above, x east and z south): angle from the table centre.
   const angle = (s: CatanSeat) => (Math.atan2(s.x - CATAN_TABLE.x, -(s.z - CATAN_TABLE.z)) + 2 * Math.PI) % (2 * Math.PI);

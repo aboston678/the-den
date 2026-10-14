@@ -177,3 +177,24 @@ export function ballReturnBuffer(ctx: BaseAudioContext) {
   }
   return toBuffer(ctx, data, rate);
 }
+
+/** Seconds into the dice tumble when each die hits the table (the sound and the animation share them). */
+export const DICE_HITS = [0.42, 0.62, 0.76, 0.86, 0.93] as const;
+
+/** Two wooden dice clattering on the table: short bright knocks that get softer. */
+export function diceRollBuffer(ctx: BaseAudioContext) {
+  const rate = 22050, seconds = 1.2, data = new Float32Array(Math.round(rate * seconds));
+  const r = rng(97);
+  DICE_HITS.forEach((at, k) => {
+    for (const die of [0, 1]) {
+      const start = Math.round((at + die * 0.025 + r() * 0.01) * rate);
+      const pitch = 1700 + r() * 900 + die * 300;
+      const loud = 0.75 * Math.pow(0.62, k);
+      for (let i = 0; i < 0.06 * rate && start + i < data.length; i++) {
+        const t = i / rate;
+        data[start + i]! += (Math.sin(2 * Math.PI * pitch * t) * 0.6 + (r() * 2 - 1) * 0.5) * Math.exp(-t * 90) * loud;
+      }
+    }
+  });
+  return toBuffer(ctx, data, rate);
+}

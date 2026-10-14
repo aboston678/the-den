@@ -31,6 +31,10 @@ export const playerState = {
   castRequest: null as { x: number; z: number } | null,
   /** Bowling (GAME_SPEC §15): keep the bear on this spot facing this way (WASD, jump, dance off). */
   hold: null as { x: number; z: number; yaw: number } | null,
+  /** Catan (GAME_SPEC §16): sit in this chair (the player walks in, sits, and stands back up when it's cleared). */
+  seat: null as import("@den/shared").CatanSeat | null,
+  /** True while the bear is in a chair (sitting down, seated, or getting up). */
+  seated: false,
   /** Bowling: play the bowl now (set by the bowling controls; the player clears it). */
   bowlRequest: false,
   /** Bowling: set by the player when the ball leaves the paw; the bowling controls clear it. */
@@ -56,6 +60,8 @@ export const cameraState = {
   override: null as { from: Vector3; look: Vector3 } | null,
   /** While set, mouse movement goes here instead of turning the camera (bowling aim). */
   mouse: null as ((dx: number, dy: number) => void) | null,
+  /** The mouse pointer is free for clicking on things (the Catan board): no capturing it, and letting it go doesn't pause. */
+  freeMouse: false,
 };
 
 export type { BearAction } from "@den/shared";
@@ -92,6 +98,8 @@ declare global {
       programNames?: () => string[];
       /** Bowling (Phase 3): lanes as this client sees them, plus dev/test controls (bowling/dev.ts). */
       bowl?: import("./bowling/dev.ts").BowlDev;
+      /** Catan (Phase 4): the table as this client sees it, plus test controls (catan/dev.ts). */
+      catan?: import("./catan/dev.ts").CatanDev;
       /** Other bears as this client sees them. */
       remotes: () => { id: string; name: string; x: number; z: number; action: string; flashlight: boolean; tagVisible: boolean; connected: boolean; fish: { rod: boolean; state: string; species: string } }[];
     };

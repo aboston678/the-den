@@ -4,7 +4,7 @@ import type { BearAction } from "../state.ts";
 import { locomotionWeights } from "./movement.ts";
 
 const LOOPING = ["Idle", "Walk", "Run", "Dance", "Reel"] as const;
-const ONE_SHOT = ["Jump", "Roar", "Cast", "Celebrate", "Bowl"] as const;
+const ONE_SHOT = ["Jump", "Roar", "Cast", "Celebrate", "Bowl", "SitDown", "StandUp"] as const;
 /** The cast clip's long wind-up is skipped and the throw sped up (GAME_SPEC §13: casting should feel snappy). */
 export const CAST = { from: 1.4, speed: 1.3, release: 2.6 } as const;
 /** Seconds from starting a cast to the lure leaving the rod. */
@@ -16,6 +16,13 @@ export const CAST_RELEASE_S = (CAST.release - CAST.from) / CAST.speed;
 export const BOWL = { from: 3.4, to: 5.05, speed: 1.15, release: 4.75 } as const;
 /** Seconds from starting the bowl to the ball leaving the paw. */
 export const BOWL_RELEASE_S = (BOWL.release - BOWL.from) / BOWL.speed;
+/**
+ * Sitting at the Catan table: just the lowering part of Stand_to_Sit, then hold its last pose.
+ * (The Chair_Sit_Idle loop leans the cartoon bear's big tummy right over the board.)
+ */
+export const SIT = { from: 1.6, to: 4.5, speed: 1.5 } as const;
+/** Getting up: just the rising part of Sit_to_Stand. */
+export const STAND = { from: 1.2, to: 3.9, speed: 1.45 } as const;
 type ClipName = (typeof LOOPING)[number] | (typeof ONE_SHOT)[number];
 
 /**
@@ -79,13 +86,24 @@ export class BearAnimator {
       bowl.reset().play();
       bowl.time = BOWL.from;
       bowl.timeScale = BOWL.speed;
+    } else if (action === "sit") {
+      const sit = this.actions.get("SitDown")!;
+      sit.reset().play();
+      sit.time = SIT.from;
+      sit.timeScale = SIT.speed;
+    } else if (action === "stand") {
+      const stand = this.actions.get("StandUp")!;
+      stand.reset().play();
+      stand.time = STAND.from;
+      stand.timeScale = STAND.speed;
     }
   }
 
-  /** True once a one-shot (cast, celebrate, bowl) has played to its end (the bowl stops at BOWL.to). */
-  finished(name: "Cast" | "Celebrate" | "Bowl") {
+  /** True once a one-shot has played to its end (the bowl, sit and stand stop early). */
+  finished(name: "Cast" | "Celebrate" | "Bowl" | "SitDown" | "StandUp") {
     const a = this.actions.get(name)!;
-    return a.time >= (name === "Bowl" ? BOWL.to : a.getClip().duration - 0.05);
+    const end = name === "Bowl" ? BOWL.to : name === "SitDown" ? SIT.to : name === "StandUp" ? STAND.to : a.getClip().duration - 0.05;
+    return a.time >= end;
   }
 
   get action() {
@@ -99,7 +117,9 @@ export class BearAnimator {
   }
 
   update(dt: number, speed: number) {
-    const target: Record<ClipName, number> = { Idle: 0, Walk: 0, Run: 0, Dance: 0, Jump: 0, Roar: 0, Reel: 0, Cast: 0, Celebrate: 0, Bowl: 0 };
+    const target: Record<ClipName, number> = {
+      Idle: 0, Walk: 0, Run: 0, Dance: 0, Jump: 0, Roar: 0, Reel: 0, Cast: 0, Celebrate: 0, Bowl: 0, SitDown: 0, StandUp: 0,
+    };
     if (this.current === "locomotion") {
       const loco = locomotionWeights(speed, MOVE.walkSpeed, MOVE.sprintSpeed);
       target.Idle = loco.idle;
@@ -112,6 +132,15 @@ export class BearAnimator {
     else if (this.current === "reel") target.Reel = 1;
     else if (this.current === "celebrate") target.Celebrate = 1;
     else if (this.current === "bowl") target.Bowl = 1;
+    else if (this.current === "sit") {
+      // Lower into the chair, then stay put in the seated pose.
+      target.SitDown = 1;
+      const sit = this.actions.get("SitDown")!;
+      if (sit.time >= SIT.to) {
+        sit.time = SIT.to;
+        sit.timeScale = 0;
+      }
+    } else if (this.current === "stand") target.StandUp = 1;
 
     // Match leg speed to ground speed (never slower than the clip's own pace).
     this.actions.get("Walk")!.timeScale = Math.max(1, speed / CLIP.walkNaturalSpeed);

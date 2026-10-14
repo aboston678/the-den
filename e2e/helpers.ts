@@ -56,7 +56,7 @@ export async function joinGame(page: Page, code: string, name: string) {
 export async function waitForBear(page: Page) {
   await expect(page.locator("canvas")).toBeVisible({ timeout: 15_000 });
   await expect.poll(() => page.evaluate(() => window.__den?.player.colliderHandle ?? -1), { timeout: 30_000 }).toBeGreaterThanOrEqual(0);
-  await expect.poll(() => page.evaluate(() => window.__den!.player.grounded)).toBe(true);
+  await expect.poll(() => page.evaluate(() => window.__den!.player.grounded), { timeout: 15_000 }).toBe(true);
   await page.locator("canvas").focus();
 }
 

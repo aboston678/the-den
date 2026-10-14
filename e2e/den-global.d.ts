@@ -48,6 +48,27 @@ interface Window {
       devRolls: (lane: string, rolls: number[]) => void;
       seen: (lane: "1" | "2") => { ball: boolean; ballX: number; gone: number };
     };
+    /** Catan (Phase 4): the table as this browser sees it, and moves (sent to the server like clicks). */
+    catan?: {
+      state: () => {
+        seats: string[];
+        view: import("../shared/src/catan/view.ts").CatanView | null;
+        mine: import("../shared/src/catan/view.ts").CatanPrivate | null;
+        waitingFor: string;
+        waitUntil: number;
+        error: { text: string; at: number } | null;
+        ok: number;
+        wins: { id: string; name: string; vp: number; mine: boolean }[];
+        prompt: string | null;
+        seated: boolean;
+      };
+      sit: (seat: number) => void;
+      stand: () => void;
+      start: () => void;
+      act: (action: import("../shared/src/catan/rules.ts").CatanAction) => void;
+      quit: () => void;
+      dev: (dice?: [number, number], give?: Record<string, number>) => void;
+    };
   };
 }
 

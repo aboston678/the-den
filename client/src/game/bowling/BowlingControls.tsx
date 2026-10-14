@@ -1,5 +1,5 @@
 import {
-  BALL_RETURN, type BallState, type BowlFrame, JOIN_REACH, LANE, LANES, type LaneSpec, PIN_SPOTS, PLATFORM_Y, STANCE, THROW, ballY, isGameOver, joinSpot,
+  APPROACH_WORLD_Y, BALL_RETURN, type BallState, type BowlFrame, JOIN_REACH, LANE, LANES, type LaneSpec, PIN_SPOTS, PLATFORM_Y, STANCE, THROW, ballY, isGameOver, joinSpot,
   laneById, laneToWorld, nextBall, pinsStanding, reachedPins, stepBall, throwBall,
 } from "@den/shared";
 import { useFrame, useThree } from "@react-three/fiber";
@@ -107,7 +107,9 @@ export function BowlingControls() {
         const s = joinSpot(laneById(id)!);
         return Math.hypot(playerState.position.x - s.x, playerState.position.z - s.z);
       };
-      const near = LANES.filter((l) => dist(l.id) < JOIN_REACH).sort((a, b) => dist(a.id) - dist(b.id))[0];
+      // On the alley's floor only: the dining room is right above the ball return.
+      const downstairs = Math.abs(playerState.position.y - APPROACH_WORLD_Y) < 1.5;
+      const near = downstairs ? LANES.filter((l) => dist(l.id) < JOIN_REACH).sort((a, b) => dist(a.id) - dist(b.id))[0] : undefined;
       const lane = near && lanes[near.id];
       const full = !!lane && (lane.bowlers.length >= 4 || (lane.phase !== "over" && lane.bowlers.some((b) => b.rolls.length > 0)));
       const prompt = !near ? null : full ? `Lane ${near.id} is mid-game` : `Bowl on lane ${near.id}`;

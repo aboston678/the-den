@@ -3,6 +3,8 @@ import { Physics } from "@react-three/rapier";
 import { Suspense, useEffect } from "react";
 import { GameAudio } from "./audio/GameAudio.tsx";
 import { BowlingControls } from "./bowling/BowlingControls.tsx";
+import { CatanControls } from "./catan/CatanControls.tsx";
+import { CatanTable } from "./catan/CatanTable.tsx";
 import { FishingControls } from "./fishing/FishingControls.tsx";
 import { FishingLines } from "./fishing/FishingLines.tsx";
 import { ThirdPersonCamera } from "./camera/ThirdPersonCamera.tsx";
@@ -37,6 +39,8 @@ export function GameScene() {
         <RemoteBears />
         <FishingControls />
         <BowlingControls />
+        <CatanControls />
+        <CatanTable />
         <Suspense fallback={null}>
           <FishingLines />
         </Suspense>

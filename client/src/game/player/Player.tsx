@@ -11,6 +11,7 @@ import { useHeldBall } from "../bowling/heldBall.ts";
 import { useBowling } from "../bowling/session.ts";
 import { useLanes } from "../bowling/store.ts";
 import { BOWL_RELEASE_S, CAST_RELEASE_S } from "./BearAnimator.ts";
+import { type SeatMove, seatStep } from "./seating.ts";
 import { remotes } from "../../net/remotes.ts";
 import { consumePress, isHeld } from "../input/keyboard.ts";
 import { playAt } from "../audio/audio.ts";
@@ -66,7 +67,8 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
 
   // Start facing away from the camera (which begins on the +z side looking toward −z).
   const s = useRef({ vy: 0, speed: 0, yaw: Math.PI, dir: { x: 0, z: -1 }, airTime: 0, actionTime: 0, roarReadyAt: 0, groundY: 0, ready: false,
-    pushX: 0, pushZ: 0, staggerUntil: 0, sendTimer: 0, castAt: null as { x: number; z: number } | null, released: false });
+    pushX: 0, pushZ: 0, staggerUntil: 0, sendTimer: 0, castAt: null as { x: number; z: number } | null, released: false,
+    chair: null as SeatMove | null });
 
   useFrame(({ clock }, rawDt) => {
     const controller = controllerRef.current;
@@ -104,9 +106,11 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
       },
       cameraState.yaw,
     );
-    // Bowling holds the bear on its spot on the approach: no walking, jumping or dancing.
+    // Bowling holds the bear on its spot on the approach, and a chair holds it at the Catan table:
+    // no walking, jumping or dancing.
     const held = playerState.hold;
-    if (held) dir.x = dir.z = 0;
+    const seated = playerState.seat !== null || st.chair !== null;
+    if (held || seated) dir.x = dir.z = 0;
     const moving = dir.x !== 0 || dir.z !== 0;
     const sprint = isHeld("ShiftLeft") || isHeld("ShiftRight");
     const grounded = playerState.grounded;
@@ -118,11 +122,11 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
     // --- actions: dance (B), roar (Y), jump (Space) ---
     let action = animator.action;
     if (consumePress("KeyF")) playerState.flashlight = !playerState.flashlight;
-    if (consumePress("KeyB") && grounded && !held) {
+    if (consumePress("KeyB") && grounded && !held && !seated) {
       if (action === "dance") start("locomotion");
       else if (action === "locomotion") start("dance");
     }
-    if (consumePress("KeyY") && grounded && !held && now >= st.roarReadyAt && (action === "locomotion" || action === "dance")) {
+    if (consumePress("KeyY") && grounded && !held && !seated && now >= st.roarReadyAt && (action === "locomotion" || action === "dance")) {
       start("roar");
       st.roarReadyAt = now + MOVE.roarCooldown;
       void playAt("roar", playerState.position.x, playerState.position.y + 1.6, playerState.position.z, 1.8, 8);
@@ -176,7 +180,7 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
 
     if (moving && (action === "dance" || action === "roar")) start("locomotion"); // moving cancels
     if (action === "roar" && animator.roarFinished) start("locomotion");
-    if (consumePress("Space") && grounded && !held && animator.action !== "jump" && st.vy <= 0) {
+    if (consumePress("Space") && grounded && !held && !seated && animator.action !== "jump" && st.vy <= 0) {
       st.vy = MOVE.jumpVelocity;
       start("jump");
     }
@@ -230,9 +234,27 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
       st.pushX = st.pushZ = 0;
       st.yaw = held.yaw;
     }
-    controller.computeColliderMovement(collider.current, desired);
-    const moved = controller.computedMovement();
-    const nowGrounded = controller.computedGrounded();
+    // --- Catan chairs (GAME_SPEC §16): walk in, sit, get back up; the bear goes exactly where the
+    // chair says (no bumping into the chair or table on the way) ---
+    const here = body.current.translation();
+    const chairSpot = seatStep(st.chair, playerState.seat, { x: here.x, y: here.y - CAPSULE_CENTER, z: here.z }, st.yaw, dt, animator, start);
+    st.chair = chairSpot ? chairSpot.move : null;
+    let moved: { x: number; y: number; z: number };
+    let nowGrounded: boolean;
+    if (chairSpot) {
+      moved = { x: chairSpot.x - here.x, y: chairSpot.y + CAPSULE_CENTER - here.y, z: chairSpot.z - here.z };
+      nowGrounded = true;
+      st.vy = 0;
+      st.speed = 0;
+      st.pushX = st.pushZ = 0;
+      st.yaw = chairSpot.yaw ?? st.yaw;
+    } else {
+      controller.computeColliderMovement(collider.current, desired);
+      const m = controller.computedMovement();
+      moved = { x: m.x, y: m.y, z: m.z };
+      nowGrounded = controller.computedGrounded();
+    }
+    playerState.seated = st.chair !== null;
     if (st.vy > 0 && moved.y < desired.y * 0.5) st.vy = 0; // bumped our head
     // Stay lightly pressed onto the ground (snap-to-ground does the rest). Pressing harder slowed
     // the bear to a crawl on the house's steep stairs, since the push is projected along the slope.
@@ -242,7 +264,7 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
 
     // If the feet ever end up below a floor (Rapier's controller ignores surfaces it's already
     // inside), lift the bear back on top.
-    const floorY = st.vy <= 0 ? floorBelow(p.x, p.y - CAPSULE_CENTER, p.z) : null;
+    const floorY = st.vy <= 0 && !chairSpot ? floorBelow(p.x, p.y - CAPSULE_CENTER, p.z) : null;
     const feet = p.y + moved.y - CAPSULE_CENTER;
     if (floorY !== null && feet < floorY - 0.03) {
       moved.y += floorY - feet;
@@ -290,7 +312,8 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
     playerState.yaw = st.yaw;
     if (visual.current) {
       visual.current.rotation.y = st.yaw;
-      visual.current.visible = !playerState.hidden;
+      // At the Catan board camera your own bear would fill the view; everyone else still sees it.
+      visual.current.visible = !playerState.hidden && !(playerState.seated && cameraState.freeMouse);
     }
     animator.update(dt, Math.min(st.speed, groundSpeed));
 

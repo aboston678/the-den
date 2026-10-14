@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { cameraState } from "../game/state.ts";
 import { leaveParty } from "../net/party.ts";
 import { CONTROLS } from "./Hud.tsx";
 import { SettingsPanel } from "./Settings.tsx";
@@ -14,7 +15,8 @@ export function Pause() {
   useEffect(() => {
     const lockChange = () => {
       const locked = !!document.pointerLockElement;
-      if (wasLocked.current && !locked) setOpen(true);
+      // Letting the mouse go for the Catan board isn't a pause.
+      if (wasLocked.current && !locked && !cameraState.freeMouse) setOpen(true);
       if (locked) setOpen(false);
       wasLocked.current = locked;
     };
@@ -31,7 +33,7 @@ export function Pause() {
 
   const resume = () => {
     setOpen(false);
-    document.querySelector("canvas")?.requestPointerLock?.();
+    if (!cameraState.freeMouse) document.querySelector("canvas")?.requestPointerLock?.();
   };
 
   if (!open) return null;
