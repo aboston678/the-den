@@ -14,6 +14,7 @@ import {
   generateRoomCode,
   isWorldName,
   parseTime,
+  sanitizeBowlFrame,
   sanitizeNickname,
   sanitizePose,
   spawnPoint,
@@ -21,9 +22,10 @@ import {
 } from "@den/shared";
 import { type Bear, authenticate } from "../auth.ts";
 import { devToolsOn } from "../config.ts";
-import { PartyState, Player } from "./PartyState.ts";
+import { Lane, PartyState, Player } from "./PartyState.ts";
+import { Bowling, type GameResult, LANE_IDS } from "./bowling.ts";
 import { type Catch, Fishing } from "./fishing.ts";
-import { recordCatch } from "../stats.ts";
+import { recordBowlingGame, recordCatch } from "../stats.ts";
 
 const num = (v: unknown) => (typeof v === "number" ? v : Number.NaN);
 
@@ -45,6 +47,9 @@ export class PartyRoom extends Room<{ state: PartyState }> {
   state = new PartyState();
   private lastPoseAt = new Map<string, number>();
   private fishing = new Fishing();
+  private bowling = new Bowling();
+  /** When each bowler last sent a ball/pins frame (ms), to keep the stream to ~20 a second. */
+  private lastFrameAt = new Map<string, number>();
   /** Supabase user id per bear (server-side only; used to save stats), null for development players. */
   readonly userIds = new Map<string, string | null>();
 
@@ -113,6 +118,47 @@ export class PartyRoom extends Room<{ state: PartyState }> {
       for (const c of caught) void this.announceCatch(c);
     }, 1000 / NET_TICK_HZ);
 
+    // Bowling (GAME_SPEC §15): the server owns turns and scores; the bowler's browser streams its
+    // ball and pins, which are passed on to everyone else.
+    for (const id of LANE_IDS) this.state.lanes.set(id, new Lane());
+    const laneOf = (m: unknown) => {
+      const lane = (m as { lane?: unknown } | null)?.lane;
+      return lane === "1" || lane === "2" ? lane : null;
+    };
+    this.onMessage(MSG.bowlJoin, (client, message) => {
+      const p = playing(client), lane = laneOf(message);
+      if (p && lane) this.bowling.join(this.state.lanes, lane, client.sessionId, p, Date.now());
+    });
+    this.onMessage(MSG.bowlLeave, (client) => this.bowling.leave(this.state.lanes, client.sessionId, Date.now()));
+    this.onMessage(MSG.bowlNewGame, (client, message) => {
+      const lane = laneOf(message);
+      if (playing(client) && lane) this.bowling.newGame(this.state.lanes, lane, client.sessionId, Date.now());
+    });
+    this.onMessage(MSG.bowlRolling, (client, message) => {
+      const lane = laneOf(message);
+      if (playing(client) && lane) this.bowling.rolling(this.state.lanes, lane, client.sessionId, Date.now());
+    });
+    this.onMessage(MSG.bowlResult, (client, message: { knocked?: unknown }) => {
+      const lane = laneOf(message);
+      if (playing(client) && lane) this.bowling.result(this.state.lanes, lane, client.sessionId, num(message?.knocked), Date.now());
+    });
+    this.onMessage(MSG.bowlFrame, (client, message) => {
+      const frame = sanitizeBowlFrame(message);
+      const lane = frame && this.state.lanes.get(frame.lane);
+      if (!frame || !lane || lane.bowlers[lane.turn]?.id !== client.sessionId || lane.phase === "idle" || lane.phase === "over") return;
+      const now = Date.now();
+      if (now - (this.lastFrameAt.get(client.sessionId) ?? 0) < 35 && !frame.snd) return;
+      this.lastFrameAt.set(client.sessionId, now);
+      this.broadcast(SERVER_MSG.bowlFrame, frame, { except: client });
+    });
+    this.onMessage(MSG.devBowl, (client, message: { rolls?: unknown }) => {
+      const lane = laneOf(message);
+      if (devToolsOn() && lane) this.bowling.devSetRolls(this.state.lanes, lane, client.sessionId, message?.rolls, Date.now());
+    });
+    this.clock.setInterval(() => {
+      for (const g of this.bowling.tick(this.state.lanes, this.state.players, Date.now())) void this.announceGame(g);
+    }, 1000 / NET_TICK_HZ);
+
     this.onMessage(MSG.devTime, (_client, message: { time?: unknown }) => {
       const time = parseTime(message?.time);
       if (devToolsOn() && time !== undefined) this.state.clock = time;
@@ -155,6 +201,8 @@ export class PartyRoom extends Room<{ state: PartyState }> {
   onLeave(client: Client) {
     this.state.players.delete(client.sessionId);
     this.fishing.remove(client.sessionId);
+    this.bowling.leave(this.state.lanes, client.sessionId, Date.now());
+    this.lastFrameAt.delete(client.sessionId);
     this.userIds.delete(client.sessionId);
     this.lastPoseAt.delete(client.sessionId);
     if (this.state.hostId === client.sessionId) {
@@ -173,6 +221,14 @@ export class PartyRoom extends Room<{ state: PartyState }> {
       if (saved) c.best = saved.best;
     }
     this.broadcast(SERVER_MSG.caught, c);
+  }
+
+  /** Save a finished game of bowling to a signed-in bear's account (high score), then tell the party. */
+  private async announceGame(g: GameResult) {
+    const userId = this.userIds.get(g.id);
+    let best = false;
+    if (userId) best = (await recordBowlingGame(userId, g.score).catch(() => null))?.best ?? false;
+    this.broadcast(SERVER_MSG.bowled, { ...g, best });
   }
 
   private freeSlot() {

@@ -1,3 +1,5 @@
+import { bowlSend } from "../../net/party.ts";
+import { laneRender } from "./laneState.ts";
 import { click, useBowling } from "./session.ts";
 import { type LaneView, useLanes } from "./store.ts";
 
@@ -14,6 +16,10 @@ export interface BowlDev {
   click: () => void;
   /** Dev only: skip the meters and bowl with these settings (when you're at the line). */
   throw: (t: { z: number; aim: number; power: number; curve: number }) => boolean;
+  /** Dev only: ask the server to set your balls so far this game. */
+  devRolls: (lane: string, rolls: number[]) => void;
+  /** What this browser shows on a lane: the ball (if it's out) and how many pins are gone. */
+  seen: (lane: "1" | "2") => { ball: boolean; ballX: number; gone: number };
 }
 
 export function installBowlDev() {
@@ -35,6 +41,13 @@ export function installBowlDev() {
       useBowling.setState({ ...t, mode: "throw" });
       window.__den!.player.bowlRequest = true;
       return true;
+    },
+    devRolls: (lane, rolls) => {
+      if (import.meta.env.DEV) bowlSend.devRolls(lane, rolls);
+    },
+    seen: (lane) => {
+      const r = laneRender[lane];
+      return { ball: r.ball.visible, ballX: r.ball.p.x, gone: r.pins.filter((p) => p.gone).length };
     },
   };
 }

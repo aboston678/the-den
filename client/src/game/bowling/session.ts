@@ -35,6 +35,15 @@ export const useBowling = create<BowlUi>(() => ({
   lane: null, mode: "off", z: 0.2, aim: 0, power: 0, curve: 0, prompt: null, banner: null,
 }));
 
+/** All ten pins standing (bit mask, bit 0 = the head pin). */
+export const ALL_PINS = 0x3ff;
+/** How many pins a mask has. */
+export const popcount = (m: number) => {
+  let n = 0;
+  for (let i = 0; i < 10; i++) n += (m >> i) & 1;
+  return n;
+};
+
 /** Meter shapes over time: power bounces 0→1→0 every 1.2 s; curve swings −1…1 every 1.6 s. */
 export const POWER_PERIOD = 1.2, CURVE_PERIOD = 1.6;
 export const powerAt = (t: number) => 1 - Math.abs(((t / POWER_PERIOD) % 1) * 2 - 1);

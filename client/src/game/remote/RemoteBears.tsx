@@ -10,6 +10,8 @@ import { nameTagEls } from "./nameTags.ts";
 import { CAPSULE, CAPSULE_CENTER, JUMP_AIR_TIME } from "../config.ts";
 import { useBearModel } from "../player/useBearModel.ts";
 import { useRod } from "../fishing/rig.ts";
+import { useHeldBall } from "../bowling/heldBall.ts";
+import { useLanes } from "../bowling/store.ts";
 import { cameraState, playerState } from "../state.ts";
 import { invisibleColliders } from "../world/invisible.ts";
 
@@ -50,6 +52,14 @@ function RemoteBearView({ id }: { id: string }) {
   const start = bear?.current ?? { x: 0, y: 0, z: 0 };
   const yaw = useRef(0);
   useRod(id, model, visual, () => ({ rod: remotes.get(id)?.fish.rod ?? false, action: animator.action, yaw: yaw.current }));
+  // Bowling: a ball in the paw while it's their turn at the line (it leaves the paw when they roll).
+  useHeldBall(model, visual, () => {
+    const lanes = useLanes.getState().lanes;
+    for (const lane of [lanes["1"], lanes["2"]]) {
+      if (lane.phase === "aim" && lane.bowlers[lane.turn]?.id === id) return { show: true, colour: lane.turn };
+    }
+    return { show: false, colour: 0 };
+  });
 
   useFrame((_, rawDt) => {
     const b = remotes.get(id);

@@ -1,42 +1,40 @@
 import {
-  BALL_RETURN, type BallState, JOIN_REACH, LANE, LANES, type LaneSpec, PIN_SPOTS, PLATFORM_Y, STANCE, THROW, ballY, houseToWorld, laneById,
-  laneToWorld, reachedPins, stepBall, throwBall,
+  BALL_RETURN, type BallState, type BowlFrame, JOIN_REACH, LANE, LANES, type LaneSpec, PIN_SPOTS, PLATFORM_Y, STANCE, THROW, ballY, isGameOver, joinSpot,
+  laneById, laneToWorld, nextBall, pinsStanding, reachedPins, stepBall, throwBall,
 } from "@den/shared";
 import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useRef } from "react";
 import { Quaternion, Vector3 } from "three";
-import { usePartyStore } from "../../net/party.ts";
+import { bowlSend, usePartyStore } from "../../net/party.ts";
 import { playAt } from "../audio/audio.ts";
 import { toWorld } from "../house/space.ts";
 import { consumePress, isHeld } from "../input/keyboard.ts";
 import { cameraState, playerState } from "../state.ts";
-import { ALL_PINS, LOCAL_ID, laneDriver } from "./laneDriver.ts";
-import { laneRender, rackPins } from "./laneState.ts";
+import { type LaneRender, laneRender, rackPins } from "./laneState.ts";
 import { PinDeck, rapierReady } from "./pinSim.ts";
 import { Pinsetter } from "./pinsetter.ts";
-import { type BowlMode, click, curveAt, powerAt, useBowling } from "./session.ts";
+import { drivenHere, frameOf } from "./remoteFrames.ts";
+import { ALL_PINS, type BowlMode, click, curveAt, popcount, powerAt, useBowling } from "./session.ts";
 import { useLanes } from "./store.ts";
 
-// Your turn at the lanes (GAME_SPEC §15, Andrew's meter controls): E at the ball return joins a
-// lane; on your turn the bear stands on the approach, A/D slides, the mouse swings the aim arrow,
-// a click starts the POWER meter, a click stops it, a click stops the CURVE meter, and the bear
-// bowls. The ball runs on the lane model (shared/src/bowling/ball.ts) and then the pin physics
-// (pinSim.ts); the pinsetter clears up and the next ball (or bowler) is up.
+// Your turn at the lanes (GAME_SPEC §15, Andrew's meter controls). E at the ball return asks the
+// server to put you on that lane. On your turn the bear stands on the approach: A/D slides, the
+// mouse swings the aim arrow, a click starts the POWER meter, a click stops it, a click stops the
+// CURVE meter, and the bear bowls. Your browser runs the ball (the lane model in
+// shared/src/bowling/ball.ts, then the pin physics in pinSim.ts), streams it to the party, and
+// tells the server which pins fell; the server keeps score and says whose turn is next.
 
 type LaneId = "1" | "2";
 const SLIDE_SPEED = 0.6; // m/s along the foul line (A/D)
 const AIM_PER_PIXEL = 0.012; // degrees of aim per pixel of mouse movement
 const LANE_YAW = Math.PI / 2; // facing +x, down the lanes
 const SUBSTEP = 1 / 240;
+const FRAME_EVERY = 1 / 20; // stream the ball and pins 20 times a second
 
 const v = (a: [number, number, number]) => new Vector3(...a);
 const spinQ = new Quaternion(), axis = new Vector3();
-
-/** Where you join a lane: next to the ball return, on that lane's side (world x, z). */
-function joinSpot(id: LaneId) {
-  const lane = laneById(id)!;
-  return houseToWorld(BALL_RETURN.x, (BALL_RETURN.z + lane.cz) / 2);
-}
+/** The ball return's hood, where balls pop back up (world). */
+const RETURN_HOOD = toWorld([BALL_RETURN.x + 0.45, PLATFORM_Y + 0.6, BALL_RETURN.z]);
 
 interface Run {
   ball: BallState | null;
@@ -46,12 +44,17 @@ interface Run {
   t: number;
   /** Which pins were standing before this ball. */
   before: number;
+  /** The balls so far this game, before this one (to work out what the pinsetter does). */
+  rolls: number[];
   crashed: boolean;
+  /** Seconds until the next streamed frame, and a sound to send with it. */
+  sendIn: number;
+  sound: BowlFrame["snd"];
 }
 
 export function BowlingControls() {
   const { gl } = useThree();
-  const run = useRef<Run>({ ball: null, deck: null, setter: null, t: 0, before: ALL_PINS, crashed: false });
+  const run = useRef<Run>({ ball: null, deck: null, setter: null, t: 0, before: ALL_PINS, rolls: [], crashed: false, sendIn: 0, sound: undefined });
 
   // Clicks drive the meters (only with the mouse captured, so the first click just captures it).
   useEffect(() => {
@@ -66,7 +69,8 @@ export function BowlingControls() {
   }, [gl]);
 
   useEffect(() => () => {
-    leaveLane();
+    if (useBowling.getState().lane) bowlSend.leave();
+    stopBowling();
     run.current.deck?.dispose();
   }, []);
 
@@ -80,40 +84,68 @@ export function BowlingControls() {
       r.t = 0;
       set({ mode: m });
     };
+    const lanes = useLanes.getState().lanes;
+    const me = usePartyStore.getState().sessionId;
+    const myLane = (["1", "2"] as const).find((id) => lanes[id].bowlers.some((b) => b.id === me)) ?? null;
+
+    // The server puts us on a lane (or takes us off). A ball we're rolling plays out either way.
+    const busy = ui.mode === "throw" || ui.mode === "roll" || ui.mode === "pins" || ui.mode === "sweep";
+    if (myLane !== ui.lane && !busy) {
+      if (myLane) {
+        set({ lane: myLane, mode: "wait", aim: 0, z: 0.2 });
+        if (lanes[myLane].phase !== "rolling") rackPins(laneRender[myLane]);
+      } else stopBowling();
+      return;
+    }
 
     // --- not on a lane: offer to join at the ball return ---
     if (!ui.lane) {
       // The nearest lane's side of the ball return (both lanes share it).
       const dist = (id: LaneId) => {
-        const s = joinSpot(id);
+        const s = joinSpot(laneById(id)!);
         return Math.hypot(playerState.position.x - s.x, playerState.position.z - s.z);
       };
       const near = LANES.filter((l) => dist(l.id) < JOIN_REACH).sort((a, b) => dist(a.id) - dist(b.id))[0];
-      const prompt = near ? `Bowl on lane ${near.id}` : null;
+      const lane = near && lanes[near.id];
+      const full = !!lane && (lane.bowlers.length >= 4 || (lane.phase !== "over" && lane.bowlers.some((b) => b.rolls.length > 0)));
+      const prompt = !near ? null : full ? `Lane ${near.id} is mid-game` : `Bowl on lane ${near.id}`;
       if (prompt !== ui.prompt) set({ prompt });
-      if (near && consumePress("KeyE")) joinLane(near.id);
+      if (near && !full && consumePress("KeyE")) bowlSend.join(near.id);
       return;
     }
 
     const id = ui.lane;
     const laneSpec = laneById(id)!;
-    const lane = useLanes.getState().lanes[id];
+    const lane = lanes[id];
     const render = laneRender[id];
-    const myTurn = lane.bowlers[lane.turn]?.id === myId() && lane.phase === "aim";
+    const myTurn = lane.bowlers[lane.turn]?.id === me && lane.phase === "aim";
     const atLine = ui.mode === "aim" || ui.mode === "power" || ui.mode === "curve" || ui.mode === "throw";
+    drivenHere[id] = ui.mode === "roll" || ui.mode === "pins" || ui.mode === "sweep";
 
     // E leaves the lane (not mid-ball), or starts a new game once this one's over.
     const canLeave = ui.mode === "wait" || ui.mode === "aim";
     const over = lane.phase === "over";
     const prompt = canLeave ? (over ? "New game" : "Leave the lane") : null;
     if (prompt !== ui.prompt) set({ prompt });
-    if (canLeave && consumePress("KeyE")) return over ? joinLane(id) : leaveLane();
+    if (canLeave && consumePress("KeyE")) {
+      if (over) bowlSend.newGame(id);
+      else {
+        bowlSend.leave();
+        stopBowling();
+      }
+      return;
+    }
 
     // --- your turn: stand at the line ---
     if (ui.mode === "wait" && myTurn) {
       mode("aim");
-      startTurn(r, render, lane.standing);
+      r.before = lane.standing;
+      r.rolls = lane.bowlers[lane.turn]!.rolls;
+      r.ball = null;
+      render.ball.visible = false;
+      playerState.bowlReleased = false;
     }
+    if (ui.mode === "aim" && !myTurn) mode("wait"); // the server moved on (we sat too long, or left)
     if (atLine) {
       if (ui.mode === "aim") {
         const slide = (isHeld("KeyD") ? 1 : 0) - (isHeld("KeyA") ? 1 : 0);
@@ -137,9 +169,11 @@ export function BowlingControls() {
       r.ball = throwBall({ z: s.z, aim: s.aim, power: s.power, curve: s.curve });
       render.ball.visible = true;
       render.ball.colour = lane.turn;
-      laneDriver.rolling(id);
+      bowlSend.rolling(id);
       const at = laneToWorld(laneSpec, 0, 0, s.z);
       void playAt("ball-roll", at[0], at[1], at[2], 0.9, 10);
+      r.sound = "roll";
+      r.sendIn = 0;
       mode("roll");
     }
 
@@ -155,79 +189,94 @@ export function BowlingControls() {
       const camX = Math.min(b.x - 3.2, LANE.headPin - 5.5);
       shot(laneSpec, [camX, 0.95, b.z * 0.5], [Math.min(b.x + 5, LANE.headPin), 0.1, b.z * 0.3]);
       if (reachedPins(b)) {
-        if (b.gutter) {
-          mode("pins");
-          r.deck = null;
-        } else {
-          r.deck ??= new PinDeck();
+        r.deck = null;
+        if (!b.gutter) {
+          r.deck = new PinDeck();
           r.deck.rack(r.before === ALL_PINS ? null : render.pins);
           r.deck.launch(b);
-          r.crashed = false;
-          mode("pins");
         }
+        r.crashed = false;
+        mode("pins");
       }
     }
 
     // --- the crash: physics until the pins settle ---
     if (ui.mode === "pins") {
       shot(laneSpec, [LANE.headPin - 4.6, 1.05, 0], [LANE.headPin + 0.4, 0.12, 0]);
-      const deck = r.deck;
-      let standing: boolean[];
-      if (deck) {
-        deck.step(dt);
-        deck.write(render);
-        if (!r.crashed && deck.time > 0.2) {
-          r.crashed = true;
-          const moved = render.pins.filter((p, i) => !p.gone && Math.hypot(p.p.x - PIN_SPOTS[i]!.x, p.p.z - PIN_SPOTS[i]!.z) > 0.03).length;
-          const at = laneToWorld(laneSpec, LANE.headPin, 0.3, 0);
-          if (moved > 0) void playAt(moved >= 4 ? "pin-crash" : "pin-tap", at[0], at[1], at[2], moved >= 4 ? 1.1 : 0.7, 9);
-        }
-        if (!deck.settled()) return;
-        standing = deck.standing();
-      } else {
-        // Gutter ball: roll on into the pit; the pins don't move.
-        const b = r.ball!;
-        b.x += b.vx * dt;
-        render.ball.p.set(b.x, ballY(b) - Math.max(0, b.x - LANE.pitEdge) * 0.6, b.z);
-        if (r.t < 1.4) return;
-        standing = PIN_SPOTS.map((_, i) => (r.before & (1 << i)) !== 0);
+      const settled = r.deck ? crash(r, render, laneSpec, dt) : gutterBall(r, render, dt);
+      if (settled) {
+        // Count what fell (of the pins that were up for this ball) and tell the server.
+        let knocked = 0;
+        settled.forEach((up, i) => {
+          if (!up && r.before & (1 << i)) knocked |= 1 << i;
+        });
+        r.deck?.dispose();
+        r.deck = null;
+        bowlSend.result(id, knocked);
+        announce(knocked, r.before, !!r.ball?.gutter);
+        // The pinsetter: set the standing pins back down, or a fresh rack at the end of the frame.
+        const after = [...r.rolls, popcount(knocked)];
+        const freshRack = nextBall(after)?.ball === 0 || isGameOver(after) || pinsStanding(after) === 10;
+        r.setter = new Pinsetter(render, settled.map((s, i) => s && (r.before & (1 << i)) !== 0), freshRack);
+        void playAt("sweep", ...laneToWorld(laneSpec, LANE.headPin, 0.6, 0), 0.6, 6);
+        r.sound = "sweep";
+        mode("sweep");
       }
-      // Count what fell (of the pins that were up for this ball).
-      let knocked = 0;
-      standing.forEach((up, i) => {
-        if (!up && r.before & (1 << i)) knocked |= 1 << i;
-      });
-      laneDriver.result(id, knocked);
-      announce(knocked, r.before, !deck);
-      const after = useLanes.getState().lanes[id];
-      r.setter = new Pinsetter(render, standing.map((s, i) => s && (r.before & (1 << i)) !== 0), after.standing === ALL_PINS);
-      void playAt("sweep", ...laneToWorld(laneSpec, LANE.headPin, 0.6, 0), 0.6, 6);
-      mode("sweep");
     }
 
-    // --- the pinsetter clears up; then back to the line, or wait for your next turn ---
+    // --- the pinsetter clears up; then wait for the server to say whose turn it is ---
     if (ui.mode === "sweep" && r.setter) {
       if (r.setter.update(dt)) {
         r.setter = null;
-        const after = useLanes.getState().lanes[id];
-        if (after.standing === ALL_PINS) rackPins(render);
-        laneDriver.ready(id);
         void playAt("ball-return", ...RETURN_HOOD, 0.6, 5);
+        r.sound = "return";
+        stream(r, id, FRAME_EVERY); // the last frame: the pins as they'll be for the next ball
+        drivenHere[id] = false;
         mode("wait");
-        if (after.phase === "over") releaseLine();
-      } else shot(laneSpec, [LANE.headPin - 4.6, 1.05, 0], [LANE.headPin + 0.4, 0.12, 0]);
+        return;
+      }
+      shot(laneSpec, [LANE.headPin - 4.6, 1.05, 0], [LANE.headPin + 0.4, 0.12, 0]);
     }
+    if (drivenHere[id]) stream(r, id, dt);
     if (ui.mode === "wait") releaseLine();
   });
 
   return null;
 }
 
-function startTurn(r: Run, render: (typeof laneRender)["1"], standing: number) {
-  r.before = standing;
-  r.ball = null;
-  render.ball.visible = false;
-  playerState.bowlReleased = false;
+/** Run the pin physics; the pins' standing/fallen once they settle, else null. */
+function crash(r: Run, render: LaneRender, lane: LaneSpec, dt: number): boolean[] | null {
+  const deck = r.deck!;
+  deck.step(dt);
+  deck.write(render);
+  if (!r.crashed && deck.time > 0.2) {
+    r.crashed = true;
+    const moved = render.pins.filter((p, i) => !p.gone && Math.hypot(p.p.x - PIN_SPOTS[i]!.x, p.p.z - PIN_SPOTS[i]!.z) > 0.03).length;
+    if (moved > 0) {
+      const at = laneToWorld(lane, LANE.headPin, 0.3, 0);
+      void playAt(moved >= 4 ? "pin-crash" : "pin-tap", at[0], at[1], at[2], moved >= 4 ? 1.1 : 0.7, 9);
+      r.sound = moved >= 4 ? "crash" : "tap";
+    }
+  }
+  return deck.settled() ? deck.standing() : null;
+}
+
+/** A gutter ball rolls on into the pit; the pins don't move. */
+function gutterBall(r: Run, render: LaneRender, dt: number): boolean[] | null {
+  const b = r.ball!;
+  b.x += b.vx * dt;
+  render.ball.p.set(b.x, ballY(b) - Math.max(0, b.x - LANE.pitEdge) * 0.6, b.z);
+  if (r.t < 1.4) return null;
+  return PIN_SPOTS.map((_, i) => (r.before & (1 << i)) !== 0);
+}
+
+/** Send the party where our ball and pins are (20 a second, and straight away with a sound). */
+function stream(r: Run, id: LaneId, dt: number) {
+  r.sendIn -= dt;
+  if (r.sendIn > 0 && !r.sound) return;
+  r.sendIn = FRAME_EVERY;
+  bowlSend.frame(frameOf(id, r.sound));
+  r.sound = undefined;
 }
 
 /** Step back from the line: the bear and camera are yours again. */
@@ -237,41 +286,26 @@ function releaseLine() {
   cameraState.mouse = null;
 }
 
-function joinLane(id: LaneId) {
-  laneDriver.join(id, myName());
-  rackPins(laneRender[id]);
-  useBowling.setState({ lane: id, mode: "wait", aim: 0, z: 0.2, prompt: null });
-}
-
-function leaveLane() {
-  const { lane } = useBowling.getState();
-  if (lane) laneDriver.leave(lane);
+/** Off the lane entirely. */
+function stopBowling() {
   releaseLine();
+  drivenHere["1"] = drivenHere["2"] = false;
   useBowling.setState({ lane: null, mode: "off", prompt: null });
 }
 
 /** STRIKE! / SPARE! / GUTTER / n pins, and a celebration for a strike. */
 function announce(knockedMask: number, before: number, gutter: boolean) {
-  const n = popcountMask(knockedMask);
+  const n = popcount(knockedMask);
   const fresh = before === ALL_PINS;
   let text = n === 1 ? "1 pin" : `${n} pins`, big = false;
   if (fresh && n === 10) (text = "STRIKE!"), (big = true), (playerState.celebrateRequest = true);
-  else if (!fresh && popcountMask(before) === n && n > 0) (text = "SPARE!"), (big = true);
+  else if (!fresh && popcount(before) === n && n > 0) (text = "SPARE!"), (big = true);
   else if (gutter) text = "Gutter";
   else if (n === 0) text = "Miss";
   useBowling.setState({ banner: { text, big, at: performance.now() } });
 }
 
-const popcountMask = (m: number) => PIN_SPOTS.reduce((n, _, i) => n + ((m >> i) & 1), 0);
 const clamp = (x: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, x));
-/** Who "you" are on the lanes (the practice lane in this browser, 3.2). */
-const myId = () => LOCAL_ID;
-const myName = () => {
-  const p = usePartyStore.getState();
-  return p.players.find((x) => x.id === p.sessionId)?.name ?? "You";
-};
-/** The ball return's hood, where balls pop back up (world). */
-const RETURN_HOOD = toWorld([BALL_RETURN.x + 0.45, PLATFORM_Y + 0.6, BALL_RETURN.z]);
 
 /** Point the camera from/at lane coordinates. */
 function shot(lane: LaneSpec, from: [number, number, number], look: [number, number, number]) {

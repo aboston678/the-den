@@ -4,6 +4,7 @@ import { useEffect, useMemo } from "react";
 import { BoxGeometry, InstancedMesh, Matrix4, Mesh, MeshStandardMaterial, Vector3 } from "three";
 import { RACK_SPOTS } from "./alleyGeometry.ts";
 import { laneRender } from "./laneState.ts";
+import { followRemote } from "./remoteFrames.ts";
 import { BALL_COLOURS, ballGeometry, ballMaterial, pinGeometry, pinMaterial } from "./models.ts";
 
 // The moving parts of both lanes (GAME_SPEC §15): 20 pins (one instanced mesh), each lane's ball,
@@ -54,9 +55,10 @@ export function LanePins() {
     parts.barMat.dispose();
   }, [parts]);
 
-  useFrame(() => {
+  useFrame((_, dt) => {
     LANES.forEach((lane, li) => {
-      const r = laneRender[lane.id as "1" | "2"];
+      followRemote(lane.id, Math.min(dt, 0.1)); // another bear's roll on this lane, if any
+      const r = laneRender[lane.id];
       r.pins.forEach((pin, i) => {
         if (pin.gone) return parts.pins.setMatrixAt(li * PIN_COUNT + i, hidden);
         pos.set(...laneToFloorplan(lane, pin.p.x, pin.p.y, pin.p.z));

@@ -13,12 +13,24 @@ export const MSG = {
   reel: "reel", // one press of R: reel in (strikes on a bite, fights a hooked fish)
   reelIn: "reelIn", // wind the lure back in without a fish
   devFish: "devFish", // { biteIn, species?, weight? }: next bite after this many seconds (dev and tests only)
+  // Bowling (GAME_SPEC §15): the server owns turns and scores; the bowler's browser runs the ball and pins.
+  bowlJoin: "bowlJoin", // { lane }: join a lane at its ball return (before or between games)
+  bowlLeave: "bowlLeave", // leave your lane
+  bowlNewGame: "bowlNewGame", // { lane }: start a new game once the last one's over
+  bowlRolling: "bowlRolling", // { lane }: my ball's on its way
+  bowlResult: "bowlResult", // { lane, knocked }: which standing pins my ball knocked down (bit mask)
+  bowlFrame: "bowlFrame", // BowlFrame: where my ball and pins are (20 Hz while they move), passed on to everyone else
+  devBowl: "devBowl", // { lane, rolls }: set my balls so far in this game (dev and tests only)
 } as const;
 
 /** Messages the server sends to everyone in the party. */
 export const SERVER_MSG = {
   /** { id, name, species, weight, best }: someone landed a fish. */
   caught: "caught",
+  /** BowlFrame from another bowler (see MSG.bowlFrame). */
+  bowlFrame: "bowlFrame",
+  /** { id, name, lane, score, best }: someone finished a game of bowling. */
+  bowled: "bowled",
 } as const;
 
 export const BEAR_ACTIONS = ["locomotion", "jump", "fall", "roar", "dance", "cast", "reel", "celebrate", "bowl"] as const;

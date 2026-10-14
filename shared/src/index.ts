@@ -11,3 +11,4 @@ export * from "./bowling/lane.ts";
 export * from "./bowling/scoring.ts";
 export * from "./bowling/ball.ts";
 export * from "./bowling/throw.ts";
+export * from "./bowling/sync.ts";

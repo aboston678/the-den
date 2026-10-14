@@ -32,6 +32,28 @@ export const Player = schema(
 );
 export type Player = SchemaType<typeof Player>;
 
+// Bowling (GAME_SPEC §15): who's on each lane, their balls so far, whose turn. The server owns this.
+export const Bowler = schema(
+  {
+    id: t.string(), // session id
+    name: t.string(),
+    rolls: t.string().default(""), // pins knocked down by each ball, comma separated ("10,7,3")
+  },
+  "Bowler",
+);
+export type Bowler = SchemaType<typeof Bowler>;
+
+export const Lane = schema(
+  {
+    bowlers: t.array(Bowler),
+    turn: t.uint8().default(0), // index into bowlers
+    phase: t.string().default("idle"), // idle | aim | rolling | reset | over
+    standing: t.uint16().default(0x3ff), // pins up for the next ball (bit 0 = head pin)
+  },
+  "Lane",
+);
+export type Lane = SchemaType<typeof Lane>;
+
 export const PartyState = schema(
   {
     phase: t.string().default("lobby"), // "lobby" | "playing"
@@ -41,6 +63,7 @@ export const PartyState = schema(
     players: t.map(Player),
     doors: t.map("boolean"), // door id -> open (GAME_SPEC §8.2: every door opens for everyone)
     clock: t.float32(), // seconds into the 68-minute day/night cycle (GAME_SPEC §9); ticks once a second
+    lanes: t.map(Lane), // "1" and "2" (GAME_SPEC §15)
   },
   "PartyState",
 );

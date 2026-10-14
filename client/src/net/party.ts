@@ -1,8 +1,11 @@
 import { Callbacks, Client, type Room } from "@colyseus/sdk";
 import {
-  type BearAction, type FishState, MSG, PARTY_ROOM, type Pose, SERVER_MSG, type WorldName, isValidRoomCode, isWorldName, normalizeRoomCode, sanitizeNickname,
+  type BearAction, type BowlFrame, type FishState, MSG, PARTY_ROOM, type Pose, SERVER_MSG, type WorldName, isValidRoomCode, isWorldName, normalizeRoomCode,
+  sanitizeBowlFrame, sanitizeNickname,
 } from "@den/shared";
 import { create } from "zustand";
+import { applyRemoteFrame } from "../game/bowling/remoteFrames.ts";
+import { type LanePhase, type LaneView, resetLanes, useLanes } from "../game/bowling/store.ts";
 import { setServerClock } from "../game/sky/clock.ts";
 import { playerState } from "../game/state.ts";
 import { accessToken } from "./auth.ts";
@@ -228,6 +231,53 @@ export const reelInLine = () => room?.send(MSG.reelIn);
 /** Dev and tests: next bite after `biteIn` seconds (optionally a set species and weight). */
 export const devFish = (biteIn: number, species?: string, weight?: number) => room?.send(MSG.devFish, { biteIn, species, weight });
 
+/** Bowling (GAME_SPEC §15): the server runs turns and scores; we send what our own ball did. */
+export const bowlSend = {
+  join: (lane: string) => room?.send(MSG.bowlJoin, { lane }),
+  leave: () => room?.send(MSG.bowlLeave),
+  newGame: (lane: string) => room?.send(MSG.bowlNewGame, { lane }),
+  rolling: (lane: string) => room?.send(MSG.bowlRolling, { lane }),
+  result: (lane: string, knocked: number) => room?.send(MSG.bowlResult, { lane, knocked }),
+  frame: (f: BowlFrame) => room?.send(MSG.bowlFrame, f),
+  /** Dev and tests: set my balls so far this game (the server ignores it in production). */
+  devRolls: (lane: string, rolls: number[]) => room?.send(MSG.devBowl, { lane, rolls }),
+};
+
+/** Finished games announced to the party (newest last). */
+export const useBowlNews = create<{ games: { id: string; name: string; lane: string; score: number; best: boolean; at: number; mine: boolean }[] }>(() => ({ games: [] }));
+
+interface NetLane {
+  bowlers: { forEach(cb: (b: { id: string; name: string; rolls: string }) => void): void };
+  turn: number;
+  phase: string;
+  standing: number;
+}
+
+/** The lanes as the server last sent them (JSON), so the store only changes when they do. */
+const lastLanes: Record<string, string> = {};
+
+/** Copy the lanes from the server's state into the store (only when something changed). */
+function syncLanes(r: Room) {
+  const lanes = r.state?.lanes as { get(id: string): NetLane | undefined } | undefined;
+  if (!lanes) return;
+  const next = { ...useLanes.getState().lanes };
+  let changed = false;
+  for (const id of ["1", "2"] as const) {
+    const l = lanes.get(id);
+    if (!l) continue;
+    const bowlers: LaneView["bowlers"] = [];
+    l.bowlers.forEach((b) => bowlers.push({ id: b.id, name: b.name, rolls: b.rolls ? b.rolls.split(",").map(Number) : [] }));
+    const view: LaneView = { id, bowlers, turn: l.turn ?? 0, phase: (l.phase || "idle") as LanePhase, standing: l.standing ?? 0x3ff };
+    const json = JSON.stringify(view);
+    if (json !== lastLanes[id]) {
+      lastLanes[id] = json;
+      next[id] = view;
+      changed = true;
+    }
+  }
+  if (changed) useLanes.setState({ lanes: next });
+}
+
 /** Jump the party's clock (dev and tests; the server ignores it in production). */
 export function setDevTime(time: number | string) {
   room?.send(MSG.devTime, { time });
@@ -335,6 +385,15 @@ function bind(r: Room) {
     useFishStore.setState((st) => ({ catches: [...st.catches.slice(-4), { ...c, at: performance.now(), mine: c.id === r.sessionId }] }));
   });
 
+  r.onStateChange(() => syncLanes(r));
+  r.onMessage(SERVER_MSG.bowlFrame, (f: unknown) => {
+    const frame = sanitizeBowlFrame(f);
+    if (frame) applyRemoteFrame(frame);
+  });
+  r.onMessage(SERVER_MSG.bowled, (g: { id: string; name: string; lane: string; score: number; best: boolean }) => {
+    useBowlNews.setState((st) => ({ games: [...st.games.slice(-4), { ...g, at: performance.now(), mine: g.id === r.sessionId }] }));
+  });
+
   r.onDrop(() => usePartyStore.setState({ status: "reconnecting" }));
   r.onReconnect(() => {
     saveToken(r);
@@ -346,6 +405,9 @@ function bind(r: Room) {
     forgetToken();
     usePartyStore.setState({ status: "idle", code: "", hostId: "", phase: "lobby", players: [], remoteIds: [], sessionId: "", doors: {} });
     useFishStore.setState({ me: NO_FISH, catches: [] });
+    resetLanes();
+    for (const k of Object.keys(lastLanes)) delete lastLanes[k];
+    useBowlNews.setState({ games: [] });
   });
 
   usePartyStore.setState({ status: "in-party", sessionId: r.sessionId, error: null });

@@ -1,4 +1,4 @@
-import { HOUSE } from "../world/layout.ts";
+import { HOUSE, houseToWorld } from "../world/layout.ts";
 
 // The bowling alley's layout (GAME_SPEC §15, Phase 3): two regulation lanes in the basement room
 // `bowling_alley` (docs/floorplan.json, floorplan x 28–56, z 0–6), running west → east with the
@@ -102,3 +102,7 @@ export function laneToWorld(lane: LaneSpec, x: number, y: number, z: number): [n
 export const STANCE = { x: -0.9, maxZ: LANE.width / 2 - 0.12 } as const;
 /** You can join a lane at its ball return from this far away (world metres). */
 export const JOIN_REACH = 2.6;
+/** Where you join a lane: beside the ball return, on that lane's side (both lanes share it). World x, z. */
+export const joinSpot = (lane: LaneSpec) => houseToWorld(BALL_RETURN.x, (BALL_RETURN.z + lane.cz) / 2);
+/** The approach's floor height in the world (for checking a bear is down at the lanes). */
+export const APPROACH_WORLD_Y = PLATFORM_Y * HOUSE.scale;

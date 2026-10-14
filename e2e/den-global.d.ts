@@ -45,6 +45,8 @@ interface Window {
       me: () => { lane: string | null; mode: string; z: number; aim: number; power: number; curve: number; banner: string | null };
       click: () => void;
       throw: (t: { z: number; aim: number; power: number; curve: number }) => boolean;
+      devRolls: (lane: string, rolls: number[]) => void;
+      seen: (lane: "1" | "2") => { ball: boolean; ballX: number; gone: number };
     };
   };
 }
