@@ -1,5 +1,6 @@
 import { type Client, Room, matchMaker } from "@colyseus/core";
 import {
+  CATAN_RECONNECT_S,
   DOOR_REACH,
   INTERACTIVE_DOORS,
   MAX_PLAYERS,
@@ -24,8 +25,9 @@ import { type Bear, authenticate } from "../auth.ts";
 import { devToolsOn } from "../config.ts";
 import { Lane, PartyState, Player } from "./PartyState.ts";
 import { Bowling, type GameResult, LANE_IDS } from "./bowling.ts";
+import { Catan, type CatanResult } from "./catan.ts";
 import { type Catch, Fishing } from "./fishing.ts";
-import { recordBowlingGame, recordCatch } from "../stats.ts";
+import { recordBowlingGame, recordCatanGame, recordCatch } from "../stats.ts";
 
 const num = (v: unknown) => (typeof v === "number" ? v : Number.NaN);
 
@@ -48,6 +50,7 @@ export class PartyRoom extends Room<{ state: PartyState }> {
   private lastPoseAt = new Map<string, number>();
   private fishing = new Fishing();
   private bowling = new Bowling();
+  private catan = new Catan();
   /** When each bowler last sent a ball/pins frame (ms), to keep the stream to ~20 a second. */
   private lastFrameAt = new Map<string, number>();
   /** Supabase user id per bear (server-side only; used to save stats), null for development players. */
@@ -159,6 +162,45 @@ export class PartyRoom extends Room<{ state: PartyState }> {
       for (const g of this.bowling.tick(this.state.lanes, this.state.players, Date.now())) void this.announceGame(g);
     }, 1000 / NET_TICK_HZ);
 
+    // Catan (GAME_SPEC §16): the server holds the game; the table's view is what everyone may see,
+    // and each player's own cards go to them alone.
+    this.catan.setup(this.state.catan);
+    const table = this.state.catan;
+    const afterCatan = () => this.sendCatanHands();
+    this.onMessage(MSG.catanSit, (client, message: { seat?: unknown }) => {
+      const p = playing(client);
+      if (p && this.catan.sit(table, client.sessionId, p, num(message?.seat))) afterCatan();
+    });
+    this.onMessage(MSG.catanStand, (client) => {
+      if (this.catan.stand(table, client.sessionId)) afterCatan();
+    });
+    this.onMessage(MSG.catanStart, (client, message: { h?: unknown }) => {
+      if (!playing(client)) return;
+      const house = message?.h === true;
+      if (!this.catan.start(table, client.sessionId, this.state.players, house)) return;
+      if (house) client.send(SERVER_MSG.catanOk, {});
+      afterCatan();
+    });
+    this.onMessage(MSG.catanAct, (client, message: { action?: unknown }) => {
+      if (!playing(client)) return;
+      const error = this.catan.act(table, client.sessionId, message?.action, Date.now());
+      if (error) client.send(SERVER_MSG.catanError, { error });
+      else afterCatan();
+    });
+    this.onMessage(MSG.catanQuit, (client) => {
+      this.catan.quit(table, client.sessionId, Date.now());
+      afterCatan();
+    });
+    this.onMessage(MSG.devCatan, (client, message: { dice?: unknown; give?: unknown }) => {
+      if (!devToolsOn()) return;
+      this.catan.dev(client.sessionId, message?.dice, message?.give);
+      afterCatan();
+    });
+    this.clock.setInterval(() => {
+      const done = this.catan.tick(table, Date.now());
+      if (done) void this.announceCatan(done);
+    }, 250);
+
     this.onMessage(MSG.devTime, (_client, message: { time?: unknown }) => {
       const time = parseTime(message?.time);
       if (devToolsOn() && time !== undefined) this.state.clock = time;
@@ -190,18 +232,26 @@ export class PartyRoom extends Room<{ state: PartyState }> {
   onDrop(client: Client) {
     const player = this.state.players.get(client.sessionId);
     if (player) player.connected = false;
-    this.allowReconnection(client, RECONNECT_WINDOW_S);
+    // Catan players get longer, and their game waits for them (GAME_SPEC §16).
+    const inCatan = this.catan.playerIndex(client.sessionId) >= 0;
+    if (inCatan) this.catan.drop(this.state.catan, client.sessionId, Date.now());
+    this.allowReconnection(client, inCatan ? CATAN_RECONNECT_S : RECONNECT_WINDOW_S);
   }
 
   onReconnect(client: Client) {
     const player = this.state.players.get(client.sessionId);
     if (player) player.connected = true;
+    this.catan.back(this.state.catan, client.sessionId);
+    const mine = this.catan.privateFor(client.sessionId);
+    if (mine) client.send(SERVER_MSG.catanPrivate, mine);
   }
 
   onLeave(client: Client) {
     this.state.players.delete(client.sessionId);
     this.fishing.remove(client.sessionId);
     this.bowling.leave(this.state.lanes, client.sessionId, Date.now());
+    this.catan.leave(this.state.catan, client.sessionId, Date.now());
+    this.sendCatanHands();
     this.lastFrameAt.delete(client.sessionId);
     this.userIds.delete(client.sessionId);
     this.lastPoseAt.delete(client.sessionId);
@@ -229,6 +279,28 @@ export class PartyRoom extends Room<{ state: PartyState }> {
     let best = false;
     if (userId) best = (await recordBowlingGame(userId, g.score).catch(() => null))?.best ?? false;
     this.broadcast(SERVER_MSG.bowled, { ...g, best });
+  }
+
+  /** Each Catan player's own cards, sent only to them, and only when they've changed. */
+  private lastHands = new Map<string, string>();
+  private sendCatanHands() {
+    for (const client of this.clients) {
+      const mine = this.catan.privateFor(client.sessionId);
+      const json = mine ? JSON.stringify(mine) : "";
+      if (json === (this.lastHands.get(client.sessionId) ?? "")) continue;
+      this.lastHands.set(client.sessionId, json);
+      client.send(SERVER_MSG.catanPrivate, mine);
+    }
+  }
+
+  /** Save a finished game of Catan (a win for a signed-in winner), then tell the party. */
+  private async announceCatan(r: CatanResult) {
+    this.sendCatanHands();
+    if (!r.winnerId) return;
+    const winner = this.userIds.get(r.winnerId) ?? null;
+    const players = r.playerIds.map((id) => this.userIds.get(id) ?? null).filter((u): u is string => !!u);
+    await recordCatanGame(winner, players).catch(() => null);
+    this.broadcast(SERVER_MSG.catanWon, { id: r.winnerId, name: r.winnerName, vp: r.vp });
   }
 
   private freeSlot() {

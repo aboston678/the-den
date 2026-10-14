@@ -20,3 +20,4 @@ export * from "./catan/awards.ts";
 export * from "./catan/game.ts";
 export * from "./catan/rules.ts";
 export * from "./catan/view.ts";
+export * from "./catan/seats.ts";

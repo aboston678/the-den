@@ -285,14 +285,13 @@ const MAIN: Placement[] = [
   P("pendant_lantern", "foyer", 28.0, 1.7, { y: 2.6 }),
 
   // Formal dining (Catan room): mahogany table with EXACTLY 4 Chippendale chairs, one per side
-  // (GAME_SPEC §8.2, §16), china cabinet, candle chandelier, oriental rug.
+  // (GAME_SPEC §8.2, §16), china cabinet, candle chandelier, oriental rug. The Catan board sits on the table.
   P("rug_oriental", "formal_dining", 31.9, 2.4, { w: 3.0, d: 2.4, look: "gold" }),
   P("dining_table", "formal_dining", 31.9, 2.4, { look: "cloth" }),
   P("chippendale_chair", "formal_dining", 31.9, 1.6),
   P("chippendale_chair", "formal_dining", 31.9, 3.2, { rot: 180 }),
   P("chippendale_chair", "formal_dining", 30.92, 2.4, { rot: 90 }),
   P("chippendale_chair", "formal_dining", 32.88, 2.4, { rot: 270 }),
-  P("flowers", "formal_dining", 31.9, 2.4, { y: 0.76, look: "dried" }),
   W("china_cabinet", "formal_dining", "s", 32.0),
   P("chandelier", "formal_dining", 31.9, 2.4, { y: 2.6 }),
   W("painting", "formal_dining", "e", 2.5, { y: 1.45, w: 0.9, h: 0.4, look: "landscape" }),

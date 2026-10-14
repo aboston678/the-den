@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { recordBowlingGame, recordCatch } from "./stats.ts";
+import { recordBowlingGame, recordCatanGame, recordCatch } from "./stats.ts";
 
 const env = { ...process.env };
 afterEach(() => {
@@ -72,5 +72,37 @@ describe("saving bowling games", () => {
     keys();
     const failing = (async () => new Response("nope", { status: 500 })) as typeof import("./auth.ts").supabase;
     expect(await recordBowlingGame("user-1", 100, failing)).toBeNull();
+  });
+});
+
+describe("saving catan games", () => {
+  it("saves the game and gives the winner +1 win", async () => {
+    process.env.SUPABASE_URL = "https://example.supabase.co";
+    process.env.SUPABASE_SERVICE_ROLE_KEY = "secret";
+    const calls: { path: string; method: string; body: unknown }[] = [];
+    const call = (async (path: string, init?: RequestInit) => {
+      calls.push({ path, method: init?.method ?? "GET", body: init?.body ? JSON.parse(String(init.body)) : null });
+      if (path.startsWith("/rest/v1/stats?") && !init?.method) return Response.json([{ catan_wins: 2 }]);
+      return new Response(null, { status: 201 });
+    }) as typeof import("./auth.ts").supabase;
+    expect(await recordCatanGame("user-1", ["user-1", "user-2"], call)).toEqual({ wins: 3 });
+    expect(calls.map((c) => `${c.method} ${c.path}`)).toEqual([
+      "POST /rest/v1/catan_games", "GET /rest/v1/stats?user_id=eq.user-1&select=catan_wins", "PATCH /rest/v1/stats?user_id=eq.user-1",
+    ]);
+    expect(calls[0]!.body).toEqual({ winner: "user-1", players: ["user-1", "user-2"] });
+    expect((calls[2]!.body as { catan_wins: number }).catan_wins).toBe(3);
+  });
+
+  it("a winner who isn't signed in still gets the game saved for the others", async () => {
+    process.env.SUPABASE_URL = "https://example.supabase.co";
+    process.env.SUPABASE_SERVICE_ROLE_KEY = "secret";
+    const paths: string[] = [];
+    const call = (async (path: string) => {
+      paths.push(path);
+      return new Response(null, { status: 201 });
+    }) as typeof import("./auth.ts").supabase;
+    expect(await recordCatanGame(null, ["user-2"], call)).toEqual({ wins: 0 });
+    expect(paths).toEqual(["/rest/v1/catan_games"]);
+    expect(await recordCatanGame(null, [], call)).toBeNull();
   });
 });

@@ -10,6 +10,9 @@ export const NET_TICK_HZ = 20;
 /** Seconds a dropped player has to reconnect before they're removed (GAME_SPEC §7). */
 export const RECONNECT_WINDOW_S = 30;
 
+/** Seconds a dropped Catan player has; the game pauses meanwhile (GAME_SPEC §16). */
+export const CATAN_RECONNECT_S = 60;
+
 /** Colyseus room name for a party. */
 export const PARTY_ROOM = "party";
 

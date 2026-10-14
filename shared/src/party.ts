@@ -21,6 +21,13 @@ export const MSG = {
   bowlResult: "bowlResult", // { lane, knocked }: which standing pins my ball knocked down (bit mask)
   bowlFrame: "bowlFrame", // BowlFrame: where my ball and pins are (20 Hz while they move), passed on to everyone else
   devBowl: "devBowl", // { lane, rolls }: set my balls so far in this game (dev and tests only)
+  // Catan (GAME_SPEC §16): the server owns the game; browsers send moves and get back what they may see.
+  catanSit: "catanSit", // { seat }: sit in a chair at the dining table (you must be next to it)
+  catanStand: "catanStand", // get up (not while you're in a game that's still going)
+  catanStart: "catanStart", // { h? }: start a game with everyone seated (2–4)
+  catanAct: "catanAct", // { action }: a move (CatanAction), checked against the rules
+  catanQuit: "catanQuit", // leave the game you're in (your cards go back to the bank)
+  devCatan: "devCatan", // { dice?, give? }: next roll / extra cards for me (dev and tests only)
 } as const;
 
 /** Messages the server sends to everyone in the party. */
@@ -31,9 +38,17 @@ export const SERVER_MSG = {
   bowlFrame: "bowlFrame",
   /** { id, name, lane, score, best }: someone finished a game of bowling. */
   bowled: "bowled",
+  /** CatanPrivate: your own hand and development cards (sent only to you). */
+  catanPrivate: "catanPrivate",
+  /** { error }: why your Catan move was refused (sent only to you). */
+  catanError: "catanError",
+  /** {}: sent only to the bear who started the game, when they asked for it. */
+  catanOk: "catanOk",
+  /** { id, name, vp }: someone won at Catan. */
+  catanWon: "catanWon",
 } as const;
 
-export const BEAR_ACTIONS = ["locomotion", "jump", "fall", "roar", "dance", "cast", "reel", "celebrate", "bowl"] as const;
+export const BEAR_ACTIONS = ["locomotion", "jump", "fall", "roar", "dance", "cast", "reel", "celebrate", "bowl", "sit", "stand"] as const;
 export type BearAction = (typeof BEAR_ACTIONS)[number];
 
 export interface Pose {

@@ -54,6 +54,19 @@ export const Lane = schema(
 );
 export type Lane = SchemaType<typeof Lane>;
 
+// Catan (GAME_SPEC §16): who sits where, and the game as everyone may see it. Hands and development
+// cards are never in here; each player gets their own by private message.
+export const CatanTable = schema(
+  {
+    seats: t.array("string"), // 4 chairs, clockwise from the north side: session id or ""
+    view: t.string().default(""), // CatanView as JSON ("" before the first game)
+    waitingFor: t.string().default(""), // name of a dropped player the game is waiting for
+    waitUntil: t.float64().default(0), // when they'll be removed (ms since 1970)
+  },
+  "CatanTable",
+);
+export type CatanTable = SchemaType<typeof CatanTable>;
+
 export const PartyState = schema(
   {
     phase: t.string().default("lobby"), // "lobby" | "playing"
@@ -64,6 +77,7 @@ export const PartyState = schema(
     doors: t.map("boolean"), // door id -> open (GAME_SPEC §8.2: every door opens for everyone)
     clock: t.float32(), // seconds into the 68-minute day/night cycle (GAME_SPEC §9); ticks once a second
     lanes: t.map(Lane), // "1" and "2" (GAME_SPEC §15)
+    catan: CatanTable,
   },
   "PartyState",
 );
