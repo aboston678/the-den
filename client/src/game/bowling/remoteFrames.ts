@@ -2,6 +2,7 @@ import { type BowlFrame, LANE, laneById, laneToWorld } from "@den/shared";
 import { Quaternion, Vector3 } from "three";
 import { playAt } from "../audio/audio.ts";
 import { type LaneRender, laneRender } from "./laneState.ts";
+import { useLanes } from "./store.ts";
 
 // Another bear's ball and pins (GAME_SPEC §15 "Sync"): their browser runs the physics and streams
 // where everything is ~20 times a second; we glide our copy toward the latest positions so it
@@ -73,6 +74,7 @@ export function followRemote(id: "1" | "2", dt: number) {
   if (t.ball.visible && !r.ball.visible) r.ball.p.copy(t.ball.p), r.ball.q.copy(t.ball.q);
   else r.ball.p.lerp(t.ball.p, k), r.ball.q.slerp(t.ball.q, k);
   r.ball.visible = t.ball.visible;
+  r.ball.colour = useLanes.getState().lanes[id].turn; // the bowler's colour, as on their side
   r.pins.forEach((pin, i) => {
     const want = t.pins[i]!;
     if (pin.gone && !want.gone) pin.p.copy(want.p), pin.q.copy(want.q);
