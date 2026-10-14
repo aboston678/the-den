@@ -172,7 +172,9 @@ export class HouseMaterials {
       case "lane": {
         const map = laneBoards();
         map.repeat.set(1 / 1.2, 1 / 0.54); // 1.2 m of grain, 20 boards (27 mm each) per tile
-        return new MeshStandardMaterial({ map, roughness: 0.32, envMapIntensity: 0.1 }); // underground: no blue sky in the polish
+        // A little of their own colour as glow: real lanes are lit end to end, but only the lamps nearest
+        // you are real lights here, so the far end would go dim and grey.
+        return new MeshStandardMaterial({ map, emissiveMap: map, emissive: "#ffffff", emissiveIntensity: 0.32, roughness: 0.32, envMapIntensity: 0.1 }); // underground: no blue sky in the polish
       }
       case "tile": return new MeshStandardMaterial({ color: arg, roughness: 0.35, map: this.speckle, normalScale: new Vector2(0.3, 0.3) });
       case "carpet": {

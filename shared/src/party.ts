@@ -21,7 +21,7 @@ export const SERVER_MSG = {
   caught: "caught",
 } as const;
 
-export const BEAR_ACTIONS = ["locomotion", "jump", "fall", "roar", "dance", "cast", "reel", "celebrate"] as const;
+export const BEAR_ACTIONS = ["locomotion", "jump", "fall", "roar", "dance", "cast", "reel", "celebrate", "bowl"] as const;
 export type BearAction = (typeof BEAR_ACTIONS)[number];
 
 export interface Pose {

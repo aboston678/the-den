@@ -7,6 +7,7 @@ import { indoor } from "../house/lights.ts";
 import { toWorld } from "../house/space.ts";
 import { invisibleColliders } from "../world/invisible.ts";
 import { removeBody } from "../world/physics.ts";
+import { AimArrow } from "./AimArrow.tsx";
 import { LanePins } from "./LanePins.tsx";
 import { Monitors } from "./Monitors.tsx";
 import { installBowlDev } from "./dev.ts";
@@ -47,6 +48,7 @@ export function Alley({ barriers }: { barriers: SolidBox[] }) {
     <group ref={group} name="bowling">
       <Monitors />
       <LanePins />
+      <AimArrow />
     </group>
   );
 }

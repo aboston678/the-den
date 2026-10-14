@@ -42,6 +42,9 @@ interface Window {
     bowl?: {
       lanes: () => Record<"1" | "2", BowlLane>;
       setLanes: (lanes: Partial<Record<"1" | "2", Partial<BowlLane>>>) => void;
+      me: () => { lane: string | null; mode: string; z: number; aim: number; power: number; curve: number; banner: string | null };
+      click: () => void;
+      throw: (t: { z: number; aim: number; power: number; curve: number }) => boolean;
     };
   };
 }

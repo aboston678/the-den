@@ -272,10 +272,10 @@ Weight = min + (max − min) × r^2.2 (r random 0–1), so big fish are rare. Fi
 - **Physics:** the ball's trip down the lane uses a small hand-written ball model (slide → hook → roll): low friction on the oiled front ~2/3 and higher friction on the dry back end, so a spinning ball hooks late. At the pins a separate Rapier world takes over for the crash (ball ~7 kg, pins ~1.6 kg, fixed 120 Hz steps so it doesn't depend on frame rate). Both run in unit tests so strike rates can be tuned (changed 2026-10-13: a reliable, tunable hook).
 - **Controls (meters, golf-game style; Andrew 2026-10-13):**
   1. Position: A/D slides the bear left/right on the approach.
-  2. Aim: move the mouse left/right to swing the aim arrow (±6°).
+  2. Aim: move the mouse left/right to swing the aim arrow (±3°: that already spans gutter to gutter at the pins; ±6° was mostly gutter).
   3. Power: click to start a bouncing POWER meter, click again to stop it.
   4. Curve: a CURVE meter then swings left ↔ right; click to stop it (middle = straight, ends = big hook either way).
-  - **Variability:** where you stop the meters is the skill; on top of that there's a small random scatter in aim (bigger the harder you throw), a little wobble on the curve, and tiny random nudges to the pins, so the same throw doesn't always leave the same pins.
+  - **Variability:** where you stop the meters is the skill; on top of that there's a small random scatter in aim (about ±5 cm at the pins for a gentle ball up to ±14 cm flat out, against a ~6 cm pocket), a little wobble on the curve, and tiny random nudges to the pins, so the same throw doesn't always leave the same pins.
 - **Pinsetter:** after the first ball, sweep fallen pins; after the frame, reset all 10. Ball comes back on the return ~5 s later.
 - **Scoring:** standard ten-pin, 10 frames, strike/spare bonuses, 10th frame up to 3 balls, max 300. Overhead monitor shows each lane's scorecard. Big "STRIKE!" / "SPARE!" banners and sounds; bear celebrates on a strike.
 - **Turns:** 1–4 bears per lane (E at that lane's ball rack to join before or between games). Others can watch.

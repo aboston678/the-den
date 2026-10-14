@@ -5,6 +5,7 @@ import { useQuality } from "./game/quality.ts";
 import { tryRejoin, usePartyStore } from "./net/party.ts";
 import { ActionPrompt } from "./ui/ActionPrompt.tsx";
 import { FishingHud } from "./ui/FishingHud.tsx";
+import { BowlingHud } from "./ui/BowlingHud.tsx";
 import { ConnectionBadge, ControlsHint, PartyList } from "./ui/Hud.tsx";
 import { LoadingScreen } from "./ui/LoadingScreen.tsx";
 import { NameTags } from "./ui/NameTags.tsx";
@@ -58,6 +59,7 @@ export function App() {
       <NameTags />
       <ActionPrompt />
       <FishingHud />
+      <BowlingHud />
       <PartyList />
       <Pause />
       <LoadingScreen />

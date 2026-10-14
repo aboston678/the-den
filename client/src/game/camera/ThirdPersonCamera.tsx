@@ -10,6 +10,9 @@ import { settings } from "../../ui/settings.ts";
 
 const target = new Vector3();
 const offset = new Vector3();
+/** Where the camera is looking, eased toward a shot's look-at point. */
+const looking = new Vector3();
+let wasOverride = false;
 
 /**
  * Third-person camera behind and above the bear (GAME_SPEC §5.3): click to capture the mouse
@@ -34,6 +37,7 @@ export function ThirdPersonCamera() {
     };
     const look = (e: MouseEvent) => {
       if (document.pointerLockElement !== canvas) return;
+      if (cameraState.mouse) return cameraState.mouse(e.movementX, e.movementY);
       const { sensitivity, invertY } = settings();
       const k = CAMERA.sensitivity * sensitivity;
       cameraState.yaw -= e.movementX * k;
@@ -55,6 +59,18 @@ export function ThirdPersonCamera() {
 
   useFrame((_, rawDt) => {
     const dt = Math.min(rawDt, 0.1);
+    // A set shot (bowling): ease there, then hold it.
+    const shot = cameraState.override;
+    if (shot) {
+      if (!wasOverride) looking.copy(playerState.position).y += CAMERA.targetHeight; // start from where the bear camera looked
+      const k = 1 - Math.exp(-5 * dt);
+      camera.position.lerp(shot.from, k);
+      looking.lerp(shot.look, k);
+      camera.lookAt(looking);
+      wasOverride = true;
+      return;
+    }
+    wasOverride = false;
     const { yaw, pitch } = cameraState;
     target.copy(playerState.position).y += CAMERA.targetHeight;
     offset.set(Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), Math.cos(yaw) * Math.cos(pitch));

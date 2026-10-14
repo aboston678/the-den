@@ -29,6 +29,14 @@ export const playerState = {
   teleportTo: null as { x: number; y: number; z: number; yaw?: number } | null,
   /** Fishing: cast to this point on the water (set by the fishing controls; the player plays the cast and sends it). */
   castRequest: null as { x: number; z: number } | null,
+  /** Bowling (GAME_SPEC §15): keep the bear on this spot facing this way (WASD, jump, dance off). */
+  hold: null as { x: number; z: number; yaw: number } | null,
+  /** Bowling: play the bowl now (set by the bowling controls; the player clears it). */
+  bowlRequest: false,
+  /** Bowling: set by the player when the ball leaves the paw; the bowling controls clear it. */
+  bowlReleased: false,
+  /** Play the celebrate clip now (a strike). */
+  celebrateRequest: false,
   /** Screenshot helper: hide your own bear (it fills the frame in tight rooms). */
   hidden: false,
   /** Test helper: when true, the player records its toe positions each frame (foot-slide check). */
@@ -44,6 +52,10 @@ export const cameraState = {
   current: 3.5,
   /** Seconds of camera shake left (roars nearby, getting shoved). */
   shake: 0,
+  /** A fixed shot instead of following the bear (bowling): camera position and where it looks, world metres. */
+  override: null as { from: Vector3; look: Vector3 } | null,
+  /** While set, mouse movement goes here instead of turning the camera (bowling aim). */
+  mouse: null as ((dx: number, dy: number) => void) | null,
 };
 
 export type { BearAction } from "@den/shared";

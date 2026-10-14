@@ -38,7 +38,7 @@ export function pinMaterial() {
   for (const h of [9.0, 10.5]) ctx.fillRect(0, 256 * (1 - (h + 0.55) / 15), 4, 256 * (0.4 / 15));
   const map = new CanvasTexture(c);
   map.colorSpace = SRGBColorSpace;
-  return new MeshStandardMaterial({ map, roughness: 0.28 });
+  return new MeshStandardMaterial({ map, emissiveMap: map, emissive: "#ffffff", emissiveIntensity: 0.25, roughness: 0.28 }); // lit like the lane (see style.ts "lane")
 }
 
 export const ballGeometry = (segments = 24) => new SphereGeometry(BALL.radius, segments, Math.round(segments * 0.75));

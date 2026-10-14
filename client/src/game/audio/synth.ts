@@ -133,3 +133,64 @@ export function lineSnapBuffer(ctx: BaseAudioContext) {
   }
   return toBuffer(ctx, data, rate);
 }
+
+// --- bowling (milestone 3.2) ---
+
+/** A ball rolling down a wooden lane: a low, slightly lumpy rumble (~2.8 s, fades in and out). */
+export function ballRollBuffer(ctx: BaseAudioContext) {
+  const rate = 22050, seconds = 2.8, data = new Float32Array(Math.round(rate * seconds));
+  const r = rng(61);
+  let lp = 0, lp2 = 0;
+  for (let i = 0; i < data.length; i++) {
+    const t = i / rate;
+    lp += (r() - lp) * 0.02;
+    lp2 += (lp - lp2) * 0.08;
+    const lumps = 0.75 + 0.25 * Math.sin(2 * Math.PI * 7.5 * t); // the boards going by
+    const env = Math.min(1, t / 0.12) * Math.min(1, (seconds - t) / 0.4);
+    data[i] = (lp2 * 6 * lumps + Math.sin(2 * Math.PI * 55 * t) * 0.05) * env;
+  }
+  return toBuffer(ctx, data, rate);
+}
+
+/** Pins scattering: lots of hollow wooden knocks, thick at first and thinning out. */
+function pinsBuffer(ctx: BaseAudioContext, knocks: number, seed: number) {
+  const rate = 22050, seconds = 1.4, data = new Float32Array(Math.round(rate * seconds));
+  const r = rng(seed);
+  for (let k = 0; k < knocks; k++) {
+    const at = Math.round(rate * (-Math.log(1 - (r() * 0.5 + 0.5) * 0.98) * 0.18)); // most early, a few late
+    const f = 650 + (r() * 0.5 + 0.5) * 1100, amp = 0.4 + (r() * 0.5 + 0.5) * 0.6;
+    for (let i = 0; i < rate * 0.12 && at + i < data.length; i++) {
+      const t = i / rate;
+      data[at + i]! += amp * (Math.sin(2 * Math.PI * f * t) * 0.8 + Math.sin(2 * Math.PI * f * 2.7 * t) * 0.3 + r() * 0.5 * Math.exp(-t * 300)) * Math.exp(-t * 45);
+    }
+  }
+  return toBuffer(ctx, data, rate);
+}
+export const pinCrashBuffer = (ctx: BaseAudioContext) => pinsBuffer(ctx, 34, 67);
+export const pinTapBuffer = (ctx: BaseAudioContext) => pinsBuffer(ctx, 6, 71);
+
+/** The pinsetter's sweep: a motor whir and a soft clatter. */
+export function sweepBuffer(ctx: BaseAudioContext) {
+  const rate = 22050, seconds = 1.3, data = new Float32Array(Math.round(rate * seconds));
+  const r = rng(73);
+  let lp = 0;
+  for (let i = 0; i < data.length; i++) {
+    const t = i / rate;
+    lp += (r() - lp) * 0.12;
+    const saw = ((t * 92) % 1) * 2 - 1;
+    const env = Math.min(1, t / 0.15) * Math.min(1, (seconds - t) / 0.3);
+    data[i] = (saw * 0.25 + lp * 0.8) * env;
+  }
+  return toBuffer(ctx, data, rate);
+}
+
+/** The ball coming back up the return: a hollow thunk. */
+export function ballReturnBuffer(ctx: BaseAudioContext) {
+  const rate = 22050, data = new Float32Array(Math.round(rate * 0.5));
+  const r = rng(79);
+  for (let i = 0; i < data.length; i++) {
+    const t = i / rate;
+    data[i] = Math.sin(2 * Math.PI * 85 * t * (1 - t * 0.6)) * Math.exp(-t * 11) + r() * Math.exp(-t * 60) * 0.4;
+  }
+  return toBuffer(ctx, data, rate);
+}

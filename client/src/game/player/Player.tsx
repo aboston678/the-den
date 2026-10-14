@@ -7,7 +7,10 @@ import { NET_TICK_HZ } from "@den/shared";
 import { CAPSULE, CAPSULE_CENTER, CONTROLLER_OFFSET, JUMP_AIR_TIME, MOVE } from "../config.ts";
 import { castTo, sendPose, useFishStore } from "../../net/party.ts";
 import { useRod } from "../fishing/rig.ts";
-import { CAST_RELEASE_S } from "./BearAnimator.ts";
+import { useHeldBall } from "../bowling/heldBall.ts";
+import { useBowling } from "../bowling/session.ts";
+import { useLanes } from "../bowling/store.ts";
+import { BOWL_RELEASE_S, CAST_RELEASE_S } from "./BearAnimator.ts";
 import { remotes } from "../../net/remotes.ts";
 import { consumePress, isHeld } from "../input/keyboard.ts";
 import { playAt } from "../audio/audio.ts";
@@ -56,10 +59,14 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
   const { model, animator } = useBearModel();
   const toes = useMemo(() => ["LeftToeBase", "RightToeBase"].map((n) => model.getObjectByName(n)!), [model]);
   useRod("me", model, visual, () => ({ rod: useFishStore.getState().me.rod, action: animator.action, yaw: playerState.yaw }));
+  useHeldBall(model, visual, () => {
+    const { lane, mode } = useBowling.getState();
+    return { show: mode === "aim" || mode === "power" || mode === "curve" || mode === "throw", colour: lane ? useLanes.getState().lanes[lane].turn : 0 };
+  });
 
   // Start facing away from the camera (which begins on the +z side looking toward −z).
   const s = useRef({ vy: 0, speed: 0, yaw: Math.PI, dir: { x: 0, z: -1 }, airTime: 0, actionTime: 0, roarReadyAt: 0, groundY: 0, ready: false,
-    pushX: 0, pushZ: 0, staggerUntil: 0, sendTimer: 0, castAt: null as { x: number; z: number } | null });
+    pushX: 0, pushZ: 0, staggerUntil: 0, sendTimer: 0, castAt: null as { x: number; z: number } | null, released: false });
 
   useFrame(({ clock }, rawDt) => {
     const controller = controllerRef.current;
@@ -97,6 +104,9 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
       },
       cameraState.yaw,
     );
+    // Bowling holds the bear on its spot on the approach: no walking, jumping or dancing.
+    const held = playerState.hold;
+    if (held) dir.x = dir.z = 0;
     const moving = dir.x !== 0 || dir.z !== 0;
     const sprint = isHeld("ShiftLeft") || isHeld("ShiftRight");
     const grounded = playerState.grounded;
@@ -108,11 +118,11 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
     // --- actions: dance (B), roar (Y), jump (Space) ---
     let action = animator.action;
     if (consumePress("KeyF")) playerState.flashlight = !playerState.flashlight;
-    if (consumePress("KeyB") && grounded) {
+    if (consumePress("KeyB") && grounded && !held) {
       if (action === "dance") start("locomotion");
       else if (action === "locomotion") start("dance");
     }
-    if (consumePress("KeyY") && grounded && now >= st.roarReadyAt && (action === "locomotion" || action === "dance")) {
+    if (consumePress("KeyY") && grounded && !held && now >= st.roarReadyAt && (action === "locomotion" || action === "dance")) {
       start("roar");
       st.roarReadyAt = now + MOVE.roarCooldown;
       void playAt("roar", playerState.position.x, playerState.position.y + 1.6, playerState.position.z, 1.8, 8);
@@ -144,12 +154,29 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
       st.yaw = turnToward(st.yaw, Math.atan2(fish.lureX - playerState.position.x, fish.lureZ - playerState.position.z), 3 * dt);
       if (fish.state !== "fight") start(fish.state === "landed" && fish.weight >= 2 ? "celebrate" : "locomotion");
     }
+    // --- bowling (GAME_SPEC §15): the bowl, the release, a celebration on a strike ---
+    if (playerState.bowlRequest) {
+      playerState.bowlRequest = false;
+      start("bowl");
+      st.released = false;
+    }
+    if (animator.action === "bowl") {
+      if (!st.released && st.actionTime >= BOWL_RELEASE_S) {
+        st.released = true;
+        playerState.bowlReleased = true;
+      }
+      if (animator.finished("Bowl") || st.actionTime > 2.2) start("locomotion");
+    }
+    if (playerState.celebrateRequest) {
+      playerState.celebrateRequest = false;
+      if (grounded) start("celebrate");
+    }
     if (animator.action === "celebrate" && (animator.finished("Celebrate") || moving)) start("locomotion");
     action = animator.action;
 
     if (moving && (action === "dance" || action === "roar")) start("locomotion"); // moving cancels
     if (action === "roar" && animator.roarFinished) start("locomotion");
-    if (consumePress("Space") && grounded && animator.action !== "jump" && st.vy <= 0) {
+    if (consumePress("Space") && grounded && !held && animator.action !== "jump" && st.vy <= 0) {
       st.vy = MOVE.jumpVelocity;
       start("jump");
     }
@@ -194,6 +221,15 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
       y: st.vy * dt,
       z: (st.dir.z * st.speed + st.pushZ) * dt,
     };
+    if (held) {
+      // Glide to the bowling spot (A/D slides it) and face down the lane.
+      const cur = body.current.translation();
+      desired.x = held.x - cur.x;
+      desired.z = held.z - cur.z;
+      st.speed = 0;
+      st.pushX = st.pushZ = 0;
+      st.yaw = held.yaw;
+    }
     controller.computeColliderMovement(collider.current, desired);
     const moved = controller.computedMovement();
     const nowGrounded = controller.computedGrounded();

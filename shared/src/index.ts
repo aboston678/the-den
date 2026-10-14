@@ -9,3 +9,5 @@ export * from "./fishing.ts";
 export * from "./username.ts";
 export * from "./bowling/lane.ts";
 export * from "./bowling/scoring.ts";
+export * from "./bowling/ball.ts";
+export * from "./bowling/throw.ts";

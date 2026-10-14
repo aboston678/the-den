@@ -583,3 +583,21 @@ button.link { background: none; border: none; padding: 0; color: #e8742e; text-d
 .board-rows small { font-weight: 400; opacity: 0.7; }
 .friend-rows .actions { display: flex; gap: 6px; }
 .friends h3 { margin: 8px 0 0; font-size: 15px; letter-spacing: 1px; text-transform: uppercase; opacity: 0.8; }
+
+/* --- bowling HUD (3.2) --- */
+.bowling-hud { position: fixed; inset: 0; pointer-events: none; z-index: 20; font-family: Inter, system-ui, sans-serif; color: #f6efe0; }
+.bowl-card { position: absolute; right: 20px; top: 20px; width: 384px; height: 216px; border-radius: 10px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45); }
+.bowl-meters { position: absolute; right: 60px; bottom: 120px; display: flex; gap: 28px; align-items: flex-end; text-shadow: 0 1px 3px #000; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; font-size: 13px; }
+.bowl-meter { display: grid; gap: 6px; justify-items: center; }
+.bowl-meter .track { position: relative; border-radius: 8px; background: rgba(10, 14, 12, 0.65); border: 2px solid rgba(246, 239, 224, 0.5); overflow: hidden; }
+.bowl-meter.power .track { width: 30px; height: 220px; display: flex; align-items: flex-end; }
+.bowl-meter.power .fill { width: 100%; background: linear-gradient(0deg, #5fbf6a, #f0b43c 60%, #e2483a); }
+.bowl-meter.curve .track { width: 300px; height: 30px; background: linear-gradient(90deg, rgba(43, 100, 220, 0.75), rgba(10, 14, 12, 0.65) 40%, rgba(10, 14, 12, 0.65) 60%, rgba(220, 70, 50, 0.75)); }
+.bowl-meter.curve .mid { position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; background: rgba(246, 239, 224, 0.6); }
+.bowl-meter.curve .needle { position: absolute; top: -2px; bottom: -2px; width: 8px; margin-left: -4px; border-radius: 4px; background: #ffd36a; box-shadow: 0 0 8px #ffd36a; }
+.bowl-meter .ends { display: flex; justify-content: space-between; width: 300px; font-size: 11px; opacity: 0.85; }
+.bowl-banner { position: absolute; left: 50%; top: 30%; transform: translateX(-50%); font-family: "Bebas Neue", Oswald, sans-serif; font-size: 54px; letter-spacing: 2px; color: #f6efe0; text-shadow: 0 3px 12px rgba(0, 0, 0, 0.8); animation: bowl-pop 0.35s ease-out; }
+.bowl-banner.big { font-size: 96px; color: #ffd36a; }
+@keyframes bowl-pop { from { transform: translateX(-50%) scale(0.6); opacity: 0; } to { transform: translateX(-50%) scale(1); opacity: 1; } }
+.bowl-help { position: absolute; left: 50%; bottom: 70px; transform: translateX(-50%); padding: 6px 14px; border-radius: 999px; background: rgba(12, 18, 15, 0.7); font-size: 14px; white-space: nowrap; }
+.bowl-help:empty { display: none; }

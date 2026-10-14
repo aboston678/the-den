@@ -2,6 +2,7 @@ import { useFrame } from "@react-three/fiber";
 import { Physics } from "@react-three/rapier";
 import { Suspense, useEffect } from "react";
 import { GameAudio } from "./audio/GameAudio.tsx";
+import { BowlingControls } from "./bowling/BowlingControls.tsx";
 import { FishingControls } from "./fishing/FishingControls.tsx";
 import { FishingLines } from "./fishing/FishingLines.tsx";
 import { ThirdPersonCamera } from "./camera/ThirdPersonCamera.tsx";
@@ -35,6 +36,7 @@ export function GameScene() {
         </Suspense>
         <RemoteBears />
         <FishingControls />
+        <BowlingControls />
         <Suspense fallback={null}>
           <FishingLines />
         </Suspense>
