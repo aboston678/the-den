@@ -3,7 +3,7 @@
 Claude Code updates this file after every milestone: tick the box, add a short note, and say what's next.
 **[ANDREW APPROVES]** = stop, show Andrew, and wait for his OK.
 
-**Current status:** Phase 3 (bowling alley) under way on branch `phase-3` (2026-10-13). Phase 2 + the cartoon remake are live (main = 30dc3c2); still waiting on Andrew + a friend to play it from two computers (the last part of 2.7). 677 credits left. Railway trial ends ~2026-11-11: Andrew needs to pick a plan before then.
+**Current status:** Phase 3 (bowling alley) under way on branch `phase-3` (2026-10-13). Phase 2 + the cartoon remake are live (main = 30dc3c2); still waiting on Andrew + a friend to play it from two computers (the last part of 2.7). 676.75 credits left. Railway trial ends ~2026-11-11: Andrew needs to pick a plan before then.
 
 ---
 
@@ -62,7 +62,8 @@ Run as one batch (Andrew, 2026-10-12; full plan in `docs/phase-2-plan.md`): all 
 
 ## Phase 3: Bowling alley
 Run like Phase 2 (Andrew, 2026-10-13): build 3.1 → 3.3 straight through on branch `phase-3` (commit + push after each), screenshots to Andrew once the alley is built, one play-test review at 3.4 before it goes live. Plan: `docs/phase-3-plan.md`. Look: `reference/bowling/alley-inspiration.jpg`.
-- [ ] **3.1 Build the alley:** 2 lanes, gutters, ball return, rack, pinsetter, overhead monitors, lounge.
+- [x] **3.1 Build the alley:** 2 lanes, gutters, ball return, rack, pinsetter, overhead monitors, lounge.
+  - Built 2026-10-13 (review at 3.4). Layout in `shared/src/bowling/lane.ts` (regulation sizes, pin spots, lane ↔ floorplan ↔ world). Fixed parts built in code (`client/src/game/bowling/alleyGeometry.ts`): raised approach, two lanes in honey-orange boards, gutters, foul lines, arrows and dots, pin decks, pit with a blue glow, kickbacks, masking wall with the painted woods mural (0.25 credits), the screens' bulkhead, ball return with three balls, twin-screen kiosk; an invisible wall at the foul line. Three overhead screens + the kiosk (`Monitors.tsx`): each lane's scorecard drawn on a canvas (`scoreboard.ts`, from the unit-tested scoring in `shared/src/bowling/scoring.ts`), the mural in the middle. Pins (lathe of the regulation profile) and balls (`LanePins.tsx`, driven by `laneState.ts` for 3.2). Lounge (furniture system): walnut shoe + ball wall with display pins, Chesterfield facing the lanes, copper high-top + 4 stools, cube stools, navy armchair, pictures; new opening from the lounge onto the lanes (`floorplan.json`); alley ceiling made level past the house. 60 fps, ≤285 draw calls. Tour: `e2e/alley-tour.spec.ts` (`NO_BEAR=1` hides your bear), screenshots `docs/screenshots/3.1/`. Next: 3.2 physics + meter throw.
 - [ ] **3.2 Physics + throw controls:** position/aim/throw, spin and late hook, tuned until it feels like Wii Bowling.
 - [ ] **3.3 Turns, scoring (unit-tested), sync, celebrations.**
 - [ ] **3.4 High score to leaderboard. Deploy + friend test.** **[ANDREW APPROVES]**
@@ -115,6 +116,7 @@ Starting balance: 1,210 (2026-10-11)
 | 2026-10-13 | Cartoon bear 3D model from style concept #1: texture + PBR + A-pose + rig (2.1 m) + Idle (job 194dd196-6477-4485-9f4c-fa596644090b; approved in the plan) | `meshy_v7_image_to_3d` | 47.5 | 725.5 |
 | 2026-10-13 | Bear round 2 concepts ×4: original pear-shaped goofy bear (0.25 each; job ids in `assets/concepts/bear-v2/README.md`) | `gpt_image_2_5` | 1 | 724.5 |
 | 2026-10-13 | Bear round 2 3D model from concept #1 (Andrew's pick): texture + PBR + A-pose + rig (2.1 m) + Idle (job ee970570-578e-4fc8-a3d9-06fb91489991; Andrew approved) | `meshy_v7_image_to_3d` | 47.5 | 677 |
+| 2026-10-13 | Bowling alley mural (summer woods, painted), job 00e34ca3-061d-4613-8c9e-3ef2e7ee0690 (price check 0.25) | `gpt_image_2_5` | 0.25 | 676.75 |
 
 ## Decision log
 | Date | Decision | Why |

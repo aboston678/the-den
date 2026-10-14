@@ -227,6 +227,27 @@ function fabric(look: string) {
         ctx.fillRect(0, o, 256, w);
       }
       ctx.globalAlpha = 1;
+    } else if (look === "cubes") {
+      // Blue-and-white tumbling blocks (the bowling lounge's cube stools): rows of 3D-looking cubes.
+      const shades = ["#f3f5fa", "#2b4f9e", "#8fa6d6"];
+      const s = 64, hgt = s * Math.sqrt(3) / 2;
+      for (let row = -1; row < 256 / hgt + 1; row++) {
+        for (let col = -1; col < 256 / s + 1; col++) {
+          const cx = col * s + (row % 2 ? s / 2 : 0), cy = row * hgt * 1.0;
+          const faces: [number, number][][] = [
+            [[0, -s / 2], [s / 2, -s / 4], [0, 0], [-s / 2, -s / 4]], // top
+            [[-s / 2, -s / 4], [0, 0], [0, s / 2], [-s / 2, s / 4]], // left
+            [[0, 0], [s / 2, -s / 4], [s / 2, s / 4], [0, s / 2]], // right
+          ];
+          faces.forEach((f, i) => {
+            ctx.fillStyle = shades[i]!;
+            ctx.beginPath();
+            f.forEach(([x, y], j) => (j ? ctx.lineTo(cx + x, cy + y) : ctx.moveTo(cx + x, cy + y)));
+            ctx.closePath();
+            ctx.fill();
+          });
+        }
+      }
     } else if (look === "floral") {
       // Cream ground, small soft roses with leaves (blue bedroom curtains, cushions).
       ctx.fillStyle = "#efe7d6";

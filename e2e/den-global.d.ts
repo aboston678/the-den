@@ -13,6 +13,8 @@ interface Window {
       flashlight: boolean;
       colliderHandle: number;
       trackFeet: boolean;
+      /** Hide your own bear (screenshots). */
+      hidden: boolean;
       feet: [{ x: number; y: number; z: number }, { x: number; y: number; z: number }];
     };
     camera: { yaw: number; pitch: number; distance: number; current: number; shake: number };
@@ -36,5 +38,18 @@ interface Window {
       catches: () => { id: string; name: string; species: string; weight: number; best: boolean; mine: boolean }[];
       quickBite: (seconds?: number, species?: string, weight?: number) => void;
     };
+    /** Bowling (Phase 3): the lanes as this browser sees them; setLanes shows made-up bowlers (dev only). */
+    bowl?: {
+      lanes: () => Record<"1" | "2", BowlLane>;
+      setLanes: (lanes: Partial<Record<"1" | "2", Partial<BowlLane>>>) => void;
+    };
   };
+}
+
+interface BowlLane {
+  id: "1" | "2";
+  bowlers: { id: string; name: string; rolls: number[] }[];
+  turn: number;
+  phase: string;
+  standing: number;
 }

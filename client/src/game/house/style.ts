@@ -26,8 +26,8 @@ export const ROOM_STYLES: Record<string, RoomStyle> = {
   den: { floor: "carpet", floorColor: "#c7b99f", wall: "#ece2c9", beams: true },
   utility: { floor: "concrete", wall: "#cfcfca" },
   stair_landing: { floor: "carpet", floorColor: "#b9ad97", wall: CREAM },
-  bowling_lounge: { floor: "carpet", floorColor: "#5e3134", wall: "#d9cfbd" },
-  bowling_alley: { floor: "oak", wall: "#3d424c" },
+  bowling_lounge: { floor: "carpet", floorColor: "#b49c7a", wall: "#efe9dc" },
+  bowling_alley: { floor: "carpet", floorColor: "#b49c7a", wall: "#efe9dc" },
   // main floor
   garage: { floor: "concrete", wall: "#e6e4dd" },
   mudroom: { floor: "terracotta", wall: "#e3d6bf", speckled: true, ceiling: "pine", beams: true },
@@ -94,6 +94,30 @@ function clapboardNormals(boards = 8) {
   });
 }
 
+/** Bowling-lane boards: narrow honey-orange maple strips running along the lane (x), with a little grain. */
+function laneBoards() {
+  return canvasTexture(512, (ctx, s) => {
+    const boards = 20, bw = s / boards;
+    let seed = 7;
+    const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+    for (let b = 0; b < boards; b++) {
+      const l = 58 + rnd() * 9;
+      ctx.fillStyle = `hsl(${24 + rnd() * 6}, ${62 + rnd() * 10}%, ${l}%)`;
+      ctx.fillRect(0, b * bw, s, bw);
+      ctx.strokeStyle = "rgba(90,40,10,0.08)";
+      for (let g = 0; g < 4; g++) {
+        const y = b * bw + rnd() * bw;
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.bezierCurveTo(s * 0.3, y + (rnd() - 0.5) * 3, s * 0.7, y + (rnd() - 0.5) * 3, s, y);
+        ctx.stroke();
+      }
+      ctx.fillStyle = "rgba(70,30,10,0.35)"; // the seam between boards
+      ctx.fillRect(0, b * bw, s, 1);
+    }
+  }, true);
+}
+
 // --- materials ---
 
 export type Maps = ReturnType<typeof useOutdoorMaps>;
@@ -144,6 +168,12 @@ export class HouseMaterials {
       case "terracotta": return this.tiled(this.tex.terracotta, 1 / 2, "#e7a27c");
       case "concrete": return this.tiled(this.tex.concrete, 1 / 3, "#c9c6bf");
       case "pine": return this.tiled(this.tex.pine, 1 / 2.4, "#f0c48c");
+      // Bowling lanes: the oak boards, lighter and polished (reference/bowling/alley-inspiration.jpg).
+      case "lane": {
+        const map = laneBoards();
+        map.repeat.set(1 / 1.2, 1 / 0.54); // 1.2 m of grain, 20 boards (27 mm each) per tile
+        return new MeshStandardMaterial({ map, roughness: 0.32, envMapIntensity: 0.1 }); // underground: no blue sky in the polish
+      }
       case "tile": return new MeshStandardMaterial({ color: arg, roughness: 0.35, map: this.speckle, normalScale: new Vector2(0.3, 0.3) });
       case "carpet": {
         const m = new MeshStandardMaterial({ color: arg, roughness: 1, map: this.carpet });

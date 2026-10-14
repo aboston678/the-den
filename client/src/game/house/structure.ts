@@ -1,4 +1,4 @@
-import { DOORS, HOUSE, type LevelId, heightAt, houseToWorld, level } from "@den/shared";
+import { ALLEY_CEILING_Y, DOORS, HOUSE, type LevelId, heightAt, houseToWorld, level } from "@den/shared";
 import { type GeoBuckets, type SolidBox, add, boxFaces, quad } from "./geometry.ts";
 import { type Box2, box, subtractAll } from "./rects.ts";
 import { UPPER_CEILING, UPPER_FLOOR, DORMERS, dormerBox, roofUnder } from "./roof.ts";
@@ -81,7 +81,7 @@ function floorsAndCeilings(s: Structure) {
       slab(s, part, 0, -0.3, terrace ? "deck" : "foundation", "ceiling");
     }
   }
-  slab(s, ALLEY_ROOF, -0.3, -0.5, "foundation", "paint:#3d424c");
+  slab(s, ALLEY_ROOF, -0.3, ALLEY_CEILING_Y, "foundation", "ceiling"); // thin, so the alley's ceiling is level with the part under the house
   // Under the deck's posts the basement den walks out; the deck itself sits on the main floor.
   for (const part of subtractAll(DECK, [{ x0: GREAT_ROOM.x0, x1: GREAT_ROOM.x1, z0: DECK.z0, z1: GREAT_ROOM.z1 }])) slab(s, part, 0, -0.12, "deck", "deck");
   slab(s, PORCH, 0, -0.9, "porch_floor", "foundation");

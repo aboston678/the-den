@@ -124,6 +124,11 @@ export const KINDS = {
   cooler_salmon: { w: 0.9, d: 0.5, h: 0.45 },
   salmon_shelf: { w: 1.1, d: 0.45, h: 0.8 },
   crates: { w: 0.9, d: 0.6, h: 0.75 },
+  // bowling lounge (3.1)
+  ball_wall: { w: 2.6, d: 0.45, h: 2.0 },
+  high_top_table: { w: 0.9, d: 0.9, h: 1.05 },
+  bar_stool: { w: 0.42, d: 0.42, h: 0.76, tuck: true },
+  cube_stool: { w: 0.38, d: 0.38, h: 0.45 },
 } satisfies Record<string, Kind>;
 
 export type KindId = keyof typeof KINDS;
@@ -370,6 +375,22 @@ const BASEMENT: Placement[] = [
   P("rug_braided", "den", 13.3, 7.5, { look: "red" }),
 ];
 
+/** Bowling lounge (milestone 3.1, reference/bowling/alley-inspiration.jpg): shoe + ball wall, leather sofa facing the lanes, copper high-top, navy armchair. */
+const BOWLING: Placement[] = [
+  W("ball_wall", "bowling_lounge", "e", 8.1),
+  P("chesterfield", "bowling_lounge", 27.6, 7.8, { rot: 180 }),
+  P("cube_stool", "bowling_lounge", 27.0, 6.95),
+  P("cube_stool", "bowling_lounge", 28.2, 6.95),
+  P("high_top_table", "bowling_lounge", 30.7, 8.7),
+  P("bar_stool", "bowling_lounge", 30.15, 8.7),
+  P("bar_stool", "bowling_lounge", 31.25, 8.7),
+  P("bar_stool", "bowling_lounge", 30.7, 8.15),
+  P("bar_stool", "bowling_lounge", 30.7, 9.25),
+  P("armchair", "bowling_lounge", 32.4, 7.4, { rot: 180, look: "navy" }),
+  W("painting", "bowling_lounge", "s", 25.2, { y: 1.15, w: 1.3, h: 0.75, look: "sea" }),
+  W("frame", "bowling_lounge", "s", 28.6, { y: 1.2, w: 0.8, h: 0.6, look: "print" }),
+];
+
 /** Greenhouse (milestone 2.2, GAME_SPEC §8.3): plants, and the bear's winter stockpile, plus the canoe. */
 const GREENHOUSE: Placement[] = [
   P("canoe", "greenhouse", 5.6, 11.15),
@@ -386,7 +407,7 @@ const GREENHOUSE: Placement[] = [
   P("hanging_basket", "greenhouse", 8.6, 10.2, { y: 2.9, look: "flowers" }),
 ];
 
-export const FURNITURE: Placement[] = [...MAIN, ...UPPER, ...BASEMENT, ...GREENHOUSE];
+export const FURNITURE: Placement[] = [...MAIN, ...UPPER, ...BASEMENT, ...BOWLING, ...GREENHOUSE];
 
 // --- geometry helpers ---
 

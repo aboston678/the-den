@@ -3,6 +3,7 @@ import { Matrix4 } from "three";
 import type { GeoBuckets } from "../geometry.ts";
 import type { WallPiece } from "../walls.ts";
 import { Kit } from "./parts.ts";
+import * as bowling from "./pieces/bowling.ts";
 import * as decor from "./pieces/decor.ts";
 import * as greenhouse from "./pieces/greenhouse.ts";
 import * as kitchen from "./pieces/kitchen.ts";
@@ -86,6 +87,10 @@ const BUILDERS: Record<CodeKind, Builder> = {
   cooler_salmon: greenhouse.coolerSalmon,
   salmon_shelf: greenhouse.salmonShelf,
   crates: greenhouse.crates,
+  ball_wall: bowling.ballWall,
+  high_top_table: bowling.highTopTable,
+  bar_stool: bowling.barStool,
+  cube_stool: bowling.cubeStool,
 };
 
 /** Curtains by room (photos): office plaid, cream tie-backs in the formal dining room, florals in the blue bedroom. */

@@ -252,7 +252,10 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
     playerState.action = animator.action;
     playerState.colliderHandle = collider.current.handle;
     playerState.yaw = st.yaw;
-    if (visual.current) visual.current.rotation.y = st.yaw;
+    if (visual.current) {
+      visual.current.rotation.y = st.yaw;
+      visual.current.visible = !playerState.hidden;
+    }
     animator.update(dt, Math.min(st.speed, groundSpeed));
 
     // --- tell the party where we are, 20 times a second ---

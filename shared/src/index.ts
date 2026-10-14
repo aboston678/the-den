@@ -7,3 +7,5 @@ export * from "./house/floorplan.ts";
 export * from "./house/furniture.ts";
 export * from "./fishing.ts";
 export * from "./username.ts";
+export * from "./bowling/lane.ts";
+export * from "./bowling/scoring.ts";

@@ -16,9 +16,11 @@ import { HouseMaterials } from "./style.ts";
 import { buildExterior } from "./exterior.ts";
 import { type Railing, type WallPiece, wallColliders, wallGeometry, wallPieces } from "./walls.ts";
 import { removeBody } from "../world/physics.ts";
+import { Alley } from "../bowling/Alley.tsx";
+import { buildAlley } from "../bowling/alleyGeometry.ts";
 
 // The house (milestone 1.9), built from docs/floorplan.json: every room's walls, floors, ceilings,
-// stairs, railings and furniture (2.1). Built in floorplan metres inside a group scaled 1.25× (GAME_SPEC §4).
+// stairs, railings, furniture (2.1) and the bowling alley (3.1). Built in floorplan metres inside a group scaled 1.25× (GAME_SPEC §4).
 
 function useHouseMaterials() {
   const tex = {
@@ -52,6 +54,8 @@ function buildHouse(materials: HouseMaterials) {
   const exterior = buildExterior(pieces);
   const furnitureBuckets: GeoBuckets = new Map();
   buildFurniture(furnitureBuckets, buckets, pieces);
+  const alley = buildAlley(furnitureBuckets);
+  solids.push(...alley.solids);
   for (const part of [structure, exterior]) {
     for (const [k, list] of part.buckets) buckets.set(k, [...(buckets.get(k) ?? []), ...list]);
     solids.push(...part.solids);
@@ -82,7 +86,7 @@ function buildHouse(materials: HouseMaterials) {
     })),
     ...structure.stairRails,
   ];
-  return { meshes, furniture, solids, runs, ramps: structure.ramps };
+  return { meshes, furniture, solids, runs, ramps: structure.ramps, barriers: alley.barriers };
 }
 
 export function House() {
@@ -142,6 +146,7 @@ export function House() {
         <Doors materials={materials} />
         <Furniture built={house.furniture} />
         <Tvs />
+        <Alley barriers={house.barriers} />
       </group>
       {/* Lights live in world space: a light's range isn't scaled with the house. */}
       <HouseLights windowGlow={materials.get("window_glow") as MeshBasicMaterial} />

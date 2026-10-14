@@ -35,7 +35,10 @@ const KEEP_CLEAR: Record<string, Footprint[]> = {
     { x0: 28.35, x1: 29.5, z0: 6.0, z1: 8.2 }, // fireplace + hearth
   ],
   upper: [{ x0: 25.6, x1: 26.9, z0: 0.3, z1: 3.3 }], // the stairwell
-  basement: [{ x0: 22, x1: 28, z0: 0, z1: 6 }], // the basement stair landing (bowling, Phase 3)
+  basement: [
+    { x0: 22, x1: 28, z0: 0, z1: 6 }, // the basement stair landing
+    { x0: 29.6, x1: 56, z0: 0, z1: 4.2 }, // the lanes and their approach (shared/src/bowling/lane.ts)
+  ],
 };
 
 describe("furniture layout", () => {

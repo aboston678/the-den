@@ -29,6 +29,8 @@ export const playerState = {
   teleportTo: null as { x: number; y: number; z: number; yaw?: number } | null,
   /** Fishing: cast to this point on the water (set by the fishing controls; the player plays the cast and sends it). */
   castRequest: null as { x: number; z: number } | null,
+  /** Screenshot helper: hide your own bear (it fills the frame in tight rooms). */
+  hidden: false,
   /** Test helper: when true, the player records its toe positions each frame (foot-slide check). */
   trackFeet: false,
   feet: [new Vector3(), new Vector3()] as [Vector3, Vector3],
@@ -76,6 +78,8 @@ declare global {
       perf?: () => { fps: number; p95ms: number; calls: number; triangles: number; textureMB: number; programs: number; pixelRatio: number; size: string };
       perfBreakdown?: () => string[];
       programNames?: () => string[];
+      /** Bowling (Phase 3): lanes as this client sees them, plus dev/test controls (bowling/dev.ts). */
+      bowl?: import("./bowling/dev.ts").BowlDev;
       /** Other bears as this client sees them. */
       remotes: () => { id: string; name: string; x: number; z: number; action: string; flashlight: boolean; tagVisible: boolean; connected: boolean; fish: { rod: boolean; state: string; species: string } }[];
     };

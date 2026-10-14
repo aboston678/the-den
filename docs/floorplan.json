@@ -32,7 +32,8 @@
         {"a": "den", "b": "bowling_lounge", "x": 22, "z": 8, "width": 2.5, "type": "opening"},
         {"a": "den", "b": "utility", "x": 17.5, "z": 5, "width": 0.9, "type": "hinged", "locked": true},
         {"a": "stair_landing", "b": "bowling_lounge", "x": 25, "z": 6, "width": 3.0, "type": "opening"},
-        {"a": "stair_landing", "b": "bowling_alley", "x": 28, "z": 3, "width": 5.0, "type": "opening"}
+        {"a": "stair_landing", "b": "bowling_alley", "x": 28, "z": 3, "width": 5.0, "type": "opening"},
+        {"a": "bowling_lounge", "b": "bowling_alley", "x": 31.8, "z": 6, "width": 4.4, "type": "opening", "notes": "The lounge looks straight onto the lanes (Phase 3)."}
       ],
       "stairs": [
         {"id": "basement_stairs", "from_level": "main", "x": 25.6, "z": 0.3, "w": 1.2, "d": 3.0, "direction": "directly under the main staircase, running the opposite way, down to the basement stair landing (L-turn is fine to fit the drop)", "notes": "Andrew 2026-10-11: the basement stairs start right under the stairs that go up. Entered through the white door under the stairs (visible in great-room-balcony-foyer.jpg)."}

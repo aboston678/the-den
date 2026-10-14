@@ -30,7 +30,7 @@ export const sofa: Builder = (k, { w, d, h }, look) => {
 };
 
 export const armchair: Builder = (k, { w, d, h }, look) => {
-  const cloth = look === "cream" ? "leather:#e6dccb" : "fabric:#c9b99a";
+  const cloth = look === "cream" ? "leather:#e6dccb" : look === "navy" ? "fabric:#1e2a5e" : "fabric:#c9b99a";
   const arm = 0.17, seat = 0.44;
   k.box([-w / 2, 0.06, -d / 2], [w / 2, seat - 0.08, d / 2], cloth);
   legs(k, w, d, 0.06, 0.05, "wood:#4a3020", 0.04);
