@@ -14,7 +14,7 @@ export interface BowlDev {
   me: () => { lane: string | null; mode: string; z: number; aim: number; power: number; curve: number; banner: string | null };
   /** A click of the mouse button on the meters (tests can't capture the mouse). */
   click: () => void;
-  /** Dev only: skip the meters and bowl with these settings (when you're at the line). */
+  /** Dev only: bowl now with these settings (at the line, or part way through the meters). */
   throw: (t: { z: number; aim: number; power: number; curve: number }) => boolean;
   /** Dev only: ask the server to set your balls so far this game. */
   devRolls: (lane: string, rolls: number[]) => void;
@@ -37,7 +37,8 @@ export function installBowlDev() {
     },
     click,
     throw: (t) => {
-      if (!import.meta.env.DEV || useBowling.getState().mode !== "aim") return false;
+      const m = useBowling.getState().mode;
+      if (!import.meta.env.DEV || (m !== "aim" && m !== "power" && m !== "curve")) return false;
       useBowling.setState({ ...t, mode: "throw" });
       window.__den!.player.bowlRequest = true;
       return true;

@@ -5,7 +5,7 @@ import { openGame } from "./helpers.ts";
 // accounts need a person signing in with Google, so this uses the dev preview (?mocksocial):
 // made-up bears, same panels. Rank and friends rules are unit-tested in client/src/net/socialRules.test.ts.
 
-test("leaderboard: fish caught, all players or friends; bowling and Catan ready for later", async ({ page }) => {
+test("leaderboard: fish caught and bowling high scores, all players or friends; Catan ready for later", async ({ page }) => {
   await openGame(page, "/?mocksocial");
   await page.getByTestId("open-leaderboard").click();
   const board = page.getByTestId("leaderboard");
@@ -17,7 +17,9 @@ test("leaderboard: fish caught, all players or friends; bowling and Catan ready 
   await expect(board.getByTestId("board-rows").locator("li")).toHaveCount(3); // you + 2 friends
   await page.screenshot({ path: "test-results/social/leaderboard-friends.png" });
   await board.getByTestId("board-bowling").click();
-  await expect(board.getByTestId("board-empty")).toContainText("Phase 3");
+  await expect(board.getByTestId("board-rows").locator("li").first()).toContainText("RaptorFan");
+  await expect(board.getByTestId("board-rows").locator("li").first()).toContainText("212");
+  await page.screenshot({ path: "test-results/social/leaderboard-bowling.png" });
   await board.getByTestId("board-catan").click();
   await expect(board.getByTestId("board-empty")).toContainText("Phase 4");
 });

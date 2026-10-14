@@ -10,6 +10,8 @@ import { closePlayers, failOnErrors, hostGame } from "./helpers.ts";
 test.afterEach(closePlayers);
 
 const gr = houseToWorld(24, 8);
+const lounge = houseToWorld(30.5, 9.3), loungeLook = houseToWorld(42, 2);
+const approach = houseToWorld(32.6, 1.5), pins = houseToWorld(52.5, 1.5);
 type Spot = [string, string, number, number, number, number, number?];
 const SPOTS: Spot[] = [
   ["driveway woods", "noon", -92, -60, -80, -50],
@@ -18,6 +20,8 @@ const SPOTS: Spot[] = [
   ["great room night", "night", gr.x, gr.z, gr.x + 5, gr.z, -0.5 * HOUSE.scale],
   ["dock", "noon", 106, 0, 125, 0],
   ["map edge forest", "noon", -96, 10, -130, 10],
+  ["bowling lounge", "noon", lounge.x, lounge.z, loungeLook.x, loungeLook.z, -2.7 * HOUSE.scale],
+  ["bowling lanes", "noon", approach.x, approach.z, pins.x, pins.z, -2.52 * HOUSE.scale],
 ];
 
 async function measure(page: Page, [, time, x, z, lx, lz, y]: Spot) {

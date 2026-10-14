@@ -10,7 +10,7 @@ export { type Friendship, type Row, sortFriendships } from "./socialRules.ts";
 export type Board = "fish" | "bowling" | "catan";
 export const BOARDS: { id: Board; label: string; column: string; unit: string; soon?: string }[] = [
   { id: "fish", label: "Fish caught", column: "fish_caught", unit: "fish" },
-  { id: "bowling", label: "Bowling", column: "bowling_high_score", unit: "best game", soon: "Bowling opens in Phase 3" },
+  { id: "bowling", label: "Bowling", column: "bowling_high_score", unit: "best game" },
   { id: "catan", label: "Catan", column: "catan_wins", unit: "wins", soon: "Catan opens in Phase 4" },
 ];
 
@@ -26,6 +26,9 @@ const MOCK_STATS = [
   { userId: "m3", username: "BassMaster", value: 41 }, { userId: "me", username: "DevBear", value: 17 }, { userId: "m1", username: "RaptorFan", value: 17 },
   { userId: "m5", username: "Hemlock", value: 9 }, { userId: "m2", username: "LunaLover", value: 3 },
 ];
+const MOCK_BOWLING = [
+  { userId: "m1", username: "RaptorFan", value: 212 }, { userId: "me", username: "DevBear", value: 168 }, { userId: "m5", username: "Hemlock", value: 131 },
+];
 
 const myId = () => (mockSocial ? "me" : useAuth.getState().userId);
 
@@ -34,7 +37,8 @@ export async function leaderboard(board: Board, scope: "all" | "friends"): Promi
   const me = myId();
   if (mockSocial) {
     const friendIds = new Set(["me", ...MOCK_FRIENDS.filter((f) => f.status === "accepted").map((f) => f.otherId)]);
-    return rankRows(board === "fish" ? MOCK_STATS.filter((r) => scope === "all" || friendIds.has(r.userId)) : [], me);
+    const stats = board === "fish" ? MOCK_STATS : board === "bowling" ? MOCK_BOWLING : [];
+    return rankRows(stats.filter((r) => scope === "all" || friendIds.has(r.userId)), me);
   }
   if (!supabase || !me) return [];
   const column = BOARDS.find((b) => b.id === board)!.column;
