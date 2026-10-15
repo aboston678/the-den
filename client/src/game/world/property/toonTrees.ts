@@ -109,7 +109,7 @@ function widthOf(scene: Group, piece: string) {
 /**
  * The cartoon stand-in for a node of the realistic forest's model files (`<kind>_lod<n>_bark` /
  * `_leaves`, `shrub_*`, `fern_*`, `rock_*`, `boulder`), sized to the real one's bounding box, or
- * null when there's none (logs and stumps keep their models, restyled by the shaders).
+ * null when there's none (logs and stumps keep their models with flat bark paint, Forest.tsx).
  */
 export function toonParts(scene: Group, name: string, box: Box3): LodPart[] | null {
   const size = box.getSize(new Vector3());

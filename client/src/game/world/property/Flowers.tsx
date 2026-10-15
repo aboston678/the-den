@@ -42,8 +42,17 @@ function clumpGeometry(kind: Kind) {
         tri([x, fy + 0.005, z], p0, p1, centre, petal, petal);
       }
     };
-    if (kind === "lupine") for (let k = 0; k < 5; k++) flower(top - k * 0.07, size * (1 - k * 0.12));
-    else flower(top, size);
+    if (kind === "lupine") {
+      // A spike: little blossoms spiralling round the top of the stem, smaller toward the tip.
+      const blossom = (bx: number, by: number, bz: number, s: number) => {
+        tri([bx - s, by, bz], [bx + s, by, bz], [bx, by + s * 1.6, bz], petal, petal, centre);
+        tri([bx, by, bz - s], [bx, by, bz + s], [bx, by + s * 1.6, bz], petal, petal, centre);
+      };
+      for (let k = 0; k < 12; k++) {
+        const u = k / 11, ang = k * 2.3, rr = 0.03 * (1 - u * 0.7);
+        blossom(x + Math.cos(ang) * rr, top - 0.24 + u * 0.24, z + Math.sin(ang) * rr, size * (0.55 - 0.3 * u));
+      }
+    } else flower(top, size);
   }
   const g = new BufferGeometry();
   g.setAttribute("position", new BufferAttribute(new Float32Array(pos), 3));

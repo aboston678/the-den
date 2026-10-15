@@ -24,6 +24,9 @@ const SPOTS: Spot[] = [
   ["bowling lounge", "noon", lounge.x, lounge.z, loungeLook.x, loungeLook.z, -2.7 * HOUSE.scale],
   ["bowling lanes", "noon", approach.x, approach.z, pins.x, pins.z, -2.52 * HOUSE.scale],
   ["dining room catan", "evening", dining.x, dining.z, table.x, table.z, 0],
+  // Phase 5 polish: dawn mist over the stream, the flower bed by the house.
+  ["stream dawn", "dawn", 113, -10, 122, 4],
+  ["flower bed", "noon", 8, -13, 8, 0],
 ];
 
 async function measure(page: Page, [, time, x, z, lx, lz, y]: Spot) {

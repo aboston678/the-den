@@ -21,6 +21,7 @@ export const VIEWS: [string, string, number, number, number, number, number, num
   ["back-lawn-dusk", "dusk", back.x, back.z, back.x - 6, back.z + 20, 5, 0.12],
   ["back-lawn-night", "night", back.x, back.z, back.x - 6, back.z + 20, 5, 0.12],
   ["house-dusk", "dusk", 0, -19, 2, 0, 6, 0.08],
+  ["flower-bed", "noon", 8, -13, 8, 0, 3.5, 0.15],
 ];
 
 async function shoot(page: Page, out: string) {

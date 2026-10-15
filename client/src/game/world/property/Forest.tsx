@@ -42,9 +42,26 @@ function partsOf(scene: Group, name: string): LodPart[] {
  */
 function forestParts(scene: Group, toon: Group | null, name: string): LodPart[] {
   if (!toon) return partsOf(scene, name);
+  if (name === "log" || name === "stump") return partsOf(scene, name).map((p) => ({ ...p, material: paintedBark(p.material as MeshStandardMaterial) }));
   const tree = /^(.+)_lod\d_/.exec(name);
   const box = boundsOf(tree ? [...partsOf(scene, `${tree[1]}_lod0_bark`), ...partsOf(scene, `${tree[1]}_lod0_leaves`)] : partsOf(scene, name));
   return toonParts(toon, name, box) ?? partsOf(scene, name);
+}
+
+/** Cartoon look for the logs and stumps: their own shape, but flat bark paint like the cartoon trunks. */
+const painted = new Map<MeshStandardMaterial, MeshStandardMaterial>();
+function paintedBark(m: MeshStandardMaterial) {
+  let out = painted.get(m);
+  if (!out) {
+    out = m.clone();
+    out.map = null;
+    out.roughnessMap = null;
+    out.color.set("#9a5a33");
+    out.roughness = 0.95;
+    out.needsUpdate = true;
+    painted.set(m, out);
+  }
+  return out;
 }
 
 /** Bounding box of a set of parts (in the model's own space). */
