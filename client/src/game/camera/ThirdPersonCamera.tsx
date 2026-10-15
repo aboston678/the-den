@@ -33,7 +33,7 @@ export function ThirdPersonCamera() {
 
     const canvas = gl.domElement;
     const lock = () => {
-      if (document.pointerLockElement !== canvas && !cameraState.freeMouse) canvas.requestPointerLock?.();
+      if (document.pointerLockElement !== canvas && !cameraState.freeMouse) void Promise.resolve(canvas.requestPointerLock?.()).catch(() => {}); // may be refused; the next click tries again
     };
     const look = (e: MouseEvent) => {
       if (document.pointerLockElement !== canvas) return;

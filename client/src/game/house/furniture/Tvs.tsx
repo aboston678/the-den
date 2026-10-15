@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Matrix4, Mesh, MeshBasicMaterial, PlaneGeometry, PositionalAudio, SRGBColorSpace, Vector3, VideoTexture } from "three";
 import { create } from "zustand";
 import { settings } from "../../../ui/settings.ts";
-import { getListener } from "../../audio/audio.ts";
+import { getListener, toBus } from "../../audio/audio.ts";
 import { playerState } from "../../state.ts";
 import { indoor } from "../lights.ts";
 import { toWorld } from "../space.ts";
@@ -73,6 +73,7 @@ export function Tvs() {
       const source = listener.context.createMediaElementSource(video);
       for (const s of p.list) {
         const a = new PositionalAudio(listener);
+        toBus(a, "effects");
         a.setNodeSource(source as unknown as AudioBufferSourceNode);
         a.setRefDistance(1.6);
         a.setRolloffFactor(2.2);

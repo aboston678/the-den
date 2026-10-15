@@ -29,10 +29,45 @@ const SOUNDS = {
   // The pins crashing (Andrew's pick, 2026-10-13; kept in git as assets/audio/bowling-strike.m4a, see docs/ASSETS.md).
   "pin-strike": ["../bowling-strike.m4a", 0, 2.55, "once", -14],
 };
+
+// Short effects from Kenney's CC0 packs (Phase 5 sound pass; tools/fetch-audio.mjs, docs/ASSETS.md):
+// the whole file, levelled by peak (dBFS) so a quick tap is as clear as a long one.
+const K = "kenney";
+const IMPACT = `${K}/kenney_impact-sounds/Audio`, RPG = `${K}/kenney_rpg-audio/Audio`, UI = `${K}/kenney_interface-sounds/Audio`, CASINO = `${K}/kenney_casino-audio/Audio`;
+const sfx = (file, peak) => [file, 0, null, "sfx", peak];
+for (let i = 0; i < 5; i++) {
+  // Footsteps (5 takes per surface, picked at random so steps don't repeat).
+  SOUNDS[`step-grass-${i}`] = sfx(`${IMPACT}/footstep_grass_00${i}.ogg`, -6);
+  SOUNDS[`step-wood-${i}`] = sfx(`${IMPACT}/footstep_wood_00${i}.ogg`, -6);
+  SOUNDS[`step-carpet-${i}`] = sfx(`${IMPACT}/footstep_carpet_00${i}.ogg`, -8);
+  SOUNDS[`step-stone-${i}`] = sfx(`${IMPACT}/footstep_concrete_00${i}.ogg`, -6);
+  SOUNDS[`step-dirt-${i}`] = sfx(`${RPG}/footstep0${i}.ogg`, -6);
+}
+Object.assign(SOUNDS, {
+  land: sfx(`${IMPACT}/impactSoft_heavy_000.ogg`, -4),
+  "door-open-0": sfx(`${RPG}/doorOpen_1.ogg`, -3),
+  "door-open-1": sfx(`${RPG}/doorOpen_2.ogg`, -3),
+  "door-close-0": sfx(`${RPG}/doorClose_1.ogg`, -3),
+  "door-close-1": sfx(`${RPG}/doorClose_2.ogg`, -3),
+  "ui-click": sfx(`${UI}/click_001.ogg`, -8),
+  "ui-hover": sfx(`${UI}/tick_001.ogg`, -16),
+  "ui-open": sfx(`${UI}/open_001.ogg`, -10),
+  "ui-close": sfx(`${UI}/close_001.ogg`, -10),
+  "ui-confirm": sfx(`${UI}/confirmation_001.ogg`, -8),
+  "ui-error": sfx(`${UI}/error_004.ogg`, -10),
+  "turn-ding": sfx(`${UI}/bong_001.ogg`, -8),
+  "piece-place-0": sfx(`${IMPACT}/impactWood_light_000.ogg`, -4),
+  "piece-place-1": sfx(`${IMPACT}/impactWood_light_001.ogg`, -4),
+  robber: sfx(`${IMPACT}/impactWood_heavy_000.ogg`, -3),
+  "card-take": sfx(`${CASINO}/card-slide-1.ogg`, -6),
+  "card-give": sfx(`${CASINO}/card-place-1.ogg`, -6),
+  "card-shuffle": sfx(`${CASINO}/card-fan-1.ogg`, -6),
+});
 const XFADE = 2;
 
 function decode(file, start, length) {
-  const raw = execFileSync(ffmpeg, ["-v", "error", "-ss", String(start), "-t", String(length), "-i", `${SRC}/${file}`, "-ac", "1", "-ar", String(RATE), "-f", "f32le", "-"], { maxBuffer: 1 << 28 });
+  const span = length === null ? [] : ["-t", String(length)];
+  const raw = execFileSync(ffmpeg, ["-v", "error", "-ss", String(start), ...span, "-i", `${SRC}/${file}`, "-ac", "1", "-ar", String(RATE), "-f", "f32le", "-"], { maxBuffer: 1 << 28 });
   return new Float32Array(raw.buffer.slice(raw.byteOffset, raw.byteOffset + raw.length));
 }
 
@@ -55,6 +90,15 @@ function fadeEnds(s, inS = 0.02, outS = 0.4) {
   return s;
 }
 
+/** Scale so the loudest moment hits `db` dBFS. */
+function levelPeak(s, db) {
+  let peak = 0;
+  for (const v of s) peak = Math.max(peak, Math.abs(v));
+  const gain = 10 ** (db / 20) / Math.max(peak, 1e-6);
+  for (let i = 0; i < s.length; i++) s[i] *= gain;
+  return s;
+}
+
 /** Scale to the target RMS level, but never past -1 dBFS peak. */
 function level(s, db) {
   let sum = 0, peak = 0;
@@ -72,8 +116,9 @@ mkdirSync(OUT, { recursive: true });
 let total = 0;
 for (const [name, [file, start, length, kind, db]] of Object.entries(SOUNDS)) {
   let s = decode(file, start, kind === "loop" ? length + XFADE : length);
-  s = kind === "loop" ? makeLoop(s) : fadeEnds(s);
-  level(s, db);
+  s = kind === "loop" ? makeLoop(s) : kind === "sfx" ? fadeEnds(s, 0.002, 0.03) : fadeEnds(s);
+  if (kind === "sfx") levelPeak(s, db);
+  else level(s, db);
   const path = `${OUT}/${name}.mp3`;
   execFileSync(ffmpeg, ["-v", "error", "-y", "-f", "f32le", "-ar", String(RATE), "-ac", "1", "-i", "-", "-c:a", "libmp3lame", "-b:a", kind === "loop" ? "56k" : "64k", path], { input: Buffer.from(s.buffer) });
   const kb = statSync(path).size / 1024;

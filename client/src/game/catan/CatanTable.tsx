@@ -11,6 +11,7 @@ import { HEX, TILE_TOP, edgePos, hexPos, vertexPos } from "./layout.ts";
 import { cityGeometry, robberGeometry, roadGeometry, settlementGeometry } from "./pieceMeshes.ts";
 import { SEAT_COLOURS, useCatan } from "./store.ts";
 import { usePartyStore } from "../../net/party.ts";
+import { initCatanSounds } from "./sounds.ts";
 
 // The Catan board on the dining table (GAME_SPEC §16): everyone in the room sees it in 3D. Before
 // the first game a sample board sits there; during a game it shows the real board, every road,
@@ -35,6 +36,7 @@ export function CatanTable() {
   const yaw = CATAN_SEATS[mySeat]?.yaw ?? CATAN_SEATS[2]!.yaw;
   const { camera, gl } = useThree();
   useEffect(() => installCatanDev(camera, gl.domElement), [camera, gl]);
+  useEffect(initCatanSounds, []);
 
   // The fixed board: rebuilt only when a new game deals a new board.
   const meshes = useMemo(() => {

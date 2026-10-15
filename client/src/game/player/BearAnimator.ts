@@ -1,6 +1,7 @@
 import { type AnimationAction, type AnimationClip, AnimationMixer, LoopOnce, LoopRepeat, type Object3D } from "three";
 import { CLIP, CROSSFADE, MOVE } from "../config.ts";
 import type { BearAction } from "../state.ts";
+import { crossed, footfalls } from "./footfalls.ts";
 import { locomotionWeights } from "./movement.ts";
 
 const LOOPING = ["Idle", "Walk", "Run", "Dance", "Reel"] as const;
@@ -35,6 +36,11 @@ export class BearAnimator {
   private actions = new Map<ClipName, AnimationAction>();
   private weights = new Map<ClipName, number>();
   private current: BearAction = "locomotion";
+  /** Footfall phases of the walk and run loops, and where each loop was last frame. */
+  private steps: { Walk: number[]; Run: number[] };
+  private lastPhase = { Walk: 0, Run: 0 };
+  /** Sounds the bear made this frame (footsteps, landing): read and cleared by whoever plays them. */
+  readonly events: { step: "walk" | "run" | null; land: boolean } = { step: null, land: false };
 
   constructor(root: Object3D, clips: AnimationClip[]) {
     this.mixer = new AnimationMixer(root);
@@ -53,10 +59,13 @@ export class BearAnimator {
       this.actions.set(name, action);
       this.weights.set(name, name === "Idle" ? 1 : 0);
     }
+    this.steps = { Walk: footfalls(root, this.actions.get("Walk")!.getClip()), Run: footfalls(root, this.actions.get("Run")!.getClip()) };
+    this.mixer.update(0); // back to this bear's own pose after measuring
   }
 
   /** Start an action (call once when it begins). `airTime` is the expected jump duration. */
   start(action: BearAction, airTime = 0) {
+    if ((this.current === "jump" || this.current === "fall") && action === "locomotion") this.events.land = true;
     this.current = action;
     if (action === "jump") {
       const jump = this.actions.get("Jump")!;
@@ -154,5 +163,17 @@ export class BearAnimator {
       action.setEffectiveWeight(next);
     }
     this.mixer.update(dt);
+
+    // A footstep each time the leading walk or run loop passes a footfall.
+    const walk = this.weights.get("Walk")!, run = this.weights.get("Run")!;
+    for (const name of ["Walk", "Run"] as const) {
+      const a = this.actions.get(name)!;
+      const phase = (a.time % a.getClip().duration) / a.getClip().duration;
+      const lead = name === "Walk" ? walk >= run : run > walk;
+      if (this.current === "locomotion" && lead && Math.max(walk, run) > 0.3 && crossed(this.lastPhase[name], phase, this.steps[name])) {
+        this.events.step = name === "Walk" ? "walk" : "run";
+      }
+      this.lastPhase[name] = phase;
+    }
   }
 }

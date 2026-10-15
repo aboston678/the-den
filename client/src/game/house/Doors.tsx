@@ -12,6 +12,7 @@ import { S } from "./space.ts";
 import type { HouseMaterials } from "./style.ts";
 import { floorOf } from "./walls.ts";
 import { removeBody } from "../world/physics.ts";
+import { playAt, take } from "../audio/audio.ts";
 
 // Every door in the house opens and closes with E, for the whole party (GAME_SPEC §8.2). Hinged and
 // French doors swing, the patio door slides, garage doors tilt up into the garage. The utility room is
@@ -22,6 +23,8 @@ export const useDoorPrompt = create<{ text: string | null }>(() => ({ text: null
 
 const LEAF_T = 0.045;
 const SWING_S = 0.9; // seconds to open
+/** A closing door's latch clicks just before it's shut. */
+const LATCH_S = SWING_S * 0.8;
 
 interface Leaf {
   /** Pivot along the wall (floorplan metres) and which way the leaf extends from it. */
@@ -131,6 +134,24 @@ function DoorView({ door, m }: { door: Door; m: HouseMaterials }) {
     });
     return () => bodies.current.forEach((b) => removeBody(world, b));
   }, [world, rapier, leaves, door.axis, h]);
+
+  // Everyone hears a door open or shut where it is (not when the house first loads).
+  const heard = useRef(open);
+  useEffect(() => {
+    if (heard.current === open) return;
+    heard.current = open;
+    const w = door.world;
+    if (door.type === "garage") {
+      void playAt("garage-door", w.x, w.y + GARAGE_DOOR_HEIGHT * S * 0.7, w.z, 1, 6);
+      return;
+    }
+    if (open) {
+      void playAt(take("door-open", 2), w.x, w.y + 1, w.z, 0.8, 4);
+      return;
+    }
+    const id = setTimeout(() => void playAt(take("door-close", 2), w.x, w.y + 1, w.z, 0.8, 4), LATCH_S * 1000);
+    return () => clearTimeout(id);
+  }, [open, door]);
 
   const tmp = useMemo(() => ({ p: new Vector3(), q: new Quaternion() }), []);
   useFrame((_, dt) => {

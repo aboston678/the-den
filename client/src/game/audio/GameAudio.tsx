@@ -166,14 +166,14 @@ export function GameAudio() {
       timers.bird = 25 + Math.random() * 45;
       if (sky.daylight > 0.5) {
         const a = Math.random() * Math.PI * 2, d = 25 + Math.random() * 30;
-        void playAt(Math.random() < 0.5 ? "flicker" : "thrush", p.x + Math.cos(a) * d, p.y + 8, p.z + Math.sin(a) * d, 0.7 * (1 - 0.6 * inside) * amb, 12);
+        void playAt(Math.random() < 0.5 ? "flicker" : "thrush", p.x + Math.cos(a) * d, p.y + 8, p.z + Math.sin(a) * d, 0.7 * (1 - 0.6 * inside), 12, "ambience");
       }
     }
     if (timers.loon <= 0) {
       timers.loon = 45 + Math.random() * 75;
       if (property && current.night > 0.6) {
         const z = p.z + (Math.random() - 0.5) * 120;
-        void playAt(`loon-${1 + Math.floor(Math.random() * 3)}`, streamCenter(z), -7, z, (1 - 0.6 * inside) * amb, 40);
+        void playAt(`loon-${1 + Math.floor(Math.random() * 3)}`, streamCenter(z), -7, z, 1 - 0.6 * inside, 40, "ambience");
       }
     }
   });

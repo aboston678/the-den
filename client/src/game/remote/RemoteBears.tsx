@@ -14,6 +14,8 @@ import { useHeldBall } from "../bowling/heldBall.ts";
 import { useLanes } from "../bowling/store.ts";
 import { cameraState, playerState } from "../state.ts";
 import { invisibleColliders } from "../world/invisible.ts";
+import { bearSounds } from "../audio/footsteps.ts";
+import { CAST_RELEASE_S } from "../player/BearAnimator.ts";
 
 /** Name tags: fully visible up close, gone by 30 m (GAME_SPEC §5.3). */
 const TAG_FULL = 15;
@@ -82,6 +84,7 @@ function RemoteBearView({ id }: { id: string }) {
   }, [model]);
   const fade = useRef(1);
 
+  const reel = useRef({ line: 0, at: 0 });
   useFrame((_, rawDt) => {
     const b = remotes.get(id);
     if (!b || !body.current) return;
@@ -104,8 +107,18 @@ function RemoteBearView({ id }: { id: string }) {
       const near = Math.hypot(s.x - playerState.position.x, s.z - playerState.position.z) < ROAR_SHAKE_RADIUS;
       if (s.action === "roar" && near) cameraState.shake = Math.max(cameraState.shake, 0.5);
       if (s.action === "roar") void playAt("roar", s.x, s.y + 1.6, s.z, 1.8, 8);
+      // Their cast whooshes as the lure leaves the rod, like yours.
+      if (s.action === "cast") setTimeout(() => void playAt("cast-whoosh", s.x, s.y + 2, s.z, 0.8, 4), CAST_RELEASE_S * 1000);
     }
+    // Their reel clicks while they wind a fish in.
+    const line = b.fish.line;
+    if (b.fish.state === "fight" && line < reel.current.line - 0.05 && performance.now() - reel.current.at > 120) {
+      reel.current.at = performance.now();
+      void playAt("reel-click", s.x, s.y + 1.2, s.z, 0.5, 3);
+    }
+    reel.current.line = line;
     animator.update(dt, s.action === "locomotion" ? s.speed : 0);
+    bearSounds(animator, s.x, s.y, s.z);
     b.current = { x: s.x, y: s.y, z: s.z, speed: s.speed, action: s.action, flashlight: s.flashlight, aimYaw: s.aimYaw, aimPitch: s.aimPitch };
 
     // Name tag: over the head, fading with distance, hidden behind walls (checked every 4th frame).

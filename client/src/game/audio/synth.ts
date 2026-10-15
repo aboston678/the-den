@@ -198,3 +198,41 @@ export function diceRollBuffer(ctx: BaseAudioContext) {
   });
   return toBuffer(ctx, data, rate);
 }
+
+/** A tilt-up garage door going over: a low motor hum and rattling rollers, ending in a thud. */
+export function garageDoorBuffer(ctx: BaseAudioContext) {
+  const rate = 22050, seconds = 1.4, data = new Float32Array(Math.round(rate * seconds));
+  const r = rng(97);
+  let lp = 0, hp = 0, prev = 0;
+  for (let i = 0; i < data.length; i++) {
+    const t = i / rate;
+    const run = Math.min(1, t / 0.12) * Math.min(1, Math.max(0, (1.05 - t) / 0.15));
+    const hum = (((t * 58) % 1) * 2 - 1) * 0.35;
+    lp += (r() - lp) * 0.05;
+    // Rollers: a quick rattle a dozen times a second.
+    const n = r();
+    hp = 0.6 * (hp + n - prev);
+    prev = n;
+    const rattle = hp * (0.5 + 0.5 * Math.sin(2 * Math.PI * 13 * t)) ** 6 * 0.6;
+    const thud = t > 1.05 ? Math.sin(2 * Math.PI * 70 * (t - 1.05)) * Math.exp(-(t - 1.05) * 18) * 1.4 : 0;
+    data[i] = (hum * 0.6 + lp * 0.9 + rattle) * run + thud;
+  }
+  return toBuffer(ctx, data, rate);
+}
+
+/** A short happy fanfare for a Catan win: four rising bell notes, the last one held. */
+export function fanfareBuffer(ctx: BaseAudioContext) {
+  const rate = 22050, seconds = 1.8, data = new Float32Array(Math.round(rate * seconds));
+  const notes: [number, number][] = [[523.25, 0], [659.25, 0.14], [783.99, 0.28], [1046.5, 0.44]];
+  for (let i = 0; i < data.length; i++) {
+    const t = i / rate;
+    let v = 0;
+    for (const [f, at] of notes) {
+      if (t < at) continue;
+      const u = t - at, decay = at === 0.44 ? 2.2 : 7;
+      v += (Math.sin(2 * Math.PI * f * u) + 0.35 * Math.sin(2 * Math.PI * f * 2 * u) + 0.12 * Math.sin(2 * Math.PI * f * 3 * u)) * Math.exp(-u * decay) * Math.min(1, u / 0.005);
+    }
+    data[i] = v * 0.5;
+  }
+  return toBuffer(ctx, data, rate);
+}

@@ -21,6 +21,7 @@ import { groundY } from "../world/ground.ts";
 import { invisibleColliders } from "../world/invisible.ts";
 import { approach, facingYaw, moveDirection, turnToward } from "./movement.ts";
 import { useBearModel } from "./useBearModel.ts";
+import { bearSounds } from "../audio/footsteps.ts";
 
 const MAX_DT = 0.1;
 /** Grace period after leaving the ground in which the bear still counts as grounded ("coyote time"). */
@@ -316,6 +317,7 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
       visual.current.visible = !playerState.hidden && !(playerState.seated && cameraState.freeMouse);
     }
     animator.update(dt, Math.min(st.speed, groundSpeed));
+    bearSounds(animator, playerState.position.x, playerState.position.y, playerState.position.z);
 
     // --- tell the party where we are, 20 times a second ---
     st.sendTimer += dt;

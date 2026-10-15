@@ -82,6 +82,9 @@ test("two bears play Catan; a third watches", async ({ page: ann, browser }) => 
     await expect.poll(async () => (await view(ann)).roads.filter((r) => r !== null).length).toBe(step + 1);
   }
   await expect.poll(async () => (await view(ann)).phase).toBe("roll");
+  // Pieces clack onto the board for everyone at the table (Phase 5 sound pass).
+  const clacks = (p: Page) => p.evaluate(() => Object.entries(window.__den!.audio().played).reduce((n, [k, v]) => n + (k.startsWith("piece-place-") ? v : 0), 0));
+  for (const p of [ann, bob]) await expect.poll(() => clacks(p)).toBeGreaterThanOrEqual(8);
 
   // A roll that pays: pick a number one of the roller's settlements touches.
   let v = await view(ann);
@@ -160,6 +163,7 @@ test("two bears play Catan; a third watches", async ({ page: ann, browser }) => 
   await other.waitForTimeout(400);
   await clickSpot(other, "hex", target);
   await expect.poll(async () => (await view(ann)).robber).toBe(target);
+  for (const p of [ann, bob]) await expect.poll(() => p.evaluate(() => window.__den!.audio().played.robber ?? 0)).toBeGreaterThan(0);
   await expect.poll(async () => Object.values(await hand(other)).reduce((a, b) => a + b, 0)).toBe(otherBefore + 1);
   await expect.poll(async () => (await view(ann)).phase).toBe("main");
 

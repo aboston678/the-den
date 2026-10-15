@@ -24,7 +24,7 @@ interface Window {
     serverPosition: () => { x: number; y: number; z: number } | null;
     time: () => number;
     setTime: (time: number | string) => void;
-    audio: () => { state: string; recent: string[] };
+    audio: () => { state: string; recent: string[]; played: Record<string, number> };
     audioLevel: () => { rms: number; peak: number };
     perf: () => { fps: number; p95ms: number; calls: number; triangles: number; textureMB: number; programs: number; pixelRatio: number; size: string };
     perfBreakdown: () => string[];

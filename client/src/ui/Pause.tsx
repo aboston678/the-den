@@ -33,7 +33,8 @@ export function Pause() {
 
   const resume = () => {
     setOpen(false);
-    if (!cameraState.freeMouse) document.querySelector("canvas")?.requestPointerLock?.();
+    // Browsers can refuse (e.g. straight after Esc); a click on the game locks it then.
+    if (!cameraState.freeMouse) void Promise.resolve(document.querySelector("canvas")?.requestPointerLock?.()).catch(() => {});
   };
 
   if (!open) return null;

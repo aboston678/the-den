@@ -4,7 +4,7 @@ import { Vector3 } from "three";
 import { CLIP } from "./config.ts";
 import { remotes } from "../net/remotes.ts";
 import { serverPosition, setDevTime, usePartyStore } from "../net/party.ts";
-import { audioLevel, audioState, recent as recentSounds } from "./audio/audio.ts";
+import { audioLevel, audioState, played, recent as recentSounds } from "./audio/audio.ts";
 import { gameClock } from "./sky/clock.ts";
 import { current as currentLook } from "./sky/look.ts";
 import { groundY } from "./world/ground.ts";
@@ -82,8 +82,8 @@ declare global {
       time: () => number;
       /** Jump the party's clock to a time or a preset name ("dusk", "night", …). Dev only. */
       setTime: (time: number | string) => void;
-      /** Sound: is it running, and the last one-shots played. */
-      audio: () => { state: string; recent: string[] };
+      /** Sound: is it running, the last one-shots played, and how many times each has played. */
+      audio: () => { state: string; recent: string[]; played: Record<string, number> };
       /** Loudness of the mix right now (dB). */
       audioLevel: () => { rms: number; peak: number };
       /** The sky as this client last drew it. */
@@ -128,7 +128,7 @@ window.__den = {
   serverPosition,
   time: gameClock,
   setTime: setDevTime,
-  audio: () => ({ state: audioState(), recent: recentSounds.map((s) => s.name) }),
+  audio: () => ({ state: audioState(), recent: recentSounds.map((s) => s.name), played: { ...played } }),
   audioLevel,
   sky: () => {
     const { phase, daylight, exteriorLights } = currentLook.sky;
