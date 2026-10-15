@@ -116,3 +116,19 @@ test("settings are remembered, and Esc opens the pause menu", async ({ page }) =
   await page.getByTestId("leave-game").click();
   await expect(page.getByTestId("home-stage")).toBeVisible();
 });
+
+// Phase 5.3: friends can turn on a frame-rate readout to say how smooth the game runs on their laptop.
+test("Show frame rate puts the frame rate and graphics level in the party badge", async ({ page }) => {
+  test.setTimeout(90_000);
+  failOnErrors(page);
+  await hostGame(page, "Counter");
+  await expect(page.getByTestId("fps")).toHaveCount(0);
+  await page.keyboard.press("Escape");
+  await page.getByTestId("pause-settings").click();
+  await page.getByTestId("setting-fps").check();
+  await page.getByTestId("settings-done").click();
+  await page.keyboard.press("Escape");
+  await expect(page.getByTestId("fps")).toHaveText(/^\d+ fps · (Low|Medium|High)$/);
+  await expect.poll(async () => Number((await page.getByTestId("fps").textContent())!.split(" ")[0])).toBeGreaterThan(40);
+  await page.screenshot({ path: "test-results/menus/fps.png", clip: { x: 0, y: 0, width: 520, height: 60 } });
+});

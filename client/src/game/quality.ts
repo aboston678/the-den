@@ -52,7 +52,10 @@ export const PRESETS: Record<Tier, Quality> = {
 /** The graphics chip's name, if the browser shares it. */
 export function gpuName(): string {
   try {
-    const gl = document.createElement("canvas").getContext("webgl2");
+    // Ask for the fast graphics card, like the game's own canvas does (React Three Fiber's default):
+    // laptops with two chips (e.g. a gaming laptop's NVIDIA card plus Intel graphics) would otherwise
+    // report the slow one here and Auto would pick Low.
+    const gl = document.createElement("canvas").getContext("webgl2", { powerPreference: "high-performance" });
     const ext = gl?.getExtension("WEBGL_debug_renderer_info");
     return (ext && gl ? String(gl.getParameter(ext.UNMASKED_RENDERER_WEBGL)) : "") || "";
   } catch {

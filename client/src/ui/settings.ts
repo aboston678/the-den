@@ -13,12 +13,14 @@ export interface Settings {
   invertY: boolean;
   /** Takes effect in milestone 1.12. */
   graphics: GraphicsPreset;
+  /** A small frame-rate number in the party badge, so friends can say how smooth it runs (Phase 5). */
+  showFps: boolean;
   /** Cartoon (the game's look since 2026-10-13) or the old realistic one (game/artStyle.ts); changing it reloads the page. */
   artStyle: "realistic" | "cartoon";
 }
 
 const KEY = "den.settings";
-export const DEFAULT_SETTINGS: Settings = { music: 0.8, effects: 1, ambience: 0.9, sensitivity: 1, invertY: false, graphics: "auto", artStyle: "cartoon" };
+export const DEFAULT_SETTINGS: Settings = { music: 0.8, effects: 1, ambience: 0.9, sensitivity: 1, invertY: false, graphics: "auto", showFps: false, artStyle: "cartoon" };
 
 function load(): Settings {
   try {

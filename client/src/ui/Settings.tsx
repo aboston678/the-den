@@ -58,6 +58,10 @@ export function SettingsPanel({ onClose }: { onClose: () => void }) {
           <span>Invert mouse up/down</span>
           <input type="checkbox" checked={s.invertY} data-testid="setting-invert" onChange={(e) => updateSettings({ invertY: e.target.checked })} />
         </label>
+        <label className="setting check">
+          <span>Show frame rate</span>
+          <input type="checkbox" checked={s.showFps} data-testid="setting-fps" onChange={(e) => updateSettings({ showFps: e.target.checked })} />
+        </label>
         <button className="primary" data-testid="settings-done" onClick={onClose}>Done</button>
       </div>
     </div>
