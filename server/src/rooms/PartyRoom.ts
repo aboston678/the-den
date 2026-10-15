@@ -232,6 +232,7 @@ export class PartyRoom extends Room<{ state: PartyState }> {
   onDrop(client: Client) {
     const player = this.state.players.get(client.sessionId);
     if (player) player.connected = false;
+    if (player) this.fishing.drop(client.sessionId, player);
     // Catan players get longer, and their game waits for them (GAME_SPEC §16).
     const inCatan = this.catan.playerIndex(client.sessionId) >= 0;
     if (inCatan) this.catan.drop(this.state.catan, client.sessionId, Date.now());

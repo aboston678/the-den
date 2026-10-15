@@ -53,6 +53,11 @@ export class Fishing {
     this.anglers.delete(id);
   }
 
+  /** Their connection dropped (or they reloaded): the fish gets away and the line comes in, so nobody watches a fight that's stalled. They keep the rod. */
+  drop(id: string, p: Player) {
+    if (p.fishing === "cast" || p.fishing === "bite" || p.fishing === "fight") this.clearLine(id, p);
+  }
+
   /** Take a rod from the bucket, or put it back (only standing at the bucket; putting it away also works anywhere, e.g. going indoors). */
   rod(id: string, p: Player, take: boolean) {
     if (take) {

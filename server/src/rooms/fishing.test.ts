@@ -91,4 +91,23 @@ describe("fishing on the server", () => {
     f.rod("a", p, false);
     expect(p.fishing).toBe("");
   });
+
+  it("a dropped connection mid-fight lets the fish go and winds the line in (the rod stays)", () => {
+    const f = new Fishing(() => 0.5);
+    const b = rodBucket();
+    const p = bearAt(b.x, b.z);
+    const players = new Map([["a", p]]);
+    f.rod("a", p, true);
+    f.force("a", 0);
+    f.cast("a", p, water().x, 0, 0);
+    f.tick(players, 10, 0.05);
+    f.reel("a", p, 20);
+    expect(p.fishing).toBe("fight");
+    f.drop("a", p);
+    expect(p.fishing).toBe("");
+    expect(p.tension).toBe(0);
+    expect(p.rod).toBe(true);
+    f.cast("a", p, water().x, 0, 100);
+    expect(p.fishing).toBe("cast");
+  });
 });
