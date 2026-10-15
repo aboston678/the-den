@@ -3,7 +3,7 @@
 Claude Code updates this file after every milestone: tick the box, add a short note, and say what's next.
 **[ANDREW APPROVES]** = stop, show Andrew, and wait for his OK.
 
-**Current status:** Phases 1–4 are **done and live** (Andrew confirmed the friend tests 2026-10-14). **Phase 5 (polish)** started 2026-10-14 (plan: `docs/phase-5-plan.md`): first a live fix so Catan players can leave or vote to end a game, then 5.1–5.3 on branch `phase-5`, one review at 5.4. 676.75 credits left. Railway trial ends ~2026-11-11: Andrew needs to pick a plan before then.
+**Current status:** Phases 1–4 done and live. **Phase 5 (polish) is live** (main = 5a8e7d7, 2026-10-15; Andrew approved with "deploy"): sound pass, visual polish, Show frame rate. Last step: **a game night with friends** as the final bug bash (5.4); fixes go on a branch first. 676.75 credits left. Railway trial ends ~2026-11-11: Andrew needs to pick a plan before then.
 
 ---
 
@@ -92,7 +92,7 @@ Run like Phases 2–4 (Andrew, 2026-10-14): Catan leave/vote-to-end fix goes liv
 - [x] **5.3 Performance** on the slowest friend's laptop.
   - Done 2026-10-14. The slowest laptop is Andrew's M1 MacBook Air (8 GB), the spec's target: with all the Phase 5 polish, Medium and Low hold 60 fps at all 11 perf spots at 1080p, ≤377 draw calls, ~500 MB textures (fine for 8 GB). **Settings → Show frame rate** puts e.g. "60 fps · Medium" (green ≥50, yellow ≥30, red below) in the party badge, so the Razer and PC friends can report how it runs (`ui/Hud.tsx`, test in `menus.spec.ts`). Fixed: Auto's chip check now asks for the fast graphics card like the game does, so a two-chip gaming laptop isn't judged by its Intel chip (it could have picked Low); Auto's guesses checked for RTX/GTX/Radeon RX (High), Iris Xe/Radeon integrated/Safari (Medium) in `quality.test.ts`.
 - [ ] **5.4 Bug bash** with friends. **[ANDREW APPROVES]**
-  - My sweep 2026-10-14/15: reload-midway tests (`e2e/midway.spec.ts`): a bowler reloading on their turn doesn't stall the lane (fine already); **fixed**: an angler whose connection dropped mid-fight left the fight frozen for the party for up to 30 s, now the fish gets away and the line comes in (`Fishing.drop`, tested). Full browser suite ×3 (60 tests): run 2 all passed; run 1 the Medium frame-rate check was slow everywhere at once (the Mac's screen asleep overnight; re-measured 60 fps), run 3 two timing flakes under load (the Catan end card on the third browser, walking through the front door before it finished opening), tests given more patience and re-run fine. Before/after pictures: `review/polish/compare-*.jpg`. Waiting on: **Andrew plays the Phase 5 build** (run locally, or say "deploy"), then it goes live and a last game night with friends.
+  - My sweep 2026-10-14/15: reload-midway tests (`e2e/midway.spec.ts`): a bowler reloading on their turn doesn't stall the lane (fine already); **fixed**: an angler whose connection dropped mid-fight left the fight frozen for the party for up to 30 s, now the fish gets away and the line comes in (`Fishing.drop`, tested). Full browser suite ×3 (60 tests): run 2 all passed; run 1 the Medium frame-rate check was slow everywhere at once (the Mac's screen asleep overnight; re-measured 60 fps), run 3 two timing flakes under load (the Catan end card on the third browser, walking through the front door before it finished opening), tests given more patience and re-run fine. Before/after pictures: `review/polish/compare-*.jpg`. Andrew approved ("deploy", 2026-10-15). Deployed: `phase-5` fast-forwarded into main (5a8e7d7); Railway `/health` shows it, Vercel serves the new build (Show frame rate, the new sounds); the online sign-in test passes. Waiting on: **a game night with friends** (the final bug bash); any fixes go on a branch first.
 
 ---
 
@@ -198,6 +198,7 @@ Starting balance: 1,210 (2026-10-11)
 ## Session notes
 (Newest first. 1–3 lines per session: what got done, what's next, anything Andrew needs to do.)
 
+- **2026-10-15 · Session 8 (cont. 2).** Andrew approved Phase 5; deployed live (main 5a8e7d7). Next: game night with friends; Railway plan before ~2026-11-11.
 - **2026-10-15 · Session 8 (cont.).** Finished 5.2 (smoke, butterflies, painted logs) and 5.3 (Show frame rate; Auto picks the fast card on two-chip laptops; 60 fps on the M1). 5.4 sweep done, one real bug fixed (stuck fishing fight after a drop). Next: Andrew's review of Phase 5, then deploy.
 - **2026-10-14 · Session 8.** Andrew confirmed the Phase 2–4 friend tests. Catan leave + majority vote-to-end fix built, tested and **live** (main 3402d96). Phase 5 on `phase-5`: 5.1 sound pass done (Kenney CC0 packs, Andrew OK'd); 5.2 half done (fireflies, mist, grass, flowers). No credits spent (676.75 left). Next: finish 5.2, perf check, 5.3.
 
