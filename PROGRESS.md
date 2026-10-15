@@ -88,6 +88,7 @@ Run like Phases 2–4 (Andrew, 2026-10-14): Catan leave/vote-to-end fix goes liv
 - [x] **5.1 Sound pass.**
   - Built 2026-10-14 (review at 5.4). Kenney CC0 packs (Andrew OK'd; `tools/fetch-audio.mjs`, `docs/ASSETS.md`) → 48 short sounds via `tools/build-audio.mjs` (~0.2 MB). **Footsteps** for your bear and others within 22 m, timed to each walk/run clip's footfalls (worked out from the foot bones at load, `player/footfalls.ts`), sounding like the ground (`audio/floor.ts`: grass, dirt, stone, wood, carpet; porch/deck/dock/alley approach wood), plus a landing thud. **Doors** creak open and latch shut, garage doors rumble (made in code), heard by the whole party. **Menu clicks** and a faint hover tick on every button (`ui/uiSound.ts`). **Catan**: pieces clack, the robber thumps, cards for you, a ding on your turn, a buzz on a refused move, a fanfare for the winner (`catan/sounds.ts`). Other bears' casts and reels are heard now. **Mix**: Effects and Ambience are real volume groups (sliders change sounds already playing; birds/loons follow Ambience only; TVs follow Effects). Footsteps sit 2–4 dB under the ambience. Fixed: a refused mouse lock (Resume right after Esc) threw an error. Tests: `floor.test.ts`, `e2e/sound.spec.ts` (driveway/porch/lawn steps, landing, a door heard by a second bear, clicks), Catan clacks + robber in `catan.spec.ts`. Next: 5.2 visual polish.
 - [ ] **5.2 Visual polish** (fireflies, fog, grass, small details).
+  - In progress 2026-10-14 (not yet re-measured for frame rate). Done so far: **fireflies** dusk→dawn over the lawn and stream banks (`world/property/Fireflies.tsx`, one draw), low **mist** over the stream and lawn edges, thickest at sunrise (`Mist.tsx`, off on Low), **grass** now also on the stream banks and trail edges (`Grass.tsx`), **wildflowers** (daisies, buttercups, lupines) on lawn edges, driveway verges and banks, plus a planted **flower bed** in front of the hedge along the house (`Flowers.tsx`). Before/after pictures: `POLISH=before|after npx playwright test e2e/tools-polish.spec.ts` → `review/polish/` (not in git). Next: chimney smoke (`house/exterior.ts` `chimney()`), butterflies, daytime blue haze, logs/stumps painted, then run `e2e/perf.spec.ts` (Medium must hold 60 fps) and the full suite.
 - [ ] **5.3 Performance** on the slowest friend's laptop.
 - [ ] **5.4 Bug bash** with friends.
 
@@ -193,6 +194,8 @@ Starting balance: 1,210 (2026-10-11)
 
 ## Session notes
 (Newest first. 1–3 lines per session: what got done, what's next, anything Andrew needs to do.)
+
+- **2026-10-14 · Session 8.** Andrew confirmed the Phase 2–4 friend tests. Catan leave + majority vote-to-end fix built, tested and **live** (main 3402d96). Phase 5 on `phase-5`: 5.1 sound pass done (Kenney CC0 packs, Andrew OK'd); 5.2 half done (fireflies, mist, grass, flowers). No credits spent (676.75 left). Next: finish 5.2, perf check, 5.3.
 
 - **2026-10-14 · Session 7.** Phase 4 Catan built on `phase-4` (4.1–4.3 + most of 4.4) with Andrew's secret house dice (hold H on Start; flipped odds; server-only). No credits spent (676.75 left). Deployed live at Andrew's request. Next: Andrew + friends play it (the prank: hold H on Start), then Phase 5 polish.
 

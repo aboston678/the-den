@@ -1,4 +1,4 @@
-import { CLEARING, DRIVEWAY, DRIVEWAY_WIDTH, SCENERY, heightAt, houseCutRects, lawnMask, noise2 } from "@den/shared";
+import { CLEARING, DRIVEWAY, DRIVEWAY_WIDTH, SCENERY, TRAIL, TRAIL_WIDTH, heightAt, houseCutRects, isOnDock, lawnMask, noise2, streamCenter, surfaceAt } from "@den/shared";
 import { useFrame } from "@react-three/fiber";
 import { useMemo } from "react";
 import { BufferAttribute, BufferGeometry, Color, DoubleSide, Matrix4, MeshStandardMaterial, ShaderChunk } from "three";
@@ -7,8 +7,8 @@ import { ignoreLampsAndFlashlights } from "../lighting.ts";
 import { InstancedLod, type LodLevel } from "./InstancedLod.tsx";
 import type { Placement } from "./scatter.ts";
 
-// Grass blades for the cartoon art style (game/artStyle.ts): little clumps over the lawn and along
-// the driveway's edges, swaying in the wind, drawn near the camera and dissolving into the painted
+// Grass blades for the cartoon art style (game/artStyle.ts): little clumps over the lawn, along
+// the driveway's and the trail's edges and on the stream banks above the mud, swaying in the wind, drawn near the camera and dissolving into the painted
 // ground further out (InstancedLod). The blades' normals point straight up, so the grass is lit as
 // one soft carpet rather than thousands of flickering slivers.
 
@@ -48,7 +48,8 @@ function clumpGeometry() {
   return g;
 }
 
-function grassMaterial() {
+/** The grass's look and sway, shared with the wildflowers (Flowers.tsx). */
+export function grassMaterial() {
   const m = new MeshStandardMaterial({ vertexColors: true, roughness: 1, metalness: 0, side: DoubleSide });
   ignoreLampsAndFlashlights(m);
   const before = m.onBeforeCompile;
@@ -97,6 +98,34 @@ function grassPlacements(): Placement[] {
       const want = Math.max(lawn > 0.35 ? 1 : 0, verge) * (0.8 + 0.4 * noise2(jx, jz, 9, 23));
       if (want < 0.5 || inHouse(jx, jz)) continue;
       out.push({ x: jx, y: heightAt(jx, jz) - 0.02, z: jz, rot: (i * 2.39996) % 6.283, scale: 0.95 + 0.3 * noise2(jx, jz, 3, 24) });
+    }
+  }
+  // The stream banks, above the mud (both sides, along the stretch by the house and dock).
+  for (let z = -75; z < 75; z += STEP) {
+    for (const side of [-1, 1]) {
+      for (let d = 13.5; d < 22; d += STEP) {
+        i++;
+        const jx = streamCenter(z) + side * (d + noise2(d, z, 0.37, 25) * 0.5 * STEP), jz = z + noise2(d, z, 0.41, 26) * 0.5 * STEP;
+        const sf = surfaceAt(jx, jz);
+        if (sf.mud > 0.35 || sf.bed > 0.05 || lawnMask(jx, jz) > 0.35 || isOnDock(jx, jz)) continue;
+        if (TRAIL.closest(jx, jz, TRAIL_WIDTH / 2 + 0.3)) continue;
+        const want = (1 - (d - 13.5) / 8.5) * (0.85 + 0.4 * noise2(jx, jz, 9, 27));
+        if (want < 0.4) continue;
+        out.push({ x: jx, y: heightAt(jx, jz) - 0.02, z: jz, rot: (i * 2.39996) % 6.283, scale: 0.85 + 0.3 * noise2(jx, jz, 3, 28) });
+      }
+    }
+  }
+  // Both edges of the trail down to the dock.
+  for (let t = 0; t < TRAIL.length; t += STEP) {
+    const p = TRAIL.pointAt(t), q = TRAIL.pointAt(Math.min(TRAIL.length, t + 0.5));
+    const len = Math.hypot(q.x - p.x, q.z - p.z) || 1, nx = -(q.z - p.z) / len, nz = (q.x - p.x) / len;
+    for (const side of [-1, 1]) {
+      for (let k = TRAIL_WIDTH / 2 + 0.35; k < TRAIL_WIDTH / 2 + 2.2; k += STEP) {
+        i++;
+        const x = p.x + nx * side * k + noise2(t, k, 0.4, 29) * 0.2, z = p.z + nz * side * k + noise2(t, k, 0.4, 30) * 0.2;
+        if (lawnMask(x, z) > 0.35 || surfaceAt(x, z).bed > 0.05 || isOnDock(x, z)) continue;
+        out.push({ x, y: heightAt(x, z) - 0.02, z, rot: (i * 2.39996) % 6.283, scale: 0.8 + 0.3 * noise2(x, z, 3, 31) });
+      }
     }
   }
   return out;

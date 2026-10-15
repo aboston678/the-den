@@ -1,8 +1,11 @@
 import { Boundary } from "./Boundary.tsx";
 import { Boat } from "./Boat.tsx";
 import { Dock } from "./Dock.tsx";
+import { Fireflies } from "./Fireflies.tsx";
+import { Flowers } from "./Flowers.tsx";
 import { Forest } from "./Forest.tsx";
 import { Grass } from "./Grass.tsx";
+import { Mist } from "./Mist.tsx";
 import { TOON } from "../../artStyle.ts";
 import { House } from "../../house/House.tsx";
 import { Roads } from "./Roads.tsx";
@@ -23,6 +26,9 @@ export function Property() {
       <StoneWalls />
       <Forest />
       {TOON && <Grass />}
+      {TOON && <Flowers />}
+      <Fireflies />
+      <Mist />
       <House />
       <Boundary />
     </>
