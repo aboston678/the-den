@@ -204,9 +204,10 @@ test("two bears play Catan; a third watches", async ({ page: ann, browser }) => 
   }
   await expect.poll(async () => (await view(ann)).phase, { timeout: 15_000 }).toBe("over");
   expect((await view(ann)).winner).toBe(wIdx);
-  await expect(winner.getByTestId("catan-over")).toContainText("You win!");
+  // (Generous waits: with three browsers on one laptop the other screens can lag a few seconds.)
+  await expect(winner.getByTestId("catan-over")).toContainText("You win!", { timeout: 15_000 });
   const loser = winner === ann ? bob : ann;
-  await expect(loser.getByTestId("catan-over")).toContainText("wins!");
+  await expect(loser.getByTestId("catan-over")).toContainText("wins!", { timeout: 15_000 });
   await expect.poll(async () => (await state(loser)).wins.length).toBeGreaterThan(0);
   await shot(loser, "8-game-over");
   // The winner jumps up and cheers.

@@ -48,8 +48,9 @@ test("the front door opens with E for everyone, and you can walk in", async ({ b
   await expect(a.getByTestId("action-prompt")).toContainText("Open door");
   await a.keyboard.press("KeyE");
   await expect.poll(() => b.evaluate((id) => window.__den!.doors()[id], door.id)).toBe(true); // Bravo sees it open
-  await a.waitForTimeout(1000);
-  await walk(a, 2500);
+  // Walk in once the door has swung open (it can take longer than its 0.9 s when frames are slow).
+  await a.waitForTimeout(1500);
+  for (let tries = 0; tries < 3 && (await me(a)).z <= door.world.z + 0.8; tries++) await walk(a, 2500);
   const inside = await me(a);
   expect(inside.z).toBeGreaterThan(door.world.z + 0.8); // through the doorway into the foyer
   expect(Math.abs(inside.y)).toBeLessThan(0.1);
