@@ -57,22 +57,20 @@ export function Railings({ runs, materials }: { runs: RailRun[]; materials: { ra
     return [make(baluster, materials.post, balusters), make(post, materials.post, posts), make(rail, materials.rail, rails)];
   }, [runs, materials]);
 
-  // One sloped/straight box per run so bears can't walk through railings.
+  // One upright slab per run so bears can't walk through railings: a sloped parallelogram with
+  // vertical ends (a tilted box would lean its top ~1 m past the ends of a steep stair and block the
+  // way on and off it).
   useEffect(() => {
     const body = world.createRigidBody(rapier.RigidBodyDesc.fixed());
     for (const { from, to } of runs) {
       const a = toWorld(from), b = toWorld(to);
-      const flat = Math.hypot(b[0] - a[0], b[2] - a[2]);
-      const len = Math.hypot(flat, b[1] - a[1]);
-      const yaw = Math.atan2(b[2] - a[2], b[0] - a[0]), slope = Math.atan2(b[1] - a[1], flat);
-      const q = new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), -yaw).multiply(new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), slope));
+      const flat = Math.hypot(b[0] - a[0], b[2] - a[2]) || 1;
+      const nx = (-(b[2] - a[2]) / flat) * 0.06, nz = ((b[0] - a[0]) / flat) * 0.06; // half thickness, sideways
       const h = HEIGHT * 1.25 + 0.3;
-      world.createCollider(
-        rapier.ColliderDesc.cuboid(len / 2, h / 2, 0.06)
-          .setTranslation((a[0] + b[0]) / 2, (a[1] + b[1]) / 2 + h / 2, (a[2] + b[2]) / 2)
-          .setRotation({ x: q.x, y: q.y, z: q.z, w: q.w }),
-        body,
-      );
+      const pts: number[] = [];
+      for (const p of [a, b]) for (const up of [0, h]) for (const side of [-1, 1]) pts.push(p[0] + nx * side, p[1] + up, p[2] + nz * side);
+      const desc = rapier.ColliderDesc.convexHull(new Float32Array(pts));
+      if (desc) world.createCollider(desc, body);
     }
     return () => removeBody(world, body);
   }, [world, rapier, runs]);

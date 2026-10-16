@@ -21,6 +21,8 @@ import { groundY } from "../world/ground.ts";
 import { invisibleColliders } from "../world/invisible.ts";
 import { approach, facingYaw, moveDirection, turnToward } from "./movement.ts";
 import { useBearModel } from "./useBearModel.ts";
+import { STAIR_FEET } from "../house/structure.ts";
+import { toWorld } from "../house/space.ts";
 import { bearSounds } from "../audio/footsteps.ts";
 
 const MAX_DT = 0.1;
@@ -28,6 +30,13 @@ const MAX_DT = 0.1;
 const COYOTE = 0.15;
 /** Only switch to the falling pose after actually dropping this far below the last ground height. */
 const FALL_DROP = 0.4;
+/** Highest step the bear walks up without jumping (metres); higher at the foot of a staircase. */
+const STEP_UP = 0.35, STAIR_FOOT_STEP_UP = 0.75;
+const FEET = STAIR_FEET.map((f) => {
+  const a = toWorld([f.x0, f.y0, f.z0]), b = toWorld([f.x1, f.y1, f.z1]);
+  return { minX: Math.min(a[0], b[0]), maxX: Math.max(a[0], b[0]), minY: a[1], maxY: b[1], minZ: Math.min(a[2], b[2]), maxZ: Math.max(a[2], b[2]) };
+});
+const atStairFoot = (x: number, y: number, z: number) => FEET.some((f) => x > f.minX && x < f.maxX && y > f.minY && y < f.maxY && z > f.minZ && z < f.maxZ);
 /** Seconds a roar holds the bear still before walking off cancels it. */
 const ROAR_PLANTED_S = 1.2;
 /** Ground probe: a ray from this high above the feet straight down (stays inside the bear). */
@@ -47,10 +56,10 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
   const controllerRef = useRef<KinematicCharacterController | null>(null);
   useEffect(() => {
     const c = world.createCharacterController(CONTROLLER_OFFSET);
-    c.enableAutostep(0.35, 0.25, true); // house stairs are 0.24 m at 1.25× scale
+    c.enableAutostep(STEP_UP, 0.25, true); // house stairs are 0.24 m at 1.25× scale
     c.enableSnapToGround(0.4);
-    c.setMaxSlopeClimbAngle((45 * Math.PI) / 180);
-    c.setMinSlopeSlideAngle((50 * Math.PI) / 180);
+    c.setMaxSlopeClimbAngle((50 * Math.PI) / 180); // the basement stairs' ramp is 44°
+    c.setMinSlopeSlideAngle((55 * Math.PI) / 180);
     c.setApplyImpulsesToDynamicBodies(true);
     c.setCharacterMass(300);
     controllerRef.current = c;
@@ -69,7 +78,7 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
   });
 
   // Start facing away from the camera (which begins on the +z side looking toward −z).
-  const s = useRef({ vy: 0, speed: 0, yaw: Math.PI, dir: { x: 0, z: -1 }, airTime: 0, actionTime: 0, roarReadyAt: 0, groundY: 0, ready: false,
+  const s = useRef({ vy: 0, speed: 0, yaw: Math.PI, dir: { x: 0, z: -1 }, airTime: 0, actionTime: 0, roarReadyAt: 0, atStairFoot: false, groundY: 0, ready: false,
     pushX: 0, pushZ: 0, staggerUntil: 0, sendTimer: 0, castAt: null as { x: number; z: number } | null, released: false,
     chair: null as SeatMove | null });
 
@@ -254,6 +263,12 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
       st.pushX = st.pushZ = 0;
       st.yaw = chairSpot.yaw ?? st.yaw;
     } else {
+      // Getting on or off the bottom of a staircase from the side: let the bear step higher there.
+      const atFoot = atStairFoot(here.x, here.y - CAPSULE_CENTER, here.z);
+      if (atFoot !== st.atStairFoot) {
+        st.atStairFoot = atFoot;
+        controller.enableAutostep(atFoot ? STAIR_FOOT_STEP_UP : STEP_UP, 0.25, true);
+      }
       controller.computeColliderMovement(collider.current, desired);
       const m = controller.computedMovement();
       moved = { x: m.x, y: m.y, z: m.z };

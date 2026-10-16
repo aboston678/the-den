@@ -7,10 +7,29 @@ import { type Cell, GREAT_ROOM, GREAT_ROOM_FLOOR, type Railing, type WallPiece, 
 
 // Floors, ceilings, stairs, steps, the porch and deck floors, the fireplace (floorplan metres).
 
-/** Main stairs: from the foyer by the front door, rising south to the balcony (14 risers). */
-export const MAIN_STAIRS = { x0: 25.6, x1: 26.8, z0: 0.3, z1: 3.3, risers: 14 };
-/** Basement stairs: underneath, entered from the great room, going down north (top landing, then 11 risers). */
-export const BASEMENT_STAIRS = { x0: 25.6, x1: 26.8, zTop: 3.5, zLanding: 2.6, z1: 0.3, risers: 11 };
+/**
+ * Main stairs: from the foyer by the front door, rising south to the balcony (14 risers). The bottom
+ * step stands 0.45 m off the front wall's face so a bear can stand in front of it and walk straight on.
+ */
+export const MAIN_STAIRS = { x0: 25.6, x1: 26.8, z0: 0.55, z1: 3.3, risers: 14 };
+/** Basement stairs: underneath, entered from the great room, going down north (top landing, then 11 risers) to the same gap at the wall. */
+export const BASEMENT_STAIRS = { x0: 25.6, x1: 26.8, zTop: 3.5, zLanding: 2.8, z1: 0.55, risers: 11 };
+/** How far up from the bottom of the basement stairs the rails stop (open sides to step off at the wall). */
+const BASEMENT_RAIL_GAP = 0.75;
+/** How far up from the bottom of the main stairs the rail starts (the way on from the foyer). */
+const MAIN_RAIL_GAP = 1.0;
+
+/**
+ * Where a bear gets on or off the bottom of a staircase from the side, in floorplan metres. Both
+ * flights end against the house's front wall, so the only way on is sideways onto the lowest steps;
+ * the player lets the bear step higher than usual here (Player.tsx) so that isn't fiddly.
+ */
+export const STAIR_FEET = [
+  // Main stairs, from the foyer side.
+  { x0: MAIN_STAIRS.x0, x1: MAIN_STAIRS.x1 + 1.0, z0: 0, z1: MAIN_STAIRS.z0 + MAIN_RAIL_GAP, y0: -0.3, y1: 1.2 },
+  // Basement stairs, from either side at the bottom.
+  { x0: BASEMENT_STAIRS.x0 - 1.0, x1: BASEMENT_STAIRS.x1 + 1.0, z0: 0, z1: BASEMENT_STAIRS.z1 + BASEMENT_RAIL_GAP, y0: -2.9, y1: -1.5 },
+];
 export const FIREPLACE = { x0: 28.8, x1: 29.5, z0: 6.0, z1: 8.2 };
 export const DECK = box(16.5, 10, 13.5, 4.5);
 export const PORCH = box(21.5, -2.5, 12.5, 2.5);
@@ -161,7 +180,7 @@ function stairs(s: Structure) {
   const m = MAIN_STAIRS;
   steps(s, "z", m.z0, m.z1, m.x0, m.x1, 0, UPPER_FLOOR, m.risers, "oak_trim", true);
   // Rail along the open side, starting a few steps up so you can walk on from the side at the bottom.
-  const railStart = m.z0 + 0.9;
+  const railStart = m.z0 + MAIN_RAIL_GAP;
   s.stairRails.push({ from: [m.x1 - 0.05, (UPPER_FLOOR * (railStart - m.z0)) / (m.z1 - m.z0), railStart], to: [m.x1 - 0.05, UPPER_FLOOR, m.z1] });
   // A wall under the stairs on the foyer side, closing off the basement stairs below.
   const run = (m.z1 - m.z0) / m.risers;
@@ -176,8 +195,12 @@ function stairs(s: Structure) {
   const b = BASEMENT_STAIRS;
   slab(s, { x0: b.x0, x1: b.x1, z0: b.zLanding, z1: b.zTop }, GREAT_ROOM_FLOOR, GREAT_ROOM_FLOOR - 0.3, floorKey("stair_landing"));
   steps(s, "z", b.zLanding, b.z1, b.x0, b.x1, GREAT_ROOM_FLOOR, level("basement").floorY, b.risers, "oak_trim", true);
-  s.stairRails.push({ from: [b.x1 + 0.05, GREAT_ROOM_FLOOR, b.zLanding], to: [b.x1 + 0.05, level("basement").floorY, b.z1] });
-  s.stairRails.push({ from: [b.x0 - 0.05, GREAT_ROOM_FLOOR, b.zLanding], to: [b.x0 - 0.05, level("basement").floorY, b.z1] });
+  // Rails down both sides, stopping short of the bottom: the flight ends at the basement's front wall,
+  // so you step off (or on) sideways there.
+  const railEnd = b.z1 + BASEMENT_RAIL_GAP;
+  const railEndY = level("basement").floorY + ((GREAT_ROOM_FLOOR - level("basement").floorY) * (railEnd - b.z1)) / (b.zLanding - b.z1);
+  s.stairRails.push({ from: [b.x1 + 0.05, GREAT_ROOM_FLOOR, b.zLanding], to: [b.x1 + 0.05, railEndY, railEnd] });
+  s.stairRails.push({ from: [b.x0 - 0.05, GREAT_ROOM_FLOOR, b.zLanding], to: [b.x0 - 0.05, railEndY, railEnd] });
 
   // Railing round the stairwell upstairs.
   s.railings.push({ axis: "z", c: m.x1 + 0.03, u0: m.z0, u1: m.z1 - 0.2, y: UPPER_FLOOR });
@@ -206,8 +229,18 @@ function greatRoomRisers(s: Structure, pieces: WallPiece[]) {
     const side = inA ? -1 : 1, t = p.thickness / 2;
     const near = p.c + side * t, far = p.c + side * (t + 0.03);
     const [c0, c1] = [Math.min(near, far), Math.max(near, far)];
-    const r = p.axis === "x" ? { x0: p.u0, x1: p.u1, z0: c0, z1: c1 } : { x0: c0, x1: c1, z0: p.u0, z1: p.u1 };
-    slab(s, r, 0, GREAT_ROOM_FLOOR, `paint:${styleOf("great_room").wall}`, `paint:${styleOf("great_room").wall}`);
+    // Not across the basement door: its landing is at the great room's level, so there's no step there.
+    const gaps = DOORS.filter((d) => d.level === "main" && (d.a === "basement_stairs" || d.b === "basement_stairs") && d.axis === p.axis && Math.abs((d.axis === "x" ? d.z : d.x) - p.c) < 0.02)
+      .map((d) => { const u = d.axis === "x" ? d.x : d.z; return [u - d.width / 2, u + d.width / 2] as const; });
+    let u = p.u0;
+    for (const [g0, g1] of [...gaps.sort((q, r) => q[0] - r[0]), [p.u1, p.u1] as const]) {
+      const u1 = Math.min(g0, p.u1);
+      if (u1 - u > 0.01) {
+        const r = p.axis === "x" ? { x0: u, x1: u1, z0: c0, z1: c1 } : { x0: c0, x1: c1, z0: u, z1: u1 };
+        slab(s, r, 0, GREAT_ROOM_FLOOR, `paint:${styleOf("great_room").wall}`, `paint:${styleOf("great_room").wall}`);
+      }
+      u = Math.max(u, g1);
+    }
   }
 }
 

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { HOUSE, doorById, houseToWorld } from "../shared/src/index.ts";
+import { GREAT_ROOM_FLOOR, HOUSE, doorById, houseToWorld } from "../shared/src/index.ts";
 import { closePlayers, failOnErrors, hostGame, joinGame, newPlayer, waitForBear } from "./helpers.ts";
 
 // Milestone 1.9: the house (GAME_SPEC §8): doors open with E for everyone, rooms are walkable.
@@ -86,19 +86,6 @@ test("the garage door tilts up and you can walk into the garage", async ({ page 
   expect((await me(page)).x).toBeGreaterThan(houseToWorld(1, 0).x);
 });
 
-test("the main stairs go up to the balcony", async ({ page }) => {
-  failOnErrors(page);
-  await hostGame(page, "Ranger");
-  // In the foyer beside the bottom step, step onto the stairs, then climb south.
-  await standAt(page, [27.4, 0.5], [25, 0.5], 0);
-  await walk(page, 700);
-  await standAt(page, [26.2, 0.5], [26.2, 5], (await me(page)).y + 0.05);
-  await walk(page, 4500);
-  const p = await me(page);
-  expect(p.y).toBeGreaterThan(UPPER_Y - 0.1);
-  await page.screenshot({ path: "test-results/house-top-of-stairs.png" });
-});
-
 test("the basement den walks out onto the back lawn", async ({ page }) => {
   failOnErrors(page);
   await hostGame(page, "Ranger");
@@ -110,6 +97,64 @@ test("the basement den walks out onto the back lawn", async ({ page }) => {
   const p = await me(page);
   expect(p.z).toBeLessThan(houseToWorld(17.5, 9.2).z); // inside the den
   expect(Math.abs(p.y - level("basement"))).toBeLessThan(0.1);
+});
+
+/** Walk (holding W, steering with the camera) through floorplan points in turn; no teleports. */
+async function walkPath(p: Page, points: [number, number][], msPerLeg = 6000) {
+  await p.keyboard.down("KeyW");
+  try {
+    for (const [x, z] of points) {
+      const t = houseToWorld(x, z);
+      const until = Date.now() + msPerLeg;
+      while (Date.now() < until) {
+        const here = await me(p);
+        if (process.env.DEBUG_WALK) console.log(`→ (${x}, ${z})  at ${((here.x - HOUSE.originX) / HOUSE.scale).toFixed(2)}, ${(here.y / HOUSE.scale).toFixed(2)}, ${((here.z - HOUSE.originZ) / HOUSE.scale).toFixed(2)}`);
+        if (Math.hypot(t.x - here.x, t.z - here.z) < 0.35) break;
+        await p.evaluate(([tx, tz]) => {
+          const d = window.__den!, q = d.player.position;
+          d.camera.yaw = Math.atan2(-(tx! - q.x), -(tz! - q.z));
+        }, [t.x, t.z] as const);
+        await p.waitForTimeout(80);
+      }
+    }
+  } finally {
+    await p.keyboard.up("KeyW");
+  }
+  await p.waitForTimeout(400);
+}
+
+// Game-night fixes: Andrew's bear couldn't get up or down either staircase. Walk them for real.
+test("you can walk from the foyer up the main stairs to the balcony, and back down", async ({ page }) => {
+  test.setTimeout(120_000);
+  failOnErrors(page);
+  await hostGame(page, "Ranger");
+  await standAt(page, [28.3, 1.6], [27, 0.6], 0); // in the foyer, just inside the front door
+  await walkPath(page, [[27.4, 0.5], [26.2, 0.5], [26.2, 3.1], [26.2, 4.2]]);
+  expect((await me(page)).y).toBeGreaterThan(UPPER_Y - 0.1);
+  await page.screenshot({ path: "test-results/house-walked-up.png" });
+  await walkPath(page, [[26.2, 3.0], [26.2, 0.5], [27.6, 0.5], [28.3, 1.6]]);
+  const p = await me(page);
+  expect(Math.abs(p.y)).toBeLessThan(0.1);
+  expect(p.x).toBeGreaterThan(houseToWorld(27.2, 0).x); // back on the foyer floor
+});
+
+test("you can walk from the great room down to the basement, and back up", async ({ page }) => {
+  test.setTimeout(120_000);
+  failOnErrors(page);
+  await hostGame(page, "Ranger");
+  const great = GREAT_ROOM_FLOOR * HOUSE.scale;
+  await standAt(page, [26.2, 5], [26.2, 2], great + 0.05, true); // in the great room, facing the basement door
+  await expect(page.getByTestId("action-prompt")).toContainText("Open door");
+  await page.keyboard.press("KeyE");
+  await page.waitForTimeout(1500);
+  await walkPath(page, [[26.2, 3.0], [26.2, 0.5], [24.6, 0.6], [23.5, 1.5]]);
+  const down = await me(page);
+  expect(Math.abs(down.y - level("basement"))).toBeLessThan(0.1);
+  await page.screenshot({ path: "test-results/house-walked-down.png" });
+  await walkPath(page, [[24.6, 0.5], [26.2, 0.5], [26.2, 3.0], [26.2, 5]]);
+  const up = await me(page);
+  expect(Math.abs(up.y - great)).toBeLessThan(0.1);
+  expect(up.z).toBeGreaterThan(houseToWorld(0, 3.8).z); // back in the great room
 });
 
 function level(id: "basement") {
