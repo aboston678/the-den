@@ -7,6 +7,7 @@ import { NET_TICK_HZ } from "@den/shared";
 import { CAPSULE, CAPSULE_CENTER, CONTROLLER_OFFSET, JUMP_AIR_TIME, MOVE } from "../config.ts";
 import { castTo, sendPose, useFishStore } from "../../net/party.ts";
 import { useRod } from "../fishing/rig.ts";
+import { applyLipHold } from "../fishing/lipHold.ts";
 import { useHeldBall } from "../bowling/heldBall.ts";
 import { useBowling } from "../bowling/session.ts";
 import { useLanes } from "../bowling/store.ts";
@@ -336,6 +337,7 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
       visual.current.visible = !playerState.hidden && !(playerState.seated && cameraState.freeMouse);
     }
     animator.update(dt, Math.min(st.speed, groundSpeed));
+    applyLipHold("me", model, playerState.yaw, fish.state === "landed", animator.action !== "celebrate" && animator.action !== "cast", dt);
     bearSounds(animator, playerState.position.x, playerState.position.y, playerState.position.z);
 
     // --- tell the party where we are, 20 times a second ---

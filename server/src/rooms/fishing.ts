@@ -8,8 +8,13 @@ import type { Player } from "./PartyState.ts";
 // the fight, and the results. Clients only ask ("take a rod", "cast here", "R"); the server
 // decides and writes the outcome into the synced player state so every bear sees the same thing.
 
-/** How long results stay on screen before the line is free again (seconds). */
-const SHOW_RESULT_S = { landed: 4, snapped: 2, missed: 2 } as const;
+/**
+ * How long results stay on screen before the line is free again (seconds). A landed fish is held up
+ * by its lip until the angler lets it go (R), or for at most this long.
+ */
+const SHOW_RESULT_S = { landed: 60, released: 1.2, snapped: 2, missed: 2 } as const;
+/** R presses right after landing are still the fight's mashing, not "let it go" (seconds). */
+export const RELEASE_GRACE_S = 1.5;
 /** Walk further than this from your lure and the line is wound in (world metres). */
 const MAX_WANDER = CAST_MAX + 6;
 
@@ -17,6 +22,7 @@ interface Angler {
   biteAt: number;
   hookBy: number;
   resultUntil: number;
+  landedAt: number;
   fight: Fight | null;
   presses: number;
   pressWindowStart: number;
@@ -43,7 +49,7 @@ export class Fishing {
   private angler(id: string) {
     let a = this.anglers.get(id);
     if (!a) {
-      a = { biteAt: 0, hookBy: 0, resultUntil: 0, fight: null, presses: 0, pressWindowStart: 0, pressesInWindow: 0, best: new Map() };
+      a = { biteAt: 0, hookBy: 0, resultUntil: 0, landedAt: 0, fight: null, presses: 0, pressWindowStart: 0, pressesInWindow: 0, best: new Map() };
       this.anglers.set(id, a);
     }
     return a;
@@ -86,9 +92,13 @@ export class Fishing {
     p.catchSpecies = "";
   }
 
-  /** One press of R. */
+  /** One press of R: strike, reel, or let a landed fish go. */
   reel(id: string, p: Player, now: number) {
     const a = this.angler(id);
+    if (p.fishing === "landed") {
+      if (now - a.landedAt >= RELEASE_GRACE_S * 1000) this.result(p, a, "released", now);
+      return;
+    }
     if (now - a.pressWindowStart > 1000) {
       a.pressWindowStart = now;
       a.pressesInWindow = 0;
@@ -157,6 +167,7 @@ export class Fishing {
             p.catchSpecies = f.species;
             p.catchWeight = f.weight;
             this.result(p, a, "landed", now);
+            a.landedAt = now;
             caught.push({ id, name: p.name, species: f.species, weight: f.weight, best });
           }
           break;
@@ -171,7 +182,7 @@ export class Fishing {
     return caught;
   }
 
-  private result(p: Player, a: Angler, state: "landed" | "snapped" | "missed", now: number) {
+  private result(p: Player, a: Angler, state: "landed" | "released" | "snapped" | "missed", now: number) {
     p.fishing = state;
     p.tension = 0;
     a.fight = null;

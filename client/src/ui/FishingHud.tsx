@@ -59,6 +59,7 @@ export function FishingHud() {
       ))}
       {me.rod && !me.state && !charging && <div className="fish-help">Hold <b>left mouse</b> to cast · <b>E</b> at the bucket puts the rod back</div>}
       {me.state === "cast" && <div className="fish-help">Waiting for a bite… · <b>R</b> winds the line in</div>}
+      {me.state === "landed" && <div className="fish-help" data-testid="release-help">Holding it up by the lip · <b>R</b> lets it go</div>}
     </div>
   );
 }

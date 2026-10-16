@@ -10,6 +10,7 @@ import { nameTagEls } from "./nameTags.ts";
 import { CAPSULE, CAPSULE_CENTER, JUMP_AIR_TIME } from "../config.ts";
 import { useBearModel } from "../player/useBearModel.ts";
 import { useRod } from "../fishing/rig.ts";
+import { applyLipHold } from "../fishing/lipHold.ts";
 import { useHeldBall } from "../bowling/heldBall.ts";
 import { useLanes } from "../bowling/store.ts";
 import { cameraState, playerState } from "../state.ts";
@@ -118,6 +119,7 @@ function RemoteBearView({ id }: { id: string }) {
     }
     reel.current.line = line;
     animator.update(dt, s.action === "locomotion" ? s.speed : 0);
+    applyLipHold(id, model, yaw.current, remotes.get(id)?.fish.state === "landed", animator.action !== "celebrate" && animator.action !== "cast", dt);
     bearSounds(animator, s.x, s.y, s.z);
     b.current = { x: s.x, y: s.y, z: s.z, speed: s.speed, action: s.action, flashlight: s.flashlight, aimYaw: s.aimYaw, aimPitch: s.aimPitch };
 

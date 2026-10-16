@@ -1,15 +1,16 @@
-import { type FishState, STREAM } from "@den/shared";
+import { type FishState, STREAM, heightAt, isStreamWater } from "@den/shared";
 import { useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo } from "react";
 import {
-  BufferAttribute, BufferGeometry, Group, Line, LineBasicMaterial, Mesh, MeshBasicMaterial, MeshStandardMaterial, RingGeometry, SphereGeometry, Vector3,
+  BufferAttribute, BufferGeometry, Group, Line, LineBasicMaterial, Matrix4, Mesh, MeshBasicMaterial, MeshStandardMaterial, Quaternion, RingGeometry, SphereGeometry, Vector3,
 } from "three";
 import { NO_FISH, useFishStore, usePartyStore } from "../../net/party.ts";
 import type { FishView } from "../../net/remotes.ts";
 import { remotes } from "../../net/remotes.ts";
 import { playAt } from "../audio/audio.ts";
 import { rigs } from "./rig.ts";
+import { lipHands } from "./lipHold.ts";
 
 // What everyone sees of everyone's fishing (GAME_SPEC §13): the line from the rod tip to a
 // red-and-white bobber, the cast flying out, the bobber plunging on a bite and thrashing in a
@@ -22,6 +23,17 @@ const FISH_NODES: Record<string, string> = {
 const SEGMENTS = 24;
 const FLIGHT_S = 0.7;
 const WATER = STREAM.waterY + 0.02;
+
+/**
+ * Each fish model's lower lip (model units: 1 m long, nose toward +z, belly at y = 0, see
+ * tools/build-furniture.mjs), measured from the models' shapes.
+ */
+const LIP_Y: Record<string, number> = { sunfish: 0.31, perch: 0.21, crappie: 0.29, smallmouth: 0.21, largemouth: 0.22 };
+const LIP_Z = 0.47;
+/** The catch is drawn a bit bigger than life so it reads next to a 2.1 m bear. */
+const HELD_SCALE = 1.25;
+const UP = new Vector3(0, 1, 0);
+const tmp = { f: new Vector3(), x: new Vector3(), y: new Vector3(), m: new Matrix4(), sway: new Quaternion(), lip: new Vector3() };
 
 /** A fish's length (metres) from its weight in pounds. */
 export const fishLength = (lb: number) => Math.min(0.62, Math.max(0.14, 0.28 * Math.cbrt(lb)));
@@ -37,6 +49,9 @@ interface View {
   flightT: number;
   ringT: number;
   pos: Vector3;
+  /** A released fish dropping back into the water. */
+  dropVel: Vector3;
+  dropT: number;
 }
 
 export function FishingLines() {
@@ -76,7 +91,7 @@ export function FishingLines() {
       fish.add(m);
     }
     root.add(line, bobber, ring, fish);
-    v = { line, bobber, ring, fish, prev: "", prevSurges: 0, flightFrom: new Vector3(), flightT: 1, ringT: 1, pos: new Vector3() };
+    v = { line, bobber, ring, fish, prev: "", prevSurges: 0, flightFrom: new Vector3(), flightT: 1, ringT: 1, pos: new Vector3(), dropVel: new Vector3(), dropT: 1 };
     views.set(id, v);
     return v;
   };
@@ -110,6 +125,14 @@ export function FishingLines() {
         }
         if (f.state === "bite") splash(v, target, "plop", 0.7);
         if (f.state === "landed") splash(v, v.pos, "splash", 1);
+        if (f.state === "released") {
+          // Lobbed back toward where the line came in (or just set down if the bear has wandered off).
+          const from = v.fish.position, to = Math.hypot(f.lureX - from.x, f.lureZ - from.z) < 7 && isStreamWater(f.lureX, f.lureZ) ? target : null;
+          const fwd = lipHands.get(id)?.yaw ?? rig?.yaw ?? 0;
+          if (to) v.dropVel.set((to.x - from.x) / 0.7, 2.2, (to.z - from.z) / 0.7);
+          else v.dropVel.set(Math.sin(fwd) * 1.2, 1.5, Math.cos(fwd) * 1.2);
+          v.dropT = 0;
+        }
         if (f.state === "snapped" && rig) void playAt("line-snap", rig.tip.x, rig.tip.y, rig.tip.z, 0.8, 4);
         v.prev = f.state;
       }
@@ -146,14 +169,43 @@ export function FishingLines() {
         pos.needsUpdate = true;
       }
 
-      // The catch, held up for everyone to see.
-      v.fish.visible = f.state === "landed" && !!rig;
-      if (v.fish.visible && rig) {
-        const len = fishLength(f.weight);
-        v.fish.position.set(rig.hand.x + Math.sin(rig.yaw) * 0.35, rig.hand.y + 0.1, rig.hand.z + Math.cos(rig.yaw) * 0.35);
-        v.fish.rotation.set(0, rig.yaw + Math.PI / 2 + Math.sin(t * 14) * 0.25, Math.sin(t * 9) * 0.15);
-        v.fish.scale.set(len * 0.55, len, len);
+      // The catch: held up by the lip in the left paw (lipHold.ts) for as long as the angler likes, then
+      // dropped back in.
+      const lip = lipHands.get(id);
+      v.fish.visible = (f.state === "landed" && !!(lip ?? rig)) || (f.state === "released" && v.dropT < 1);
+      if (v.fish.visible) {
+        const len = fishLength(f.weight) * HELD_SCALE;
         for (const c of v.fish.children) c.visible = c.name === f.species;
+        v.fish.scale.setScalar(len);
+        if (f.state === "released") {
+          v.dropT = Math.min(1, v.dropT + dt / 1.2);
+          v.dropVel.y -= 9.8 * dt;
+          v.fish.position.addScaledVector(v.dropVel, dt);
+          v.fish.rotateX(dt * 4);
+          const over = isStreamWater(v.fish.position.x, v.fish.position.z);
+          const floor = over ? WATER : heightAt(v.fish.position.x, v.fish.position.z);
+          if (v.fish.position.y < floor) {
+            if (over) splash(v, v.fish.position, "splash", 0.8);
+            else void playAt("plop", v.fish.position.x, floor, v.fish.position.z, 0.6, 4);
+            v.dropT = 1;
+            v.fish.visible = false;
+          }
+        } else if (lip) {
+          // Nose up, its side to the camera behind the bear, swinging a little from the paw.
+          tmp.f.set(Math.sin(lip.yaw), 0, Math.cos(lip.yaw));
+          tmp.x.copy(tmp.f).negate(); // the fish's flank faces back
+          tmp.y.crossVectors(UP, tmp.x);
+          tmp.m.makeBasis(tmp.x, tmp.y, UP);
+          v.fish.quaternion.setFromRotationMatrix(tmp.m);
+          tmp.sway.setFromAxisAngle(tmp.f, Math.sin(t * 4.5) * 0.12 + Math.sin(t * 13) * 0.04);
+          v.fish.quaternion.premultiply(tmp.sway);
+          tmp.lip.set(0, LIP_Y[f.species] ?? 0.22, LIP_Z).multiplyScalar(len).applyQuaternion(v.fish.quaternion);
+          v.fish.position.copy(lip.hand).addScaledVector(UP, -0.07).sub(tmp.lip);
+        } else if (rig) {
+          // No left paw on this model: hold it out in front as before.
+          v.fish.position.set(rig.hand.x + Math.sin(rig.yaw) * 0.35, rig.hand.y + 0.1, rig.hand.z + Math.cos(rig.yaw) * 0.35);
+          v.fish.rotation.set(0, rig.yaw + Math.sin(t * 14) * 0.25, Math.sin(t * 9) * 0.15);
+        }
       }
 
       // Splash ring, fading out.

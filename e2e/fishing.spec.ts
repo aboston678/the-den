@@ -75,6 +75,16 @@ test("take a rod, cast, hook a fish, reel it in: the whole party sees it", async
   await expect(a.getByTestId("catch-card")).toContainText("Largemouth bass");
   await expect(a.getByTestId("catch-card")).toContainText("3 lb 3 oz");
   await expect(a.getByTestId("catch-card")).toContainText("New personal best!");
+  // Held up by the lip (game-night fixes) until R lets it go.
+  await expect(a.getByTestId("release-help")).toBeVisible();
+  await a.waitForTimeout(2500); // past the celebration; still holding it
+  await a.evaluate(() => {
+    const d = window.__den!;
+    d.camera.yaw = d.player.yaw + Math.PI + 0.5; // from behind and a little to the left
+    d.camera.pitch = 0.12;
+    d.camera.distance = 3.2;
+  });
+  await a.waitForTimeout(500);
   await a.screenshot({ path: "test-results/fishing/4-landed.png" });
   // Close-up from in front of the bear: the rod in its paw and the fish held up.
   await a.evaluate(() => {
@@ -87,6 +97,14 @@ test("take a rod, cast, hook a fish, reel it in: the whole party sees it", async
   await a.screenshot({ path: "test-results/fishing/5-landed-front.png" });
   await expect(b.getByTestId("catch-toast")).toContainText("Angler caught a 3 lb 3 oz largemouth bass");
   await b.screenshot({ path: "test-results/fishing/4-landed-other-bear.png" });
+
+  await a.waitForTimeout(2500);
+  expect((await fish(a)).state).toBe("landed"); // no time limit to speak of: still holding it
+  expect(await b.evaluate(() => window.__den!.remotes()[0]?.fish.state)).toBe("landed");
+  await a.keyboard.press("KeyR");
+  await expect.poll(async () => (await fish(a)).state).toBe("released");
+  await a.waitForTimeout(250);
+  await a.screenshot({ path: "test-results/fishing/6-released.png" });
 
   // Back to waiting with the rod; putting it back at the bucket.
   await expect.poll(async () => (await fish(a)).state, { timeout: 8000 }).toBe("");

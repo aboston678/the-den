@@ -104,7 +104,7 @@ export function FishingControls() {
 
     // R: strike, reel, or wind the lure back in.
     if (consumePress("KeyR")) {
-      if (me.state === "bite" || me.state === "fight") {
+      if (me.state === "bite" || me.state === "fight" || me.state === "landed") {
         reelPress();
         void playAt("reel-click", p.x, p.y + 1.2, p.z, 0.5, 3);
       } else if (me.state === "cast") reelInLine();

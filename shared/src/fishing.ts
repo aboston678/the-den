@@ -3,7 +3,8 @@ import { STREAM, streamCenter } from "./world/layout.ts";
 // Fishing rules (GAME_SPEC §13), shared by the browser and the game server. The server owns the
 // bites, the fight and the results; the browser uses the same numbers to draw them.
 
-export type FishState = "" | "cast" | "bite" | "fight" | "landed" | "snapped" | "missed";
+/** "landed": the bear holds the fish up by its lip until the angler lets it go (R), then "released" while it drops back in. */
+export type FishState = "" | "cast" | "bite" | "fight" | "landed" | "released" | "snapped" | "missed";
 
 export interface Species {
   id: string;

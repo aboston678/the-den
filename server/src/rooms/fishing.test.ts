@@ -60,6 +60,38 @@ describe("fishing on the server", () => {
     expect(landed).toMatchObject({ id: "a", species: "perch", best: true });
     expect(p.fishing).toBe("landed");
     expect(p.catchSpecies).toBe("perch");
+
+    // Held up by the lip until R lets it go (game-night fixes); the fight's last mashes don't count.
+    f.reel("a", p, t + 300);
+    expect(p.fishing).toBe("landed");
+    f.tick(players, t + 30_000, 0.05);
+    expect(p.fishing).toBe("landed"); // still holding it
+    f.reel("a", p, t + 30_100);
+    expect(p.fishing).toBe("released");
+    expect(p.catchSpecies).toBe("perch"); // so everyone sees which fish drops back in
+    f.tick(players, t + 31_500, 0.05);
+    expect(p.fishing).toBe("");
+  });
+
+  it("a landed fish nobody lets go goes back by itself after a minute", () => {
+    const f = new Fishing(() => 0.5);
+    const b = rodBucket();
+    const p = bearAt(b.x, b.z);
+    const players = new Map([["a", p]]);
+    f.rod("a", p, true);
+    f.force("a", 0, "sunfish", 0.3);
+    f.cast("a", p, water().x, 0, 0);
+    f.tick(players, 10, 0.05);
+    f.reel("a", p, 20);
+    let t = 0;
+    while (p.fishing === "fight" && t < 60_000) {
+      t += 50;
+      if (t % 250 === 0) f.reel("a", p, t);
+      f.tick(players, t, 0.05);
+    }
+    expect(p.fishing).toBe("landed");
+    f.tick(players, t + 61_000, 0.05);
+    expect(p.fishing).toBe("");
   });
 
   it("a bite nobody strikes gets away", () => {
