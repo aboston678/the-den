@@ -124,7 +124,8 @@ Base + 14 extra clips ≈ 47.5 + 112 = **~160 credits**.
 - Walk 1.8 m/s (was 2.4; Andrew 2026-10-11, the walk clip looked hurried) · Sprint (hold Shift) 6.0 m/s · Jump apex ~1.1 m · gravity ~20 m/s² (snappy, not floaty).
 - Smooth animation blending (idle↔walk↔sprint by speed; ~0.15 s crossfades). Feet should not visibly slide: match clip playback speed to movement speed.
 - Camera: ~3.5 m behind outdoors, mouse look with pointer lock, scroll to zoom 2–6 m, pulls in automatically to avoid walls (essential indoors), FOV ~70.
-- **Roar (Y):** plays the roar clip + loud positional roar (audible ~60 m). Bears within 6 m get a small camera shake. 3 s cooldown.
+- **Roar (Y):** plays the roar clip + loud positional roar (audible ~60 m). The sound is Andrew's "I'm shaving here" clip (2026-10-15; was a grizzly growl). The bear stops to roar (pressing Y while walking works; moving cancels it after ~1 s). Bears within 6 m get a small camera shake. 3 s cooldown.
+- **Crouch (C, game-night fixes 2026-10-15):** toggles a hunched sneak (Cautious_Crouch_Walk clip, 8 credits) at 1.0 m/s; the bear is 1.4 m tall instead of 2.1. Sprinting, jumping or C stand it up again, only where there's room overhead. Synced to the party.
 - **Dance (B):** loops until you move or press B again.
 - **Bumping:** bears are solid to each other. When capsules touch, both get pushed apart along the contact (soft shove; stronger if sprinting, with a small stagger). Each client applies the shove to its own bear.
 - **Name tags** above every other bear (fade with distance, hidden behind walls).
@@ -139,15 +140,16 @@ Base + 14 extra clips ≈ 47.5 + 112 = **~160 credits**.
 | Mouse | Look (pointer lock) |
 | Shift (hold) | Sprint |
 | Space | Jump |
+| C | Crouch / stand up |
 | E | Interact: open/close doors, take/return fishing rod, sit at the Catan table, join a bowling lane |
 | Y | Roar |
 | B | Dance |
 | F | Flashlight on/off |
 | Left mouse | Cast (hold to charge, release) · bowling: click to stop the power meter, then the curve meter |
-| R (spam) | Reel in a hooked fish |
+| R (spam) | Reel in a hooked fish · R again lets a landed fish go |
 | Scroll | Camera zoom |
 | Tab (hold) | Party list |
-| Esc | Pause menu (Resume, Settings, Leave to home screen) |
+| Esc | Pause menu (Resume, Full screen, Settings, Leave to home screen) |
 
 Show a context prompt like `[E] Open door` when an interactable is within ~2 m and in front of the bear.
 
@@ -222,7 +224,7 @@ TVs in the basement den and the common area. Both loop **Andrew's three home vid
 2. **Intro (lyric video, Andrew 2026-10-12):** the 19-second song clip plays while the camera glides slowly over the 3D property at dusk. The lyrics come on screen one line at a time as they're sung ("There is a bear in [town], Maine" / "and he does not have a coat" / "on purpose"); the THE DEN logo (Higgsfield art, Andrew's pick #2) fades in when the music starts (~14 s); at the end you land in the home screen and the full song carries on from that point and loops. **Skip intro** button bottom right. Plays from the start on every page load; a refreshed player still rejoins their party afterwards.
    **Loading screen** (Play → spawn): the logo, a real progress bar and rotating tips ("Press Y to roar", "Press F for your flashlight"), fading into the game. The AI loading video is dropped: Andrew chose the 3D property for the intro instead (saves ~20+ credits).
 3. **Home screen (Fortnite-style):** your bear on a slowly rotating round pedestal (drag to spin it) in a moody lit scene; party members' bears stand beside yours with name tags (up to 6). Buttons: PLAY (host), CREATE PARTY, JOIN PARTY, SETTINGS, plus LEADERBOARD, FRIENDS and SIGN OUT from Phase 2. Party code shown big with a copy button.
-4. **Settings:** graphics preset (Auto/Low/Medium/High), music/effects/ambience volume, mouse sensitivity, invert Y, show frame rate (a small "60 fps · Medium" in the party badge, so friends can say how smooth it runs; Phase 5).
+4. **Settings:** graphics preset (Auto/Low/Medium/High), music/effects/ambience volume, mouse sensitivity, invert Y, show frame rate (a small "60 fps · Medium" in the party badge, so friends can say how smooth it runs; Phase 5), play in full screen (game-night fixes: goes full screen on Play, Resume or a click on the game; a Full screen button is also on the home screen and pause menu; Esc always leaves full screen, a browser rule).
 5. **HUD (minimal):** interaction prompt, fishing UI, bowling UI, small time-of-day icon, party list on Tab.
 6. **Pause (Esc):** Resume, Settings, Leave to home screen.
 
@@ -240,7 +242,7 @@ The house dogs (Merlin, Raptor, Luna) are out of the game. No free realistic ani
 - **Cast:** hold left mouse to charge a power bar, release to cast where the camera aims (up to ~25 m). The lure must land on stream water. You can fish from the dock or anywhere along our bank.
 - **Bite:** server picks a random time **10–45 s** after the lure lands. Recasting resets it. On a bite: the bobber plunges, splash + sound, `FISH ON! Spam R` prompt. You have 2.5 s to start reeling or it gets away.
 - **Reeling:** each R press reels in line and raises tension; tension drains when you're not pressing; the fish surges every 1.5–4 s (bigger fish surge harder). Tension hits 100% → line snaps ("Snapped!"). Line in to ~1.5 m → landed. Tune so a big bass takes ~10–15 s and is genuinely tense.
-- **Landed:** bear holds the fish up (celebrate clip for big ones), catch card shows species, weight in lb/oz, and "New personal best!" when it is. The fish is released back into the water. The catch counts toward **fish caught**.
+- **Landed:** the bear holds the fish up **by its lip** in the left paw, arm out to the side (celebrate clip first for big ones), for as long as the angler likes (R lets it go, at most 60 s; the first 1.5 s of R presses are ignored so mashing doesn't drop it). Catch card shows species, weight in lb/oz, and "New personal best!" when it is. Released, the fish drops back into the water with a splash for everyone to see (game-night fixes 2026-10-15). The catch counts toward **fish caught**.
 - Everyone sees your line, bobber, the fight and the fish.
 
 | Species | Chance | Weight (lb) | Fight |
