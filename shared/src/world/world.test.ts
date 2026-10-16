@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { MAX_PLAYERS } from "../constants.ts";
 import {
-  APRON, BOWLING_ALLEY, DOCK, DRIVEWAY, DRIVEWAY_WIDTH, HOUSE, STREAM, TRAIL, dockStartX, houseToWorld, streamCenter,
+  APRON, BOWLING_ALLEY, DOCK, DRIVEWAY, DRIVEWAY_WIDTH, HOUSE, STREAM, TRAIL, dockStartX, houseToWorld, onPavement, streamCenter,
 } from "./layout.ts";
 import { SPAWN_S, spawnPoint } from "./spawn.ts";
 import { drivewayY, heightAt, isInBounds, isWild, lawnMask, surfaceAt } from "./terrain.ts";
@@ -9,6 +9,19 @@ import { drivewayY, heightAt, isInBounds, isWild, lawnMask, surfaceAt } from "./
 // The property layout checked against GAME_SPEC §4.
 
 describe("the property", () => {
+  it("knows where the paving is: the driveway and the whole garage apron, not the lawn beside them", () => {
+    const mid = DRIVEWAY.pointAt(DRIVEWAY.length / 2);
+    expect(onPavement(mid.x, mid.z)).toBe(true);
+    expect(onPavement(APRON.maxX - 0.5, APRON.minZ + 0.5)).toBe(true); // a corner in front of the garage doors
+    expect(onPavement(APRON.maxX - 0.5, APRON.maxZ - 0.5)).toBe(true);
+    expect(onPavement(APRON.minX - 0.3, APRON.maxZ + 0.3, 0.5)).toBe(true); // within the margin
+    expect(onPavement(APRON.minX - 3, APRON.maxZ + 3, 0.5)).toBe(false);
+    const ahead = DRIVEWAY.pointAt(DRIVEWAY.length / 2 + 1), len = Math.hypot(ahead.x - mid.x, ahead.z - mid.z);
+    const [nx, nz] = [-(ahead.z - mid.z) / len, (ahead.x - mid.x) / len]; // across the driveway
+    expect(onPavement(mid.x + nx * (DRIVEWAY_WIDTH / 2 - 0.2), mid.z + nz * (DRIVEWAY_WIDTH / 2 - 0.2))).toBe(true);
+    expect(onPavement(mid.x + nx * (DRIVEWAY_WIDTH / 2 + 1), mid.z + nz * (DRIVEWAY_WIDTH / 2 + 1), 0.5)).toBe(false);
+  });
+
   it("the driveway runs ~110 m from the spawn to the garage apron (smaller map, Andrew 2026-10-12)", () => {
     const end = DRIVEWAY.closest(APRON.minX, (APRON.minZ + APRON.maxZ) / 2)!.s;
     expect(end - SPAWN_S).toBeGreaterThan(95);

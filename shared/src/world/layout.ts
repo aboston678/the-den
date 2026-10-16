@@ -99,6 +99,12 @@ export const APRON = (() => {
   return { minX: a.x - 12, maxX: a.x, minZ: a.z - 1, maxZ: a.z + 8.5 * HOUSE.scale + 1, y: HOUSE.mainFloorY };
 })();
 
+/** True on the driveway's asphalt or the garage apron, or within `margin` metres of either. */
+export function onPavement(x: number, z: number, margin = 0) {
+  if (x > APRON.minX - margin && x < APRON.maxX + margin && z > APRON.minZ - margin && z < APRON.maxZ + margin) return true;
+  return !!DRIVEWAY.closest(x, z, DRIVEWAY_WIDTH / 2 + margin);
+}
+
 // --- the trail: back lawn to the dock (~90 m) ---
 export const TRAIL_WIDTH = 1.6;
 export const TRAIL = new Path([

@@ -1,4 +1,4 @@
-import { CLEARING, DRIVEWAY, DRIVEWAY_WIDTH, HOUSE_FOOTPRINT, heightAt, houseCutRects, isOnDock, lawnMask, noise2, streamCenter, surfaceAt } from "@den/shared";
+import { CLEARING, DRIVEWAY, DRIVEWAY_WIDTH, HOUSE_FOOTPRINT, heightAt, houseCutRects, isOnDock, lawnMask, noise2, onPavement, streamCenter, surfaceAt } from "@den/shared";
 import { useMemo } from "react";
 import { BufferAttribute, BufferGeometry, Color, Matrix4 } from "three";
 import { useQuality } from "../../quality.ts";
@@ -69,6 +69,7 @@ function placements(): Record<Kind, Placement[]> {
   const inHouse = (x: number, z: number) => cuts.some((c) => x > c.minX - 0.5 && x < c.maxX + 0.5 && z > c.minZ - 0.5 && z < c.maxZ + 0.5);
   let i = 0;
   const add = (x: number, z: number, kind?: Kind, big = 1) => {
+    if (onPavement(x, z, 0.5)) return; // never on the driveway or the garage apron
     i++;
     const k: Kind = kind ?? (noise2(x, z, 0.08, 51) > 0.25 ? "lupine" : noise2(x, z, 0.11, 52) > 0 ? "daisy" : "buttercup");
     out[k].push({ x, y: heightAt(x, z) - 0.02, z, rot: (i * 2.39996) % 6.283, scale: (0.85 + 0.35 * Math.abs(noise2(x, z, 3, 53))) * big });

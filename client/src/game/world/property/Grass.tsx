@@ -1,4 +1,4 @@
-import { CLEARING, DRIVEWAY, DRIVEWAY_WIDTH, SCENERY, TRAIL, TRAIL_WIDTH, heightAt, houseCutRects, isOnDock, lawnMask, noise2, streamCenter, surfaceAt } from "@den/shared";
+import { CLEARING, DRIVEWAY, DRIVEWAY_WIDTH, SCENERY, TRAIL, TRAIL_WIDTH, heightAt, houseCutRects, isOnDock, lawnMask, noise2, onPavement, streamCenter, surfaceAt } from "@den/shared";
 import { useFrame } from "@react-three/fiber";
 import { useMemo } from "react";
 import { BufferAttribute, BufferGeometry, Color, DoubleSide, Matrix4, MeshStandardMaterial, ShaderChunk } from "three";
@@ -75,6 +75,9 @@ export function grassMaterial() {
   return m;
 }
 
+/** How far a clump's blades reach from its root (spread + lean at the largest scale, plus sway). */
+const BLADE_REACH = 0.5;
+
 /** Where grass grows: the lawn, and a strip along each side of the driveway. Same every load. */
 function grassPlacements(): Placement[] {
   const out: Placement[] = [];
@@ -93,7 +96,7 @@ function grassPlacements(): Placement[] {
       const lawn = lawnMask(jx, jz);
       const road = DRIVEWAY.closest(jx, jz, DRIVEWAY_WIDTH / 2 + 7);
       const verge = road && road.dist > DRIVEWAY_WIDTH / 2 + 0.4 ? 1 - (road.dist - DRIVEWAY_WIDTH / 2) / 7 : 0;
-      if (road && road.dist < DRIVEWAY_WIDTH / 2 + 0.4) continue;
+      if (onPavement(jx, jz, BLADE_REACH)) continue; // roots far enough back that no blade lies on the asphalt
       // Thinner where the lawn fades into the woods, and in soft patches.
       const want = Math.max(lawn > 0.35 ? 1 : 0, verge) * (0.8 + 0.4 * noise2(jx, jz, 9, 23));
       if (want < 0.5 || inHouse(jx, jz)) continue;
