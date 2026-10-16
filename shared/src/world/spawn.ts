@@ -1,6 +1,5 @@
 import { MAX_PLAYERS } from "../constants.ts";
-import { DRIVEWAY, distanceToEdge } from "./layout.ts";
-import { drivewayY } from "./terrain.ts";
+import { APRON, DRIVEWAY, distanceToEdge } from "./layout.ts";
 
 /** Which map a party plays on: the real property, or the 1.6 test field (dev/tests only). */
 export const WORLDS = ["property", "test"] as const;
@@ -15,7 +14,7 @@ export interface SpawnSpot {
   yaw: number;
 }
 
-/** Metres along the driveway where the party starts: just inside the map's boundary. */
+/** Metres along the driveway just inside the map's boundary (the old spawn; the roadside planting starts here). */
 export const SPAWN_S = (() => {
   for (let s = 0; s < DRIVEWAY.length; s += 0.5) {
     const p = DRIVEWAY.pointAt(s);
@@ -24,16 +23,16 @@ export const SPAWN_S = (() => {
   return 0;
 })();
 
+/** The middle of the spawn rows: on the apron in front of the garage doors (world z −4.25 and 0.75). */
+export const SPAWN_CENTRE = { x: -26.1, z: -1.75 };
+
 /**
- * Where the bear in party slot 0–5 starts. On the property: two rows of three across the start of
- * the driveway, facing down it toward the house (GAME_SPEC §4). On the test field: a short line.
+ * Where the bear in party slot 0–5 starts. On the property: two rows of three on the paved apron,
+ * facing the garage doors (east; GAME_SPEC §4, Andrew 2026-10-16). On the test field: a short line.
  */
 export function spawnPoint(slot: number, world: WorldName = "property"): SpawnSpot {
   const s = Math.max(0, Math.min(MAX_PLAYERS - 1, Math.floor(slot)));
   if (world === "test") return { x: (s - (MAX_PLAYERS - 1) / 2) * 1.8, y: 0, z: 4, yaw: Math.PI };
   const row = Math.floor(s / 3), col = s % 3;
-  const along = SPAWN_S - row * 2.2;
-  const p = DRIVEWAY.pointAt(along);
-  const side = (col - 1) * 1.4;
-  return { x: p.x + p.dz * side, y: drivewayY(along), z: p.z - p.dx * side, yaw: Math.atan2(p.dx, p.dz) };
+  return { x: SPAWN_CENTRE.x + 1.1 - row * 2.2, y: APRON.y, z: SPAWN_CENTRE.z + (col - 1) * 1.4, yaw: Math.PI / 2 };
 }

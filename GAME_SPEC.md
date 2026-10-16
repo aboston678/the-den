@@ -7,7 +7,7 @@ This is the source of truth. Build what is written here. If something here won't
 
 ## 1. The game in one paragraph
 
-The Den is a private, browser-based, multiplayer 3D game for Andrew and his friends (max 6 per party). Everyone plays the same big, goofy cartoon grizzly bear, walking upright. You load in at the end of a wooded driveway in summer Maine, walk out of the trees to a big white farmhouse on a lawn, and hang out: open doors, explore every room, roar at each other, dance, fish off the dock in the stream, bowl on the two-lane alley in the basement, and play full-rules Catan around the dining-room table. A 30-minute day and 30-minute night cycle runs the whole time. Stats (fish caught, bowling high score, Catan wins) go on a leaderboard you can filter to friends.
+The Den is a private, browser-based, multiplayer 3D game for Andrew and his friends (max 6 per party). Everyone plays the same big, goofy cartoon grizzly bear, walking upright. You load in on the driveway in front of the garage of a big white farmhouse in the summer Maine woods, and hang out: open doors, explore every room, roar at each other, dance, fish off the dock in the stream, bowl on the two-lane alley in the basement, and play full-rules Catan around the dining-room table. A 30-minute day and 30-minute night cycle runs the whole time. Stats (fish caught, bowling high score, Catan wins) go on a leaderboard you can filter to friends.
 
 **Visual target (changed 2026-10-13, Andrew):** a bright, chunky, painted cartoon look, like the concept pictures in `assets/concepts/style/` (the driveway one is the north star): saturated summer greens, a deep blue sky with puffy clouds, warm sun and soft coloured shade, chunky stylized trees and bushes, thick swaying grass. It's built from Higgsfield cartoon models (scenery and bear), painted textures, and the cartoon shading in `client/src/game/artStyle.ts`. The original photoreal look (The Long Dark mood) stays selectable in Settings → Art style → Realistic. Keep the real property's layout: no invented landmarks (no fence, lake or mountains).
 
@@ -75,7 +75,7 @@ The Den is a private, browser-based, multiplayer 3D game for Andrew and his frie
 - **Dock:** wooden, 1.8 m wide, 8 m long, straight out from our bank due east of the house. A **bucket of fishing rods** sits at the base of the dock. **Andrew's wakeboard boat** (blue/orange/white hull, black tower, no brand name; Higgsfield image→3D from his photo) is tied alongside the dock with lines and fenders, gently bobbing (Andrew, 2026-10-12). Scenery only, not drivable.
 - **Trail:** packed dirt + pine needles from the back lawn to the dock (~90 m).
 - **Perimeter:** invisible boundary ~10 m inside the map edge, disguised by denser trees, ferns, rocks and fog falloff.
-- **Spawn:** the start of the driveway (NW edge). Up to 6 players spawn in a short line. The house should be hidden by trees at spawn; the reveal happens as you walk out of the woods.
+- **Spawn:** on the paved apron in front of the garage doors, two rows of three facing the doors (Andrew, 2026-10-16; was the start of the driveway at the NW edge).
 
 ---
 
@@ -158,7 +158,7 @@ Show a context prompt like `[E] Open door` when an interactable is within ~2 m a
 ## 7. Multiplayer
 
 - **Party flow:** Home screen → CREATE PARTY generates a 5-character code (letters A–Z without I and O, digits 2–9) → friends pick JOIN PARTY and type the code → everyone's bears line up on the home screen → the host presses PLAY → everyone loads into the map at the spawn.
-- Max 6. If the host leaves, the next player becomes host. Joining mid-game is allowed (you spawn at the driveway).
+- Max 6. If the host leaves, the next player becomes host. Joining mid-game is allowed (you spawn in front of the garage).
 - Reconnect window 30 s (Colyseus reconnection) so a page blip doesn't kick you.
 - **Synced state:** players (pose, animation, flags: flashlight, holding rod, sitting, dancing), doors (open/closed), time of day, fishing (each player's line/bobber/fish state), bowling (lane state, scores, the active roll's ball + pin transforms), Catan (full game state).
 - Test with at least two browser contexts on every multiplayer milestone.

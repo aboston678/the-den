@@ -26,7 +26,7 @@ test("screenshot tour of the property", async ({ page }) => {
     const d = window.__den!;
     const p = d.player.position;
     return [
-      ["01-spawn", p.x, p.z, p.x + 10, p.z + 10],
+      ["01-spawn", p.x - 4, p.z - 3, p.x + 6, p.z],
       ["02-driveway-woods", -92, -60, -80, -50],
       ["03-driveway-reveal", -58, -26, -20, 0],
       ["04-garage-apron", -40, -4, -18, -2, 0.12, 5],

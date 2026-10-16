@@ -121,18 +121,18 @@ describe("the property", () => {
 });
 
 describe("spawnPoint", () => {
-  it("puts six bears on the driveway at the west edge, apart, facing down it", () => {
+  it("puts six bears on the apron in front of the garage, apart, facing the doors", () => {
     const spots = Array.from({ length: MAX_PLAYERS }, (_, i) => spawnPoint(i));
     for (const [i, a] of spots.entries()) {
-      expect(a.x).toBeLessThan(-95);
-      expect(a.z).toBeLessThan(-60);
+      expect(a.x).toBeGreaterThan(APRON.minX + 1);
+      expect(a.x).toBeLessThan(APRON.maxX - 2.5); // clear of the garage doors as they tilt in
+      expect(a.z).toBeGreaterThan(APRON.minZ + 1);
+      expect(a.z).toBeLessThan(APRON.maxZ - 1);
       expect(isInBounds(a.x, a.z)).toBe(true);
-      expect(DRIVEWAY.closest(a.x, a.z)!.dist).toBeLessThan(DRIVEWAY_WIDTH / 2);
       expect(Math.abs(a.y - heightAt(a.x, a.z))).toBeLessThan(0.1);
       for (const b of spots.slice(i + 1)) expect(Math.hypot(a.x - b.x, a.z - b.z)).toBeGreaterThan(1.2);
-      // Facing toward the house (south-east).
-      expect(Math.sin(a.yaw)).toBeGreaterThan(0);
-      expect(Math.cos(a.yaw)).toBeGreaterThan(0);
+      // Facing east, at the garage doors.
+      expect(Math.sin(a.yaw)).toBeCloseTo(1);
     }
   });
 

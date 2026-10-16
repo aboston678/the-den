@@ -28,7 +28,7 @@ test.beforeEach(async ({ page }) => {
   await hostGame(page, "Ranger");
 });
 
-test("you start on the driveway at the north-west edge, facing down it, and it runs smoothly", async ({ page }) => {
+test("you start on the apron in front of the garage, facing its doors, and it runs smoothly", async ({ page }) => {
   const spot = spawnPoint(0);
   const start = await me(page);
   expect(Math.hypot(start.x - spot.x, start.z - spot.z)).toBeLessThan(0.3);
@@ -36,12 +36,11 @@ test("you start on the driveway at the north-west edge, facing down it, and it r
   expect(Math.cos(start.yaw - spot.yaw)).toBeGreaterThan(0.99);
   expect(await fps(page)).toBeGreaterThan(30);
 
-  // W walks down the driveway (away from the camera), staying on the ground.
-  await hold(page, ["KeyW"], 3000);
+  // S walks back toward the camera (west, away from the closed garage doors), staying on the ground.
+  await hold(page, ["KeyS"], 3000);
   const after = await me(page);
   expect(Math.hypot(after.x - start.x, after.z - start.z)).toBeGreaterThan(4.5);
-  expect(after.x).toBeGreaterThan(start.x); // south-east, toward the house
-  expect(after.z).toBeGreaterThan(start.z);
+  expect(after.x).toBeLessThan(start.x - 4);
   expect(Math.abs(after.y - (await ground(page, after.x, after.z)))).toBeLessThan(0.15);
 });
 

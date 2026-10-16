@@ -95,6 +95,16 @@ Run like Phases 2–4 (Andrew, 2026-10-14): Catan leave/vote-to-end fix goes liv
   - My sweep 2026-10-14/15: reload-midway tests (`e2e/midway.spec.ts`): a bowler reloading on their turn doesn't stall the lane (fine already); **fixed**: an angler whose connection dropped mid-fight left the fight frozen for the party for up to 30 s, now the fish gets away and the line comes in (`Fishing.drop`, tested). Full browser suite ×3 (60 tests): run 2 all passed; run 1 the Medium frame-rate check was slow everywhere at once (the Mac's screen asleep overnight; re-measured 60 fps), run 3 two timing flakes under load (the Catan end card on the third browser, walking through the front door before it finished opening), tests given more patience and re-run fine. Before/after pictures: `review/polish/compare-*.jpg`. Andrew approved ("deploy", 2026-10-15). Deployed: `phase-5` fast-forwarded into main (5a8e7d7); Railway `/health` shows it, Vercel serves the new build (Show frame rate, the new sounds); the online sign-in test passes. Waiting on: **a game night with friends** (the final bug bash); any fixes go on a branch first.
   - **Game-night fixes** (branch `game-night-fixes`, 2026-10-15; Andrew's 9 requests after playing): garage doors fill their openings (the door was hinged at its centre); pink bedroom curtains no longer poke out of the roof (window heights counted the upper floor twice); basement doorways are rectangles (openings were taller than the low wall under the great room); no grass or flowers on the driveway or apron (shared `onPavement`); both staircases walkable, tested by really walking (step across the basement door removed, railing colliders upright instead of leaning past their ends, both flights 0.45 m off the front wall, basement rails stop short, a little extra step-up at the stair feet); roar works while walking (was cancelled the same frame) and plays Andrew's "I'm shaving here" clip, and sound wakes after Safari pauses it; full screen (pause/home buttons + setting); crouch with C (bought clip, 8 credits); a landed fish is held up by the lip until R lets it go. Full browser suite: 62 passed, 1 timing flake (the Catan bank trade, passed alone). Andrew approved ("deploy it", 2026-10-15). **Deployed:** `game-night-fixes` fast-forwarded into main (bcff86e); Railway `/health` shows it, Vercel serves the new build (new roar sound, full screen, crouch, lip hold in the code). **Hotfix (13df1dd):** Andrew got a blank home screen after the intro: Safari still had yesterday's bear file (kept for a day) without the crouch clip, and the animator stopped the game. Public files (models, textures, sounds) now get a new name every build (`client/src/asset.ts`, `?v=<commit>`), and a missing newer clip falls back to Walk. Checked live: home screen loads, bear fetched as `bear-toon.glb?v=13df1dd`.
 
+## Andrew's requests, round 2 (branch `garage-and-games`, 2026-10-16)
+Plan approved by Andrew 2026-10-16: spawn by the garage, Jenna Catfish + jumping fish, Connect Four in the basement stair landing, a rideable motorcycle (one per bear) and a racetrack joined to the map past the driveway's end with a lap timer. One review before it goes live. Credits: ~19 (bike concepts + bike model + catfish model), batch OK asked before spending.
+- [x] **R2.1 Spawn in front of the garage.** Bears start on the apron in two rows of three facing the garage doors (`shared/src/world/spawn.ts`); joining mid-game lands there too. Tests: `world.test.ts`, `e2e/property.spec.ts` (walks back from the closed doors), tour shot. GAME_SPEC §1/§4/§7 updated.
+- [ ] **R2.2 Jenna Catfish + fish jump while reeling.**
+- [ ] **R2.3 Connect Four** in the basement stair landing, wins on the leaderboard.
+- [ ] **R2.4 Database script** (Andrew pastes it in Supabase): fish over 20 lb, Connect Four wins.
+- [ ] **R2.5 Motorcycle** in the garage, one per bear.
+- [ ] **R2.6 Racetrack** past the end of the driveway, lap timer.
+- [ ] **R2.7 Review + deploy.** **[ANDREW APPROVES]**
+
 ---
 
 ## Higgsfield credit ledger
@@ -140,6 +150,8 @@ Starting balance: 1,210 (2026-10-11)
 ## Decision log
 | Date | Decision | Why |
 |---|---|---|
+| 2026-10-16 | Bears spawn on the apron in front of the garage, facing the doors (GAME_SPEC §4, §7) | Andrew's request |
+| 2026-10-16 | Vehicles come off "Not in v1": a motorcycle per bear, and a racetrack joined to the map past the driveway's end (an invented landmark, Andrew's call) | Andrew's request; spec sections updated as each piece lands |
 | 2026-10-15 | Roar sound = Andrew's "I'm shaving here" clip (licence unknown; Andrew's pick); a roar plants the bear for ~1 s | Andrew: "the roar isn't working", add the clip |
 | 2026-10-15 | Crouch (C toggle): one bought clip (Cautious_Crouch_Walk, 8 credits), its back/arms eased toward standing at load, still frame for standing crouched; 1.0 m/s, 1.4 m tall (GAME_SPEC §5.3, §6) | Andrew asked for crouch and picked the paid clip; no plain crouch-idle in the library |
 | 2026-10-15 | Landed fish held by the lip until R (60 s max) instead of a fixed 4 s (GAME_SPEC §13) | Andrew: "you should be able to lip the fish"; he chose "always lip it" |
