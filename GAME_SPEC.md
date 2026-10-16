@@ -9,7 +9,7 @@ This is the source of truth. Build what is written here. If something here won't
 
 The Den is a private, browser-based, multiplayer 3D game for Andrew and his friends (max 6 per party). Everyone plays the same big, goofy cartoon grizzly bear, walking upright. You load in on the driveway in front of the garage of a big white farmhouse in the summer Maine woods, and hang out: open doors, explore every room, roar at each other, dance, fish off the dock in the stream, bowl on the two-lane alley in the basement, and play full-rules Catan around the dining-room table. A 30-minute day and 30-minute night cycle runs the whole time. Stats (fish caught, bowling high score, Catan wins) go on a leaderboard you can filter to friends.
 
-**Visual target (changed 2026-10-13, Andrew):** a bright, chunky, painted cartoon look, like the concept pictures in `assets/concepts/style/` (the driveway one is the north star): saturated summer greens, a deep blue sky with puffy clouds, warm sun and soft coloured shade, chunky stylized trees and bushes, thick swaying grass. It's built from Higgsfield cartoon models (scenery and bear), painted textures, and the cartoon shading in `client/src/game/artStyle.ts`. The original photoreal look (The Long Dark mood) stays selectable in Settings → Art style → Realistic. Keep the real property's layout: no invented landmarks (no fence, lake or mountains).
+**Visual target (changed 2026-10-13, Andrew):** a bright, chunky, painted cartoon look, like the concept pictures in `assets/concepts/style/` (the driveway one is the north star): saturated summer greens, a deep blue sky with puffy clouds, warm sun and soft coloured shade, chunky stylized trees and bushes, thick swaying grass. It's built from Higgsfield cartoon models (scenery and bear), painted textures, and the cartoon shading in `client/src/game/artStyle.ts`. The original photoreal look (The Long Dark mood) stays selectable in Settings → Art style → Realistic. Keep the real property's layout: no invented landmarks (no fence, lake or mountains). The one exception is Andrew's racetrack (2026-10-16, §4.1), out past the end of the driveway, beyond the property.
 
 ---
 
@@ -76,7 +76,17 @@ The Den is a private, browser-based, multiplayer 3D game for Andrew and his frie
 - **Dock:** wooden, 1.8 m wide, 8 m long, straight out from our bank due east of the house. A **bucket of fishing rods** sits at the base of the dock. **Andrew's wakeboard boat** (blue/orange/white hull, black tower, no brand name; Higgsfield image→3D from his photo) is tied alongside the dock with lines and fenders, gently bobbing (Andrew, 2026-10-12). Scenery only, not drivable.
 - **Trail:** packed dirt + pine needles from the back lawn to the dock (~90 m).
 - **Perimeter:** invisible boundary ~10 m inside the map edge, disguised by denser trees, ferns, rocks and fog falloff.
+- **The way out (2026-10-16):** the driveway now carries on past the old map edge: through the strip of woods, out onto open farmland, and along a road to the racetrack (§4.1). The invisible boundary has a gap there, and walls run along both sides of the road.
 - **Spawn:** on the paved apron in front of the garage doors, two rows of three facing the doors (Andrew, 2026-10-16; was the start of the driveway at the NW edge).
+
+### 4.1 The racetrack (Andrew, 2026-10-16)
+
+Joined to the map, no loading or fade: the driveway leaves the woods at its far (north-west) end and a road (same paving, ~120 m) crosses gently rolling patchwork farmland to a gate in the east fence of the track grounds (~545 × 355 m, x −760…−215, z −560…−205, all flat at 6.5 m, the driveway's height there). Modelled on Andrew's photo (`reference/motorcycle/racetrack.jpg`), built in code (`shared/src/track.ts`, `client/src/game/track/`):
+- A ~2 km circuit, 12 m of dark asphalt with white edge lines: a long start/finish straight heading west along the south side, a sweeping turn 1, a hairpin, a far loop, a back straight along the north, esses and a last corner onto the straight.
+- Red/white kerbs on both edges through the corners; blue then red painted run-off on the outside of them; mown grass inside the fence; a chequered start/finish line under a gantry.
+- A paved paddock just inside the gate, beside the straight, with a long white pit building; a grandstand with red and blue seats facing the straight; a low wall round the grounds.
+- Out here the haze opens up (to ~700 m) so you can see across the circuit; the track is only drawn when it could be seen.
+- **Lap timer** (on the bike): cross the start/finish line to start a lap; it counts when you come round again having passed two sector points (no cutting across). Screen: current, last and best lap. The server checks a lap (on a bike, at the track, not impossibly fast) and the party gets a note for each personal best and party best. Session only (not on the leaderboard).
 
 ---
 

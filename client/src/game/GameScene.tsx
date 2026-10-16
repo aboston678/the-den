@@ -9,6 +9,7 @@ import { Connect4Board } from "./connect4/Connect4Board.tsx";
 import { Connect4Controls } from "./connect4/Connect4Controls.tsx";
 import { BikeControls } from "./bike/BikeControls.tsx";
 import { Bikes } from "./bike/Bikes.tsx";
+import { LapControls } from "./track/laps.ts";
 import { FishingControls } from "./fishing/FishingControls.tsx";
 import { FishingLines } from "./fishing/FishingLines.tsx";
 import { ThirdPersonCamera } from "./camera/ThirdPersonCamera.tsx";
@@ -48,6 +49,7 @@ export function GameScene() {
         <Connect4Controls />
         <Connect4Board />
         <BikeControls />
+        <LapControls />
         <Suspense fallback={null}>
           <Bikes />
         </Suspense>

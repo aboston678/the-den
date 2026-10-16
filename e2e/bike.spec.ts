@@ -91,3 +91,47 @@ test("ride the garage motorcycle out onto the driveway; another bear sees it; pa
   await ann.keyboard.press("KeyE");
   await expect.poll(async () => (await bike(ann)).riding).toBe(true);
 });
+
+test("ride from the garage out along the driveway to the racetrack and time a lap", async ({ page: ann, browser }) => {
+  test.setTimeout(360_000);
+  failOnErrors(ann);
+  const code = await hostGame(ann, "Ann");
+  const bob = await newPlayer(browser);
+  await joinGame(bob, code, "Bob");
+  await waitForBear(bob);
+
+  await goTo(ann, GARAGE_BIKE.x + 1.4, GARAGE_BIKE.z, undefined, GARAGE_BIKE.y);
+  await expect.poll(async () => (await bike(ann)).prompt).toBe("Ride the motorcycle");
+  await ann.keyboard.press("KeyE");
+  await expect.poll(async () => (await bike(ann)).riding).toBe(true);
+  // Out on the apron, then the bike rides itself down the driveway, out of the woods and to the track.
+  await ann.evaluate(([x, z]) => window.__den!.teleport(x!, z!, 0), [-28, -1.5] as const);
+  await ann.waitForTimeout(500);
+  await ann.evaluate(() => window.__den!.track!.autopilot("out"));
+  let shotWoods = false;
+  await expect.poll(async () => {
+    const p = await me(ann);
+    if (!shotWoods && p.x < -150) {
+      shotWoods = true;
+      await shot(ann, "5-leaving-the-woods");
+    }
+    return p.x;
+  }, { timeout: 60_000, intervals: [500] }).toBeLessThan(-235);
+  await expect(ann.getByTestId("lap-hud")).toBeVisible();
+  await shot(ann, "6-at-the-track");
+  // Bob's server copy of Ann followed her all the way out (bike speeds are allowed while riding).
+  await expect.poll(async () => (await bob.evaluate(() => window.__den!.remotes()[0]?.x)) ?? 0, { timeout: 10_000 }).toBeLessThan(-220);
+
+  // Round the circuit.
+  await ann.evaluate(() => window.__den!.track!.autopilot("lap"));
+  await expect.poll(async () => (await ann.evaluate(() => window.__den!.track!.laps())).current, { timeout: 30_000 }).not.toBeNull();
+  await ann.waitForTimeout(6000);
+  await shot(ann, "7-racing");
+  await expect.poll(async () => (await ann.evaluate(() => window.__den!.track!.laps())).last, { timeout: 200_000, intervals: [1000] }).not.toBeNull();
+  const laps = await ann.evaluate(() => window.__den!.track!.laps());
+  expect(laps.last!).toBeGreaterThan(30);
+  await expect(ann.getByTestId("lap-best")).not.toHaveText("–");
+  await expect(bob.getByTestId("lap-toast")).toContainText("Ann set the party's best lap");
+  await shot(ann, "8-lap-done");
+  await ann.evaluate(() => window.__den!.track!.autopilot(null));
+});

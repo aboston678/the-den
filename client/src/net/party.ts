@@ -9,6 +9,7 @@ import { type LanePhase, type LaneView, resetLanes, useLanes } from "../game/bow
 import { resetCatan, useCatan } from "../game/catan/store.ts";
 import { resetC4, useC4 } from "../game/connect4/store.ts";
 import { type BikeView, NO_BIKE, dropBike, setBike, useBikes } from "../game/bike/store.ts";
+import { useLaps } from "../game/track/laps.ts";
 import { setServerClock } from "../game/sky/clock.ts";
 import { playerState } from "../game/state.ts";
 import { accessToken } from "./auth.ts";
@@ -327,6 +328,9 @@ export const bikeSend = {
   park: (x: number, y: number, z: number, yaw: number) => room?.send(MSG.bike, { do: "park", x, y, z, yaw }),
 };
 
+/** A lap of the racetrack we just finished (seconds); the server checks it and tells the party. */
+export const sendLap = (s: number) => room?.send(MSG.lap, { s });
+
 /** Connect Four (Andrew, 2026-10-16): the server holds the game; we send moves. */
 export const c4Send = {
   sit: (seat: number) => room?.send(MSG.c4Sit, { seat }),
@@ -467,6 +471,9 @@ function bind(r: Room) {
     syncCatan(r);
     syncC4(r);
   });
+  r.onMessage(SERVER_MSG.lap, (l: { id: string; name: string; s: number; best: boolean; record: boolean }) => {
+    useLaps.setState((st) => ({ news: [...st.news.slice(-4), { ...l, at: performance.now(), mine: l.id === r.sessionId }] }));
+  });
   r.onMessage(SERVER_MSG.c4Error, (m: { error: string }) => useC4.setState({ error: { text: m.error, at: performance.now() } }));
   r.onMessage(SERVER_MSG.c4Won, (w: { id: string; name: string }) => {
     useC4.setState((st) => ({ wins: [...st.wins.slice(-4), { ...w, at: performance.now(), mine: w.id === r.sessionId }] }));
@@ -504,6 +511,7 @@ function bind(r: Room) {
     resetC4();
     lastC4 = "";
     useBikes.setState({ me: NO_BIKE, others: {} });
+    useLaps.setState({ current: null, last: null, best: null, news: [] });
   });
 
   usePartyStore.setState({ status: "in-party", sessionId: r.sessionId, error: null });

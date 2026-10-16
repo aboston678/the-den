@@ -1,4 +1,5 @@
 import { BIKE_MAX_SPEED } from "./bike.ts";
+import { WORLD_LIMITS } from "./track.ts";
 import { BEAR } from "./constants.ts";
 
 // Networking rules shared by the browser and the game server (GAME_SPEC §7).
@@ -36,6 +37,7 @@ export const MSG = {
   c4Act: "c4Act", // { action }: a move (C4Action), checked against the rules
   // The motorcycle (Andrew, 2026-10-16).
   bike: "bike", // { do: "take" | "mount" | "park", x?, y?, z?, yaw? }: take the garage bike, get on yours, park it where it is
+  lap: "lap", // { s }: I just finished a lap of the racetrack in s seconds (timed in my browser, checked here)
 } as const;
 
 /** Messages the server sends to everyone in the party. */
@@ -58,6 +60,8 @@ export const SERVER_MSG = {
   c4Error: "c4Error",
   /** { id, name }: someone won at Connect Four. */
   c4Won: "c4Won",
+  /** { id, name, s, best, record }: someone finished a lap (best = their best this visit, record = the party's best). */
+  lap: "lap",
 } as const;
 
 export const BEAR_ACTIONS = ["locomotion", "jump", "fall", "roar", "dance", "cast", "reel", "celebrate", "bowl", "sit", "stand", "crouch", "ride"] as const;
@@ -76,8 +80,8 @@ export interface Pose {
   aimPitch: number;
 }
 
-/** Map bounds the server accepts (the world is 300 m × 300 m around the origin). */
-export const WORLD_HALF_SIZE = 150;
+/** Map bounds the server accepts: the property and, out to the north-west, the road and the racetrack. */
+const LIMITS = WORLD_LIMITS;
 
 /**
  * Validate a pose from a client. Movement is client-authoritative (GAME_SPEC §3) but the
@@ -89,8 +93,8 @@ export function sanitizePose(input: unknown, prev: Pose, seconds: number, riding
   const num = (v: unknown, fallback: number) => (typeof v === "number" && Number.isFinite(v) ? v : fallback);
   const clampN = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
 
-  let x = clampN(num(raw.x, prev.x), -WORLD_HALF_SIZE, WORLD_HALF_SIZE);
-  let z = clampN(num(raw.z, prev.z), -WORLD_HALF_SIZE, WORLD_HALF_SIZE);
+  let x = clampN(num(raw.x, prev.x), LIMITS.minX, LIMITS.maxX);
+  let z = clampN(num(raw.z, prev.z), LIMITS.minZ, LIMITS.maxZ);
   const y = clampN(num(raw.y, prev.y), -30, 60);
 
   // At most sprint speed × 1.5 for the elapsed time, plus a metre of slack (a bike's top speed while riding).

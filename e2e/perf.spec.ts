@@ -27,6 +27,9 @@ const SPOTS: Spot[] = [
   // Phase 5 polish: dawn mist over the stream, the flower bed by the house.
   ["stream dawn", "dawn", 113, -10, 122, 4],
   ["flower bed", "noon", 8, -13, 8, 0],
+  // Round 2: out of the woods on the road to the racetrack, and on the start/finish straight.
+  ["track road", "noon", -165, -161, -200, -205],
+  ["track straight", "noon", -280, -268, -500, -268],
 ];
 
 async function measure(page: Page, [, time, x, z, lx, lz, y]: Spot) {

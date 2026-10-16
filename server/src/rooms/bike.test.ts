@@ -1,6 +1,6 @@
-import { GARAGE_BIKE, MAX_PLAYERS, sanitizePose } from "@den/shared";
+import { GARAGE_BIKE, MAX_PLAYERS, MIN_LAP_S, TRACK, START_S, sanitizePose } from "@den/shared";
 import { describe, expect, it } from "vitest";
-import { bikeMessage } from "./bike.ts";
+import { Laps, bikeMessage } from "./bike.ts";
 import { Player } from "./PartyState.ts";
 
 const bearAt = (x: number, z: number, y = 0) => Object.assign(new Player(), { x, y, z });
@@ -41,5 +41,19 @@ describe("the motorcycle on the server", () => {
     expect(riding.speed).toBe(40);
     expect(riding.action).toBe("ride");
     expect(MAX_PLAYERS).toBeGreaterThan(0);
+  });
+});
+
+describe("lap times", () => {
+  it("counts laps ridden at the track, no impossible ones, and knows personal and party bests", () => {
+    const laps = new Laps();
+    const s = TRACK.pointAt(START_S);
+    const ann = Object.assign(bearAt(s.x, s.z, 6.5), { bike: "riding" }), bob = Object.assign(bearAt(s.x, s.z, 6.5), { bike: "riding" });
+    expect(laps.record("a", ann, MIN_LAP_S - 1)).toBeNull(); // faster than a bike can go
+    expect(laps.record("a", bearAt(0, 0), 80)).toBeNull(); // on foot, at the house
+    expect(laps.record("a", ann, 80)).toEqual({ s: 80, best: true, record: true });
+    expect(laps.record("a", ann, 85)).toEqual({ s: 85, best: false, record: false });
+    expect(laps.record("b", bob, 82)).toEqual({ s: 82, best: true, record: false });
+    expect(laps.record("b", bob, 79)).toEqual({ s: 79, best: true, record: true });
   });
 });

@@ -25,10 +25,12 @@ export class Path {
   readonly length: number;
   private boxes: { minX: number; maxX: number; minZ: number; maxZ: number }[] = [];
 
-  /** Catmull-Rom curve through `control`, sampled roughly every `step` metres. */
-  constructor(control: PathPoint[], step = 1) {
-    for (let i = 0; i < control.length - 1; i++) {
-      const p0 = control[Math.max(0, i - 1)]!, p1 = control[i]!, p2 = control[i + 1]!, p3 = control[Math.min(control.length - 1, i + 2)]!;
+  /** Catmull-Rom curve through `control`, sampled roughly every `step` metres. `closed`: a loop (the racetrack). */
+  constructor(control: PathPoint[], step = 1, readonly closed = false) {
+    const n = control.length;
+    const cp = (i: number) => (closed ? control[((i % n) + n) % n]! : control[Math.max(0, Math.min(n - 1, i))]!);
+    for (let i = 0; i < (closed ? n : n - 1); i++) {
+      const p0 = cp(i - 1), p1 = cp(i), p2 = cp(i + 1), p3 = cp(i + 2);
       const n = Math.max(1, Math.ceil(Math.hypot(p2.x - p1.x, p2.z - p1.z) / step));
       for (let k = 0; k < n; k++) {
         const t = k / n, t2 = t * t, t3 = t2 * t;
@@ -37,7 +39,7 @@ export class Path {
         this.points.push({ x: cr(p0.x, p1.x, p2.x, p3.x), z: cr(p0.z, p1.z, p2.z, p3.z) });
       }
     }
-    this.points.push({ ...control[control.length - 1]! });
+    this.points.push({ ...(closed ? control[0]! : control[n - 1]!) });
     let s = 0;
     this.at.push(0);
     for (let i = 1; i < this.points.length; i++) {

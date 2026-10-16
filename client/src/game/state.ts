@@ -37,6 +37,8 @@ export const playerState = {
   seated: false,
   /** On the motorcycle (set by bike/BikeControls once the server agrees): W/S/A/D ride it. */
   riding: false,
+  /** Dev and tests only: the bike rides itself along this route (bike/autopilot.ts). */
+  autopilot: null as import("./bike/autopilot.ts").Route | null,
   /** Bowling: play the bowl now (set by the bowling controls; the player clears it). */
   bowlRequest: false,
   /** Bowling: set by the player when the ball leaves the paw; the bowling controls clear it. */
@@ -105,6 +107,8 @@ declare global {
       /** Catan (Phase 4): the table as this client sees it, plus test controls (catan/dev.ts). */
       catan?: import("./catan/dev.ts").CatanDev;
       c4?: import("./connect4/dev.ts").C4Dev;
+      /** The racetrack (round 2): your laps, and (dev only) the bike riding itself out to the track or round it. */
+      track?: { laps: () => { current: number | null; last: number | null; best: number | null; news: { name: string; s: number; best: boolean; record: boolean; mine: boolean }[] }; autopilot: (route: "out" | "lap" | null) => void };
       bike?: { state: () => { riding: boolean; speed: number; prompt: string | null; me: import("./bike/store.ts").BikeView; others: Record<string, import("./bike/store.ts").BikeView> } };
       /** Other bears as this client sees them. */
       remotes: () => { id: string; name: string; x: number; z: number; action: string; flashlight: boolean; tagVisible: boolean; connected: boolean; fish: { rod: boolean; state: string; species: string } }[];

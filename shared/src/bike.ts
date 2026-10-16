@@ -1,3 +1,4 @@
+import { onTrackRoad } from "./track.ts";
 import { HOUSE_FOOTPRINT, houseToWorld, onPavement } from "./world/layout.ts";
 
 // The motorcycle (Andrew, 2026-10-16): a red sport bike parked in the garage. Every bear can ride
@@ -60,7 +61,7 @@ export function bikeBlocked(x: number, z: number) {
 export function bikeTopSpeed(x: number, z: number, onTrack = false) {
   if (onTrack) return BIKE.trackSpeed;
   if (inGarage(x, z)) return BIKE.indoorSpeed;
-  return onPavement(x, z, 0.5) ? BIKE.roadSpeed : BIKE.groundSpeed;
+  return onPavement(x, z, 0.5) || onTrackRoad(x, z) ? BIKE.roadSpeed : BIKE.groundSpeed;
 }
 
 /**

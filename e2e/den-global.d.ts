@@ -82,6 +82,11 @@ interface Window {
         others: Record<string, { state: string; x: number; y: number; z: number; yaw: number }>;
       };
     };
+    /** The racetrack (round 2): your laps, and (dev only) the bike riding itself out to the track or round it. */
+    track?: {
+      laps: () => { current: number | null; last: number | null; best: number | null; news: { name: string; s: number; best: boolean; record: boolean; mine: boolean }[] };
+      autopilot: (route: "out" | "lap" | null) => void;
+    };
     /** Connect Four (round 2): the table as this browser sees it, and moves (sent to the server like clicks). */
     c4?: {
       state: () => {

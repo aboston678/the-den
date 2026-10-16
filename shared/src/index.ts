@@ -24,3 +24,4 @@ export * from "./catan/seats.ts";
 export * from "./connect4/rules.ts";
 export * from "./connect4/seats.ts";
 export * from "./bike.ts";
+export * from "./track.ts";

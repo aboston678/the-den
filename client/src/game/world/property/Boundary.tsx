@@ -1,4 +1,5 @@
 import { BOUNDS, DOCK, STREAM, streamCenter } from "@den/shared";
+import { PROPERTY_GAP } from "../../track/walls.ts";
 import { useRapier } from "@react-three/rapier";
 import { useEffect } from "react";
 import { invisibleColliders } from "../invisible.ts";
@@ -27,14 +28,17 @@ export function Boundary() {
     const cx = (minX + maxX) / 2, cz = (minZ + maxZ) / 2, hx = (maxX - minX) / 2, hz = (maxZ - minZ) / 2;
     box(hx, HEIGHT, 0.5, cx, 0, minZ - 0.5);
     box(hx, HEIGHT, 0.5, cx, 0, maxZ + 0.5);
-    box(0.5, HEIGHT, hz, minX - 0.5, 0, cz);
+    // The west side has a gap where the driveway leaves for the racetrack (its own walls carry on from there).
+    const gap = PROPERTY_GAP;
+    box(0.5, HEIGHT, (gap.from - minZ) / 2, minX - 0.5, 0, (minZ + gap.from) / 2);
+    box(0.5, HEIGHT, (maxZ - gap.to) / 2, minX - 0.5, 0, (gap.to + maxZ) / 2);
     box(0.5, HEIGHT, hz, maxX + 0.5, 0, cz);
 
     // Along the stream, following its curve in 2 m pieces.
-    const gap = DOCK.width / 2 + 0.1;
+    const dockGap = DOCK.width / 2 + 0.1;
     for (let z = minZ; z < maxZ; z += 2) {
       const z1 = z + 2;
-      if (z1 > DOCK.z - gap && z < DOCK.z + gap) continue;
+      if (z1 > DOCK.z - dockGap && z < DOCK.z + dockGap) continue;
       const x0 = streamCenter(z) + STREAM.wadeLimitD, x1 = streamCenter(z1) + STREAM.wadeLimitD;
       const len = Math.hypot(x1 - x0, 2);
       box(0.25, 6, len / 2 + 0.05, (x0 + x1) / 2 + 0.25, STREAM.waterY, (z + z1) / 2, Math.atan2(x1 - x0, 2));
@@ -42,7 +46,7 @@ export function Boundary() {
     // Close the dock gap from the sides of the dock down to the stream bed.
     const xd = streamCenter(DOCK.z) + STREAM.wadeLimitD + 0.25;
     for (const side of [-1, 1]) {
-      const zEdge = DOCK.z + side * gap, zFar = DOCK.z + side * 1.1 * 2;
+      const zEdge = DOCK.z + side * dockGap, zFar = DOCK.z + side * 1.1 * 2;
       box(0.25, 6, Math.abs(zFar - zEdge) / 2 + 0.1, xd, STREAM.waterY, (zEdge + zFar) / 2);
     }
     return () => {

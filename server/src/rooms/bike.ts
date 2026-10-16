@@ -1,4 +1,4 @@
-import { BIKE_REACH, GARAGE_BIKE, bikeBlocked } from "@den/shared";
+import { BIKE_REACH, GARAGE_BIKE, MIN_LAP_S, bikeBlocked, inTrackArea } from "@den/shared";
 import type { Player } from "./PartyState.ts";
 
 // The motorcycle on the server (Andrew, 2026-10-16). Each bear has at most one bike: "riding" it,
@@ -35,4 +35,26 @@ export function bikeMessage(p: Player, raw: unknown): boolean {
     return true;
   }
   return false;
+}
+
+/**
+ * Lap times at the racetrack (session only, not saved). A lap counts from a bear on a bike at the
+ * track, no quicker than a bike flat out all the way round could manage.
+ */
+export class Laps {
+  private best = new Map<string, number>();
+
+  /** A finished lap; returns what to tell the party, or null if it doesn't count. */
+  record(id: string, p: Player, raw: unknown): { s: number; best: boolean; record: boolean } | null {
+    const s = typeof raw === "number" ? raw : Number.NaN;
+    if (!(s >= MIN_LAP_S && s < 900) || p.bike !== "riding" || !inTrackArea(p.x, p.z)) return null;
+    const mine = this.best.get(id) ?? Infinity;
+    const party = Math.min(Infinity, ...this.best.values());
+    if (s < mine) this.best.set(id, s);
+    return { s, best: s < mine, record: s < party };
+  }
+
+  leave(id: string) {
+    this.best.delete(id);
+  }
 }

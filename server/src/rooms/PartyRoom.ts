@@ -28,7 +28,7 @@ import { Bowling, type GameResult, LANE_IDS } from "./bowling.ts";
 import { Catan, type CatanResult } from "./catan.ts";
 import { type C4Result, Connect4 } from "./connect4.ts";
 import { type Catch, Fishing } from "./fishing.ts";
-import { bikeMessage } from "./bike.ts";
+import { Laps, bikeMessage } from "./bike.ts";
 import { recordBowlingGame, recordC4Game, recordCatanGame, recordCatch } from "../stats.ts";
 
 const num = (v: unknown) => (typeof v === "number" ? v : Number.NaN);
@@ -54,6 +54,7 @@ export class PartyRoom extends Room<{ state: PartyState }> {
   private bowling = new Bowling();
   private catan = new Catan();
   private c4 = new Connect4();
+  private laps = new Laps();
   /** When each bowler last sent a ball/pins frame (ms), to keep the stream to ~20 a second. */
   private lastFrameAt = new Map<string, number>();
   /** Supabase user id per bear (server-side only; used to save stats), null for development players. */
@@ -210,6 +211,13 @@ export class PartyRoom extends Room<{ state: PartyState }> {
       if (p) bikeMessage(p, message);
     });
 
+    // The racetrack's lap times (Andrew, 2026-10-16): timed in the rider's browser, checked here, told to the party.
+    this.onMessage(MSG.lap, (client, message: { s?: unknown }) => {
+      const p = playing(client);
+      const r = p ? this.laps.record(client.sessionId, p, message?.s) : null;
+      if (r && p) this.broadcast(SERVER_MSG.lap, { id: client.sessionId, name: p.name, ...r });
+    });
+
     // Connect Four (Andrew, 2026-10-16): like Catan, but two chairs and nothing secret.
     this.c4.setup(this.state.c4);
     const c4 = this.state.c4;
@@ -286,6 +294,7 @@ export class PartyRoom extends Room<{ state: PartyState }> {
     this.bowling.leave(this.state.lanes, client.sessionId, Date.now());
     this.catan.leave(this.state.catan, client.sessionId, Date.now());
     this.c4.leave(this.state.c4, client.sessionId);
+    this.laps.leave(client.sessionId);
     this.sendCatanHands();
     this.lastFrameAt.delete(client.sessionId);
     this.userIds.delete(client.sessionId);

@@ -3,6 +3,7 @@ import {
   RETAINING_WALL_HEIGHT, STREAM, TRAIL, TRAIL_WIDTH, WALL_PATHS, streamCenter,
 } from "./layout.ts";
 import { clamp01, fbm, lerp, noise2, smoothstep } from "./noise.ts";
+import { inTrackArea, inTrackCorridor } from "../track.ts";
 
 // The ground's height and surface everywhere on the property (GAME_SPEC §4):
 // - front (north) lawn level with the main floor; the ground drops ~3.4 m to the back lawn so
@@ -171,8 +172,12 @@ export function isOnDock(x: number, z: number) {
   return Math.abs(z - DOCK.z) <= DOCK.width / 2 && d >= DOCK.startD && d <= DOCK.startD + DOCK.length;
 }
 
-/** True inside the walkable area (the invisible boundary and the stream's wading limit, plus the dock). */
+/**
+ * True inside the walkable area: the property (its invisible boundary and the stream's wading limit,
+ * plus the dock), the road out to the racetrack, and the track's fenced grounds.
+ */
 export function isInBounds(x: number, z: number) {
+  if (inTrackArea(x, z) || inTrackCorridor(x, z)) return true;
   if (distanceToEdge(x, z) < 0) return false;
   return x - streamCenter(z) <= STREAM.wadeLimitD || isOnDock(x, z);
 }

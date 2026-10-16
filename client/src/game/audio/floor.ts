@@ -1,4 +1,4 @@
-import { ALLEY_FLOOR_Y, APRON, DRIVEWAY, DRIVEWAY_WIDTH, HOUSE, LEVELS, isOnDock, surfaceAt } from "@den/shared";
+import { ALLEY_FLOOR_Y, APRON, DRIVEWAY, DRIVEWAY_WIDTH, HOUSE, LEVELS, isOnDock, onTrackAsphalt, onTrackRoad, surfaceAt } from "@den/shared";
 import { styleOf } from "../house/style.ts";
 
 // What the bear is standing on, for footsteps (GAME_SPEC §10): grass (lawn and forest floor), dirt
@@ -28,7 +28,7 @@ export function floorAt(x: number, y: number, z: number): Floor {
   }
   if (isOnDock(x, z)) return "wood";
   if (x >= APRON.minX && x <= APRON.maxX && z >= APRON.minZ && z <= APRON.maxZ) return "stone";
-  if (DRIVEWAY.closest(x, z, DRIVEWAY_WIDTH / 2)) return "stone";
+  if (DRIVEWAY.closest(x, z, DRIVEWAY_WIDTH / 2) || onTrackRoad(x, z) || onTrackAsphalt(x, z)) return "stone";
   const s = surfaceAt(x, z);
   return s.mud + s.bed > Math.max(s.lawn, s.forest) ? "dirt" : "grass";
 }

@@ -11,6 +11,7 @@ import { TOON } from "../artStyle.ts";
 import { useQuality } from "../quality.ts";
 import { ToonClouds } from "./ToonClouds.tsx";
 import { playerState } from "../state.ts";
+import { trackHaze } from "../track/haze.ts";
 import { gameClock } from "./clock.ts";
 import { current, lookAt } from "./look.ts";
 
@@ -223,7 +224,12 @@ export function DayNightSky() {
     moonSprite.position.set(m.x, m.y, m.z).multiplyScalar(DOME_R - 40).add(camera.position);
     (moonSprite.material as SpriteMaterial).opacity = Math.max(0, Math.min(1, (m.y + 0.02) * 12)) * Math.max(0.35, look.night);
 
-    if (scene.fog instanceof Fog) scene.fog.color.copy(look.fog);
+    if (scene.fog instanceof Fog) {
+      scene.fog.color.copy(look.fog);
+      // Out of the woods at the racetrack, the haze opens up so you can see across the circuit.
+      scene.fog.near = q.fog[0] + (160 - q.fog[0]) * trackHaze.open;
+      scene.fog.far = q.fog[1] + (700 - q.fog[1]) * trackHaze.open;
+    }
     if (scene.background instanceof Color) scene.background.copy(look.fog);
     scene.environmentIntensity = look.envIntensity;
     gl.toneMappingExposure = look.exposure;

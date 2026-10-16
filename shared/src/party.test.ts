@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { MAX_PLAYERS } from "./constants.ts";
 import { type Pose, sanitizePose } from "./party.ts";
+import { WORLD_LIMITS } from "./track.ts";
 
 const prev: Pose = { x: 0, y: 0, z: 0, yaw: 0, speed: 0, action: "locomotion", flashlight: false, aimYaw: 0, aimPitch: 0 };
 
@@ -16,9 +17,12 @@ describe("sanitizePose", () => {
     expect(p.z).toBe(0);
   });
 
-  it("keeps bears inside the map", () => {
-    const edge = { ...prev, x: 149.9 };
-    expect(sanitizePose({ ...edge, x: 400 }, edge, 1).x).toBe(150);
+  it("keeps bears inside the map (the property, and the racetrack out to the north-west)", () => {
+    const edge = { ...prev, x: WORLD_LIMITS.maxX - 0.1 };
+    expect(sanitizePose({ ...edge, x: 400 }, edge, 1).x).toBe(WORLD_LIMITS.maxX);
+    const track = { ...prev, x: -700, z: -500 };
+    expect(sanitizePose({ ...track, x: -701 }, track, 1).x).toBe(-701); // out at the track is fine
+    expect(WORLD_LIMITS.minX).toBeLessThan(-760);
   });
 
   it("rejects junk", () => {

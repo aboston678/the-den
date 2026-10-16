@@ -3,10 +3,11 @@ import { CapsuleCollider, RigidBody, type RapierCollider, type RapierRigidBody, 
 import { useEffect, useMemo, useRef } from "react";
 import type { KinematicCharacterController } from "@dimforge/rapier3d-compat";
 import { type Group, Matrix4, Vector3 } from "three";
-import { BEAR, BIKE, NET_TICK_HZ, bikeBlocked, bikeSpeedStep, bikeTopSpeed, bikeTurnRate, inGarage } from "@den/shared";
+import { BEAR, BIKE, NET_TICK_HZ, bikeBlocked, bikeSpeedStep, bikeTopSpeed, bikeTurnRate, inGarage, onTrackAsphalt } from "@den/shared";
 import { CAMERA, CAPSULE, CAPSULE_CENTER, CONTROLLER_OFFSET, CROUCH_SHRINK, JUMP_AIR_TIME, MOVE } from "../config.ts";
 import { applyRide, useRider } from "../bike/rider.ts";
-import { onTrackAsphalt } from "../bike/track.ts";
+import { autopilot } from "../bike/autopilot.ts";
+
 import { castTo, sendPose, useFishStore } from "../../net/party.ts";
 import { useRod } from "../fishing/rig.ts";
 import { applyLipHold } from "../fishing/lipHold.ts";
@@ -285,12 +286,13 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
     function rideStep(dt: number) {
       const here = playerState.position;
       const top = bikeTopSpeed(here.x, here.z, onTrackAsphalt(here.x, here.z));
+      const auto = playerState.autopilot ? autopilot(playerState.autopilot, here.x, here.z, st.yaw, st.speed) : null;
       st.speed = bikeSpeedStep(st.speed, dt, {
-        throttle: isHeld("KeyW") || isHeld("ArrowUp"),
-        brake: isHeld("KeyS") || isHeld("ArrowDown"),
+        throttle: auto ? auto.throttle : isHeld("KeyW") || isHeld("ArrowUp"),
+        brake: auto ? auto.brake : isHeld("KeyS") || isHeld("ArrowDown"),
         tuck: sprint,
       }, top);
-      const steer = (isHeld("KeyA") || isHeld("ArrowLeft") ? 1 : 0) - (isHeld("KeyD") || isHeld("ArrowRight") ? 1 : 0);
+      const steer = auto ? auto.steer : (isHeld("KeyA") || isHeld("ArrowLeft") ? 1 : 0) - (isHeld("KeyD") || isHeld("ArrowRight") ? 1 : 0);
       // A bike only turns while it's rolling (backing up steers the other way round).
       const yawRate = steer * bikeTurnRate(st.speed) * Math.sign(st.speed) * Math.min(1, Math.abs(st.speed) / 1.5);
       st.yaw += yawRate * dt;
