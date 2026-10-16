@@ -73,6 +73,12 @@ test("a closed door is solid; the utility room is locked", async ({ page }) => {
 test("the garage door tilts up and you can walk into the garage", async ({ page }) => {
   failOnErrors(page);
   await hostGame(page, "Ranger");
+  // Closed, each door fills its whole opening: both halves of the first bay are solid.
+  for (const z of [1.3, 3.1]) {
+    await standAt(page, [-1.4, z], [3, z]);
+    await walk(page, 1500);
+    expect((await me(page)).x).toBeLessThan(houseToWorld(0, 0).x);
+  }
   await standAt(page, [-1.4, 2.2], [3, 2.2], undefined, true); // on the apron, facing the first garage door
   await page.keyboard.press("KeyE");
   await page.waitForTimeout(1300);

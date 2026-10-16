@@ -54,7 +54,7 @@ function leavesOf(d: Door): Leaf[] {
   switch (d.type) {
     case "french": return [{ hingeU: u0, dir: 1, width: w / 2, style: "glass", kind: "swing" }, { hingeU: u1, dir: -1, width: w / 2, style: "glass", kind: "swing" }];
     case "sliding": return [{ hingeU: u0 + w / 2, dir: 1, width: w / 2, style: "glass", kind: "slide" }];
-    case "garage": return [{ hingeU: u, dir: 1, width: w, style: "garage", kind: "tilt" }];
+    case "garage": return [{ hingeU: u0, dir: 1, width: w, style: "garage", kind: "tilt" }];
     default: return [{ hingeU: u0, dir: 1, width: w, style: glassy ? "glass" : pine ? "pine" : "panel", kind: "swing" }];
   }
 }

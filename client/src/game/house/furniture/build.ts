@@ -115,7 +115,8 @@ function curtains(out: GeoBuckets, pieces: WallPiece[]) {
       const [x, z] = p.axis === "x" ? [u, face] : [face, u];
       const rot = p.axis === "x" ? (side > 0 ? 0 : 180) : side > 0 ? 90 : 270;
       const k = new Kit(out, new Matrix4().makeTranslation(x, floor, z).multiply(new Matrix4().makeRotationY((rot * Math.PI) / 180)));
-      const top = o.y1 + 0.16, bottom = style.toFloor ? 0.02 : o.y0 - 0.12;
+      // Window heights are absolute (upstairs ones include the upper floor); the kit stands on the room's floor.
+      const top = o.y1 - floor + 0.16, bottom = style.toFloor ? 0.02 : o.y0 - floor - 0.12;
       k.rodX(-half - 0.4, half + 0.4, top, 0.06, 0.015, "brass");
       for (const s of [-1, 1]) {
         const x0 = s * (half - 0.06), x1 = s * (half + 0.32);
