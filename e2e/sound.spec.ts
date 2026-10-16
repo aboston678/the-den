@@ -57,13 +57,18 @@ test("doors are heard by the whole party; buttons click", async ({ browser }) =>
   await waitForBear(b);
   const door = doorById("main:foyer-porch")!;
 
-  // Alpha opens the front door; Bravo, standing on the porch too, hears it.
+  // Alpha opens the front door; Bravo, standing on the porch too, hears it. One at a time: each
+  // bear's server copy glides over to the porch, and it mustn't sweep through the other on the way.
   for (const [p, x] of [[a, 27.5], [b, 25.5]] as const) {
     const at = houseToWorld(x, -1), to = houseToWorld(x, 2);
     await p.evaluate(([ax, az, bx, bz]) => {
       window.__den!.teleport(ax!, az!);
       window.__den!.camera.yaw = Math.atan2(-(bx! - ax!), -(bz! - az!));
     }, [at.x, at.z, to.x, to.z] as const);
+    await expect.poll(async () => {
+      const s = await p.evaluate(() => window.__den!.serverPosition());
+      return s ? Math.hypot(s.x - at.x, s.z - at.z) : 99;
+    }, { timeout: 20_000 }).toBeLessThan(1);
   }
   await expect.poll(async () => {
     const s = await a.evaluate(() => window.__den!.serverPosition());

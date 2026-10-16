@@ -9,7 +9,7 @@ import { failOnErrors, hostGame } from "./helpers.ts";
 /** [stand x, z, look-at x, z] in floorplan metres; cam = [distance, pitch]; y = floor height (floorplan). */
 const STOPS: Record<string, { at: [number, number, number, number]; cam?: [number, number]; y?: number }> = {
   lounge: { at: [29.4, 9.5, 36.0, 2.0], cam: [2.8, 0.42] }, // like the reference photo
-  landing: { at: [23.4, 3.0, 36.0, 2.2], cam: [2.4, 0.15] },
+  landing: { at: [24.9, 4.8, 36.0, 2.2], cam: [2.4, 0.15] }, // beside the Connect Four table
   approach: { at: [31.6, 1.06, 52.0, 1.06], cam: [2.2, 0.08], y: -2.52 },
   ball_return: { at: [30.2, 3.5, 31.0, 2.17], cam: [1.6, 0.4], y: -2.52 },
   lane: { at: [33.4, 2.17, 52.5, 1.06], cam: [0.9, -0.04], y: -2.52 },
