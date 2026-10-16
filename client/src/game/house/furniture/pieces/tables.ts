@@ -19,6 +19,14 @@ export const farmTable: Builder = (k, { w, d, h }) => {
   k.box([-0.5, h, -0.12], [0.5, h + 0.006, 0.12], "glass");
 };
 
+/** The games table in the basement stair landing (Connect Four): honey wood with a green felt top. */
+export const gameTable: Builder = (k, { w, d, h }) => {
+  k.box([-w / 2, h - 0.045, -d / 2], [w / 2, h, d / 2], "wood:#a06a3a");
+  k.box([-w / 2 + 0.05, h, -d / 2 + 0.05], [w / 2 - 0.05, h + 0.004, d / 2 - 0.05], "fabric:#2f6b45");
+  k.box([-w / 2 + 0.06, h - 0.13, -d / 2 + 0.06], [w / 2 - 0.06, h - 0.045, d / 2 - 0.06], "wood:#8a5a30"); // apron
+  legs(k, w, d, h - 0.045, 0.06, "wood:#8a5a30", 0.05, 0.7);
+};
+
 /** Slat-back side chair (dining hall; black for the bedroom desk). */
 export const slatChair: Builder = (k, { w, d, h }, look) => {
   const wood = look === "black" ? BLACK_PAINT : "wood:#6e3f22";

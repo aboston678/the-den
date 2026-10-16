@@ -71,7 +71,8 @@ export function CatanControls() {
       return;
     }
 
-    if (playerState.seat) {
+    if (playerState.seat && CATAN_SEATS.includes(playerState.seat)) {
+      // Only our own chairs: the Connect Four table seats bears through the same playerState.seat.
       playerState.seat = null;
       release();
     }

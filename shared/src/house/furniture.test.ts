@@ -36,7 +36,7 @@ const KEEP_CLEAR: Record<string, Footprint[]> = {
   ],
   upper: [{ x0: 25.6, x1: 26.9, z0: 0.3, z1: 3.3 }], // the stairwell
   basement: [
-    { x0: 22, x1: 28, z0: 0, z1: 6 }, // the basement stair landing
+    { x0: 24.6, x1: 28, z0: 0, z1: 6 }, // the basement stairs, their foot and the walk from them to the lanes (the Connect Four table is west of it)
     { x0: 29.6, x1: 56, z0: 0, z1: 4.2 }, // the lanes and their approach (shared/src/bowling/lane.ts)
   ],
 };

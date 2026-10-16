@@ -72,6 +72,25 @@ interface Window {
       dev: (dice?: [number, number], give?: Record<string, number>, vp?: boolean) => void;
       screenOf: (kind: "vertex" | "edge" | "hex", id: number) => { x: number; y: number };
     };
+    /** Connect Four (round 2): the table as this browser sees it, and moves (sent to the server like clicks). */
+    c4?: {
+      state: () => {
+        seats: string[];
+        game: import("../shared/src/connect4/rules.ts").C4Game | null;
+        waitingFor: string;
+        waitUntil: number;
+        error: { text: string; at: number } | null;
+        wins: { id: string; name: string; mine: boolean }[];
+        confirmLeave: boolean;
+        prompt: string | null;
+        seated: boolean;
+      };
+      sit: (seat: number) => void;
+      stand: () => void;
+      start: () => void;
+      drop: (col: number) => void;
+      screenOfColumn: (col: number) => { x: number; y: number };
+    };
   };
 }
 

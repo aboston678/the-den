@@ -24,6 +24,10 @@ test("leaderboard: fish caught, bowling high scores and Catan wins, all players 
   await expect(board.getByTestId("board-rows").locator("li").first()).toContainText("LunaLover");
   await expect(board.getByTestId("board-rows").locator("li").first()).toContainText("6");
   await page.screenshot({ path: "test-results/social/leaderboard-catan.png" });
+  await board.getByTestId("board-c4").click();
+  await expect(board.getByTestId("board-rows").locator("li").first()).toContainText("RaptorFan");
+  await expect(board.getByTestId("board-rows").locator("li").first()).toContainText("11");
+  await page.screenshot({ path: "test-results/social/leaderboard-c4.png" });
 });
 
 test("friends: a request waiting, friends listed, search by username", async ({ page }) => {

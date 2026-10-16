@@ -100,6 +100,7 @@ declare global {
       bowl?: import("./bowling/dev.ts").BowlDev;
       /** Catan (Phase 4): the table as this client sees it, plus test controls (catan/dev.ts). */
       catan?: import("./catan/dev.ts").CatanDev;
+      c4?: import("./connect4/dev.ts").C4Dev;
       /** Other bears as this client sees them. */
       remotes: () => { id: string; name: string; x: number; z: number; action: string; flashlight: boolean; tagVisible: boolean; connected: boolean; fish: { rod: boolean; state: string; species: string } }[];
     };

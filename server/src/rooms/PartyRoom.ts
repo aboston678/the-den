@@ -26,8 +26,9 @@ import { devToolsOn } from "../config.ts";
 import { Lane, PartyState, Player } from "./PartyState.ts";
 import { Bowling, type GameResult, LANE_IDS } from "./bowling.ts";
 import { Catan, type CatanResult } from "./catan.ts";
+import { type C4Result, Connect4 } from "./connect4.ts";
 import { type Catch, Fishing } from "./fishing.ts";
-import { recordBowlingGame, recordCatanGame, recordCatch } from "../stats.ts";
+import { recordBowlingGame, recordC4Game, recordCatanGame, recordCatch } from "../stats.ts";
 
 const num = (v: unknown) => (typeof v === "number" ? v : Number.NaN);
 
@@ -51,6 +52,7 @@ export class PartyRoom extends Room<{ state: PartyState }> {
   private fishing = new Fishing();
   private bowling = new Bowling();
   private catan = new Catan();
+  private c4 = new Connect4();
   /** When each bowler last sent a ball/pins frame (ms), to keep the stream to ~20 a second. */
   private lastFrameAt = new Map<string, number>();
   /** Supabase user id per bear (server-side only; used to save stats), null for development players. */
@@ -201,6 +203,27 @@ export class PartyRoom extends Room<{ state: PartyState }> {
       if (done) void this.announceCatan(done);
     }, 250);
 
+    // Connect Four (Andrew, 2026-10-16): like Catan, but two chairs and nothing secret.
+    this.c4.setup(this.state.c4);
+    const c4 = this.state.c4;
+    this.onMessage(MSG.c4Sit, (client, message: { seat?: unknown }) => {
+      const p = playing(client);
+      if (p) this.c4.sit(c4, client.sessionId, p, num(message?.seat));
+    });
+    this.onMessage(MSG.c4Stand, (client) => this.c4.stand(c4, client.sessionId));
+    this.onMessage(MSG.c4Start, (client) => {
+      if (playing(client)) this.c4.start(c4, client.sessionId, this.state.players);
+    });
+    this.onMessage(MSG.c4Act, (client, message: { action?: unknown }) => {
+      if (!playing(client)) return;
+      const error = this.c4.act(c4, client.sessionId, message?.action);
+      if (error) client.send(SERVER_MSG.c4Error, { error });
+    });
+    this.clock.setInterval(() => {
+      const done = this.c4.tick(c4, Date.now());
+      if (done) void this.announceC4(done);
+    }, 250);
+
     this.onMessage(MSG.devTime, (_client, message: { time?: unknown }) => {
       const time = parseTime(message?.time);
       if (devToolsOn() && time !== undefined) this.state.clock = time;
@@ -236,13 +259,16 @@ export class PartyRoom extends Room<{ state: PartyState }> {
     // Catan players get longer, and their game waits for them (GAME_SPEC §16).
     const inCatan = this.catan.playerIndex(client.sessionId) >= 0;
     if (inCatan) this.catan.drop(this.state.catan, client.sessionId, Date.now());
-    this.allowReconnection(client, inCatan ? CATAN_RECONNECT_S : RECONNECT_WINDOW_S);
+    const inC4 = this.c4.playerIndex(client.sessionId) >= 0;
+    if (inC4) this.c4.drop(this.state.c4, client.sessionId, Date.now());
+    this.allowReconnection(client, inCatan || inC4 ? CATAN_RECONNECT_S : RECONNECT_WINDOW_S);
   }
 
   onReconnect(client: Client) {
     const player = this.state.players.get(client.sessionId);
     if (player) player.connected = true;
     this.catan.back(this.state.catan, client.sessionId);
+    this.c4.back(this.state.c4, client.sessionId);
     const mine = this.catan.privateFor(client.sessionId);
     if (mine) client.send(SERVER_MSG.catanPrivate, mine);
   }
@@ -252,6 +278,7 @@ export class PartyRoom extends Room<{ state: PartyState }> {
     this.fishing.remove(client.sessionId);
     this.bowling.leave(this.state.lanes, client.sessionId, Date.now());
     this.catan.leave(this.state.catan, client.sessionId, Date.now());
+    this.c4.leave(this.state.c4, client.sessionId);
     this.sendCatanHands();
     this.lastFrameAt.delete(client.sessionId);
     this.userIds.delete(client.sessionId);
@@ -302,6 +329,15 @@ export class PartyRoom extends Room<{ state: PartyState }> {
     const players = r.playerIds.map((id) => this.userIds.get(id) ?? null).filter((u): u is string => !!u);
     await recordCatanGame(winner, players).catch(() => null);
     this.broadcast(SERVER_MSG.catanWon, { id: r.winnerId, name: r.winnerName, vp: r.vp });
+  }
+
+  /** Save a finished game of Connect Four (a win for a signed-in winner), then tell the party. */
+  private async announceC4(r: C4Result) {
+    if (!r.winnerId) return;
+    const winner = this.userIds.get(r.winnerId) ?? null;
+    const players = r.playerIds.map((id) => this.userIds.get(id) ?? null).filter((u): u is string => !!u);
+    await recordC4Game(winner, players).catch(() => null);
+    this.broadcast(SERVER_MSG.c4Won, { id: r.winnerId, name: r.winnerName });
   }
 
   private freeSlot() {

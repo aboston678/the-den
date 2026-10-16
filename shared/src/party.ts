@@ -28,6 +28,11 @@ export const MSG = {
   catanAct: "catanAct", // { action }: a move (CatanAction), checked against the rules
   catanQuit: "catanQuit", // leave the game you're in (your cards go back to the bank)
   devCatan: "devCatan", // { dice?, give? }: next roll / extra cards for me (dev and tests only)
+  // Connect Four (Andrew, 2026-10-16): two chairs at the games table in the basement stair landing.
+  c4Sit: "c4Sit", // { seat }: sit in a chair (you must be next to it)
+  c4Stand: "c4Stand", // get up (mid-game that's leaving the game)
+  c4Start: "c4Start", // start a game (both chairs taken)
+  c4Act: "c4Act", // { action }: a move (C4Action), checked against the rules
 } as const;
 
 /** Messages the server sends to everyone in the party. */
@@ -46,6 +51,10 @@ export const SERVER_MSG = {
   catanOk: "catanOk",
   /** { id, name, vp }: someone won at Catan. */
   catanWon: "catanWon",
+  /** { error }: why your Connect Four move was refused (sent only to you). */
+  c4Error: "c4Error",
+  /** { id, name }: someone won at Connect Four. */
+  c4Won: "c4Won",
 } as const;
 
 export const BEAR_ACTIONS = ["locomotion", "jump", "fall", "roar", "dance", "cast", "reel", "celebrate", "bowl", "sit", "stand", "crouch"] as const;

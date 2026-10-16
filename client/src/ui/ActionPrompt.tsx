@@ -1,5 +1,6 @@
 import { useBowling } from "../game/bowling/session.ts";
 import { useCatanPrompt } from "../game/catan/CatanControls.tsx";
+import { useC4Prompt } from "../game/connect4/Connect4Controls.tsx";
 import { useCastUi } from "../game/fishing/FishingControls.tsx";
 import { useDoorPrompt } from "../game/house/Doors.tsx";
 
@@ -9,7 +10,8 @@ export function ActionPrompt() {
   const bucket = useCastUi((s) => s.prompt);
   const bowl = useBowling((s) => (s.mode === "off" || s.mode === "wait" ? s.prompt : null)); // on the line, the bowling HUD says it
   const seat = useCatanPrompt((s) => s.text);
-  const text = door ?? bucket ?? bowl ?? seat;
+  const c4 = useC4Prompt((s) => s.text);
+  const text = door ?? bucket ?? bowl ?? seat ?? c4;
   if (!text) return null;
   return (
     <div className="action-prompt" data-testid="action-prompt">

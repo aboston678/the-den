@@ -43,6 +43,7 @@ const BUILDERS: Record<CodeKind, Builder> = {
   farm_table: tables.farmTable,
   slat_chair: tables.slatChair,
   dining_table: tables.diningTable,
+  game_table: tables.gameTable,
   coffee_table: tables.coffeeTable,
   side_table: tables.sideTable,
   console_table: tables.consoleTable,

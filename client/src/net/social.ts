@@ -7,11 +7,12 @@ export { type Friendship, type Row, sortFriendships } from "./socialRules.ts";
 // sign-in: the database's row rules decide what each player may see and change. Stats are
 // written only by the game server.
 
-export type Board = "fish" | "bowling" | "catan";
+export type Board = "fish" | "bowling" | "catan" | "c4";
 export const BOARDS: { id: Board; label: string; column: string; unit: string; soon?: string }[] = [
   { id: "fish", label: "Fish caught", column: "fish_caught", unit: "fish" },
   { id: "bowling", label: "Bowling", column: "bowling_high_score", unit: "best game" },
   { id: "catan", label: "Catan", column: "catan_wins", unit: "wins" },
+  { id: "c4", label: "Connect Four", column: "c4_wins", unit: "wins" },
 ];
 
 // --- development preview (?mocksocial in a dev build): made-up bears, so the panels can be looked at without signing in ---
@@ -33,6 +34,10 @@ const MOCK_CATAN = [
   { userId: "m2", username: "LunaLover", value: 6 }, { userId: "me", username: "DevBear", value: 4 }, { userId: "m3", username: "BassMaster", value: 1 },
 ];
 
+const MOCK_C4 = [
+  { userId: "m1", username: "RaptorFan", value: 11 }, { userId: "m5", username: "Hemlock", value: 7 }, { userId: "me", username: "DevBear", value: 2 },
+];
+
 const myId = () => (mockSocial ? "me" : useAuth.getState().userId);
 
 /** The leaderboard for one board, all players or just you and your friends. */
@@ -40,7 +45,7 @@ export async function leaderboard(board: Board, scope: "all" | "friends"): Promi
   const me = myId();
   if (mockSocial) {
     const friendIds = new Set(["me", ...MOCK_FRIENDS.filter((f) => f.status === "accepted").map((f) => f.otherId)]);
-    const stats = board === "fish" ? MOCK_STATS : board === "bowling" ? MOCK_BOWLING : MOCK_CATAN;
+    const stats = board === "fish" ? MOCK_STATS : board === "bowling" ? MOCK_BOWLING : board === "catan" ? MOCK_CATAN : MOCK_C4;
     return rankRows(stats.filter((r) => scope === "all" || friendIds.has(r.userId)), me);
   }
   if (!supabase || !me) return [];

@@ -76,6 +76,7 @@ export const KINDS = {
   farm_table: { w: 1.8, d: 0.9, h: 0.76 },
   slat_chair: { w: 0.45, d: 0.5, h: 0.95, tuck: true },
   dining_table: { w: 1.5, d: 1.1, h: 0.76 },
+  game_table: { w: 1.0, d: 0.7, h: 0.76 },
   coffee_table: { w: 1.0, d: 1.0, h: 0.45 },
   side_table: { w: 0.48, d: 0.48, h: 0.6 },
   console_table: { w: 1.1, d: 0.36, h: 0.8 },
@@ -380,6 +381,10 @@ const BOWLING: Placement[] = [
   P("chesterfield", "bowling_lounge", 27.6, 7.8, { rot: 180 }),
   P("cube_stool", "bowling_lounge", 27.0, 6.95),
   P("cube_stool", "bowling_lounge", 28.2, 6.95),
+  // Connect Four (Andrew, 2026-10-16): the games table in the stair landing, a chair each side.
+  P("game_table", "stair_landing", 23.6, 2.6),
+  P("slat_chair", "stair_landing", 23.6, 2.0),
+  P("slat_chair", "stair_landing", 23.6, 3.2, { rot: 180 }),
   P("high_top_table", "bowling_lounge", 30.7, 8.7),
   P("bar_stool", "bowling_lounge", 30.15, 8.7),
   P("bar_stool", "bowling_lounge", 31.25, 8.7),

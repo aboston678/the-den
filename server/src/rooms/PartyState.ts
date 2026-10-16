@@ -67,6 +67,18 @@ export const CatanTable = schema(
 );
 export type CatanTable = SchemaType<typeof CatanTable>;
 
+// Connect Four (Andrew, 2026-10-16): who sits in the two chairs, and the game (nothing in it is secret).
+export const C4Table = schema(
+  {
+    seats: t.array("string"), // north and south chairs: session id or ""
+    view: t.string().default(""), // C4Game as JSON ("" before the first game)
+    waitingFor: t.string().default(""), // name of a dropped player the game is waiting for
+    waitUntil: t.float64().default(0), // when they'll be removed (ms since 1970)
+  },
+  "C4Table",
+);
+export type C4Table = SchemaType<typeof C4Table>;
+
 export const PartyState = schema(
   {
     phase: t.string().default("lobby"), // "lobby" | "playing"
@@ -78,6 +90,7 @@ export const PartyState = schema(
     clock: t.float32(), // seconds into the 68-minute day/night cycle (GAME_SPEC §9); ticks once a second
     lanes: t.map(Lane), // "1" and "2" (GAME_SPEC §15)
     catan: CatanTable,
+    c4: C4Table,
   },
   "PartyState",
 );

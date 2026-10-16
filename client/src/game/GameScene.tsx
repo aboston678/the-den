@@ -5,6 +5,8 @@ import { GameAudio } from "./audio/GameAudio.tsx";
 import { BowlingControls } from "./bowling/BowlingControls.tsx";
 import { CatanControls } from "./catan/CatanControls.tsx";
 import { CatanTable } from "./catan/CatanTable.tsx";
+import { Connect4Board } from "./connect4/Connect4Board.tsx";
+import { Connect4Controls } from "./connect4/Connect4Controls.tsx";
 import { FishingControls } from "./fishing/FishingControls.tsx";
 import { FishingLines } from "./fishing/FishingLines.tsx";
 import { ThirdPersonCamera } from "./camera/ThirdPersonCamera.tsx";
@@ -41,6 +43,8 @@ export function GameScene() {
         <BowlingControls />
         <CatanControls />
         <CatanTable />
+        <Connect4Controls />
+        <Connect4Board />
         <Suspense fallback={null}>
           <FishingLines />
         </Suspense>

@@ -7,6 +7,7 @@ import { ActionPrompt } from "./ui/ActionPrompt.tsx";
 import { FishingHud } from "./ui/FishingHud.tsx";
 import { BowlingHud } from "./ui/BowlingHud.tsx";
 import { CatanHud } from "./ui/CatanHud.tsx";
+import { Connect4Hud } from "./ui/Connect4Hud.tsx";
 import { ConnectionBadge, ControlsHint, PartyList } from "./ui/Hud.tsx";
 import { LoadingScreen } from "./ui/LoadingScreen.tsx";
 import { NameTags } from "./ui/NameTags.tsx";
@@ -62,6 +63,7 @@ export function App() {
       <FishingHud />
       <BowlingHud />
       <CatanHud />
+      <Connect4Hud />
       <PartyList />
       <Pause />
       <LoadingScreen />

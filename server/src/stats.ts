@@ -44,6 +44,31 @@ export async function recordBowlingGame(userId: string, score: number, call = su
  * Save a finished game of Catan (GAME_SPEC §16): the game (winner + signed-in players), and +1
  * Catan win for a signed-in winner. Null if it couldn't be saved.
  */
+/**
+ * Save a finished game of Connect Four (Andrew, 2026-10-16): the game, and +1 Connect Four win for a
+ * signed-in winner. Null if it couldn't be saved (or before the database has the c4 columns).
+ */
+export async function recordC4Game(winnerId: string | null, playerIds: string[], call = supabase): Promise<{ wins: number } | null> {
+  if (!supabaseReady() || playerIds.length === 0) return null;
+  const fail = async (what: string, res: Response) => {
+    console.warn(`[den] couldn't save a Connect Four game (${what}): ${res.status} ${await res.text()}`);
+    return null;
+  };
+  const game = await call("/rest/v1/c4_games", { method: "POST", headers: { Prefer: "return=minimal" }, body: JSON.stringify({ winner: winnerId, players: playerIds }) });
+  if (!game.ok) return fail("game", game);
+  if (!winnerId) return { wins: 0 };
+  const user = encodeURIComponent(winnerId);
+  const got = await call(`/rest/v1/stats?user_id=eq.${user}&select=c4_wins`);
+  if (!got.ok) return fail("stats", got);
+  const rows = (await got.json()) as { c4_wins: number }[];
+  const wins = (rows[0]?.c4_wins ?? 0) + 1;
+  const save = rows.length
+    ? await call(`/rest/v1/stats?user_id=eq.${user}`, { method: "PATCH", headers: { Prefer: "return=minimal" }, body: JSON.stringify({ c4_wins: wins, updated_at: new Date().toISOString() }) })
+    : await call("/rest/v1/stats", { method: "POST", headers: { Prefer: "return=minimal,resolution=merge-duplicates" }, body: JSON.stringify({ user_id: winnerId, c4_wins: wins }) });
+  if (!save.ok) return fail("wins", save);
+  return { wins };
+}
+
 export async function recordCatanGame(winnerId: string | null, playerIds: string[], call = supabase): Promise<{ wins: number } | null> {
   if (!supabaseReady() || playerIds.length === 0) return null;
   const fail = async (what: string, res: Response) => {

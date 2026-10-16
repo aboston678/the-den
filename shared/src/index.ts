@@ -21,3 +21,5 @@ export * from "./catan/game.ts";
 export * from "./catan/rules.ts";
 export * from "./catan/view.ts";
 export * from "./catan/seats.ts";
+export * from "./connect4/rules.ts";
+export * from "./connect4/seats.ts";

@@ -26,8 +26,9 @@ The Den is a private, browser-based, multiplayer 3D game for Andrew and his frie
 | House | Built from `docs/floorplan.json` and the listing photos, at **1.25× real scale** (doors, rooms, stairs, bowling alley, everything). |
 | Day/night | 30 min day → 4 min dusk → 30 min night → 4 min dawn (68 min loop), synced for the party. House lights always on inside. Flashlight at night. |
 | Accounts | Phase 2: **Sign in with Google** (Supabase). Everyone signs in; no guest mode (the server refuses players who aren't signed in). Development builds keep a name box for testing. |
-| Leaderboard | Fish caught (total), bowling high score (best game), Catan wins (total). Tabs: All / Friends. |
+| Leaderboard | Fish caught (total), bowling high score (best game), Catan wins (total), Connect Four wins (total, 2026-10-16). Tabs: All / Friends. |
 | Board game | **Catan**, full base-game rules, 2–4 players, in the formal dining room. Private game, so the name stays. Our own art, not the official board art. |
+| Connect Four | Two bears at a games table in the basement stair landing, next to the bowling alley (Andrew, 2026-10-16; §16b). |
 | Bowling | Basement, 2 lanes, ball return, real physics with spin, Wii-Bowling-style scoring and feel. |
 | Dogs | None (dropped by Andrew, 2026-10-12; see §12). |
 | Fishing | From the dock or anywhere on the stream bank. Bite after 10–45 s. Spam R to reel against a tension meter. |
@@ -141,7 +142,7 @@ Base + 14 extra clips ≈ 47.5 + 112 = **~160 credits**.
 | Shift (hold) | Sprint |
 | Space | Jump |
 | C | Crouch / stand up |
-| E | Interact: open/close doors, take/return fishing rod, sit at the Catan table, join a bowling lane |
+| E | Interact: open/close doors, take/return fishing rod, sit at the Catan or Connect Four table, join a bowling lane |
 | Y | Roar |
 | B | Dance |
 | F | Flashlight on/off |
@@ -180,6 +181,7 @@ White clapboard siding, black shutters, dark gray architectural shingle roof, **
 - **Lights:** always on inside, warm (~2700K). A glowing fixture in every room plus a small pool of real lights that follow the fixtures nearest you. Indoor lights don't cast shadows for now (too slow); the sun, moon and your own flashlight do. Revisit with the graphics presets in 1.12 (Andrew, 2026-10-12). Fireplace has a real-looking fire at night (flicker + glow + crackle).
 - **Windows** glow warmly from outside at night.
 - **Catan room = formal dining room:** table with exactly 4 chairs.
+- **Basement stair landing:** the games table with 2 chairs for Connect Four (§16b), west of the stairs' foot.
 - **Bowling alley:** basement, see §15. It extends past the house footprint underground.
 
 ### 8.3 Greenhouse (bear prepping for winter)
@@ -264,7 +266,7 @@ Fish models: one per species via Higgsfield image→3D (9 credits each; the catf
 
 - **Supabase Auth with Google.** First sign-in: pick a unique username (3–16 characters, letters/numbers/underscore). It's the name tag above your bear. Setting up Google sign-in takes Andrew ~15 minutes of clicking in Google Cloud and Supabase; walk him through it.
 - **Friends:** search by username → send request → accept/decline. Friends list on the home screen.
-- **Leaderboard** (home screen): Fish caught · Bowling high score · Catan wins. Tabs: All players / Friends.
+- **Leaderboard** (home screen): Fish caught · Bowling high score · Catan wins · Connect Four wins. Tabs: All players / Friends.
 - **Tables (suggested):** `profiles` (id, username), `friendships` (requester, addressee, status), `stats` (user_id, fish_caught, bowling_high_score, catan_wins), `catches` (user_id, species, weight_lb, caught_at), `bowling_games`, `catan_games`. Row-level security on everything.
 - **Only the game server writes stats** (service-role key). The browser never writes stats directly.
 
@@ -308,6 +310,16 @@ Fish models: one per species via Higgsfield image→3D (9 credits each; the catf
 - **Leaving and ending early (Andrew, 2026-10-14).** Any player can leave mid-game (Leave game, or E to get up, with a confirm): their cards go back to the bank, their pieces stay, play continues (ends with no winner if fewer than 2 remain). Any player can call a **vote to end the game**: if more than half of the players still in vote yes, the game ends for everyone with no winner and no leaderboard change; a vote lapses after 30 s.
 - **House dice (Andrew, 2026-10-14).** A secret switch for a prank: hold **H** while clicking Start game. The board, number tokens, dots and the 6/8 rule stay standard; only the dice change, to a flipped table (out of 36 rolls: 2→5, 3→4, 4→3, 5→2, 6→1, 7→6, 8→1, 9→2, 10→3, 11→4, 12→5). Off by default and off again when the game ends. Only the person who flipped it sees a brief tiny tick; the flag and the weights stay on the server and never reach any browser. No reveal at the end; wins count on the leaderboard as normal.
 - Win → **Catan wins** +1, celebrate clip.
+
+---
+
+## 16b. Connect Four (Andrew, 2026-10-16)
+
+- **Where:** a games table (honey wood, green felt) with 2 chairs in the basement stair landing, next to the bowling alley. A blue upright 7 × 6 grid stands across the table between the chairs.
+- **Sitting:** like Catan: E next to a free chair sits, E gets up. Seated, the camera looks over your shoulder at the grid with the mouse free. Your own bear hides; the other player shows faded through the holes.
+- **Play:** when both chairs are taken either player presses Start; a random bear goes first as red, then yellow. On your turn a see-through disc follows the column you point at; click to drop. Discs fall with a bounce and a clack. Four in a row across, up or diagonally wins (the four pulse, fanfare, the winner jumps up and cheers); a full grid is a draw. Rematch from the same panel.
+- **Leaving:** E mid-game asks first; leaving ends the game with no winner. A dropped player gets 60 s to reconnect while the game waits.
+- **Server-authoritative** (`shared/src/connect4/`, `server/src/rooms/connect4.ts`); nothing is secret, so the whole game is synced. A win → **Connect Four wins** +1 on the leaderboard.
 
 ---
 

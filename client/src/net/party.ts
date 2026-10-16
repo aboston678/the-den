@@ -1,12 +1,13 @@
 import { Callbacks, Client, type Room } from "@colyseus/sdk";
 import {
-  type BearAction, type BowlFrame, type CatanAction, type CatanPrivate, type CatanView, type FishState, MSG, PARTY_ROOM, type Pose, SERVER_MSG, type WorldName,
+  type BearAction, type BowlFrame, type C4Action, type C4Game, type CatanAction, type CatanPrivate, type CatanView, type FishState, MSG, PARTY_ROOM, type Pose, SERVER_MSG, type WorldName,
   isValidRoomCode, isWorldName, normalizeRoomCode, sanitizeBowlFrame, sanitizeNickname,
 } from "@den/shared";
 import { create } from "zustand";
 import { applyRemoteFrame } from "../game/bowling/remoteFrames.ts";
 import { type LanePhase, type LaneView, resetLanes, useLanes } from "../game/bowling/store.ts";
 import { resetCatan, useCatan } from "../game/catan/store.ts";
+import { resetC4, useC4 } from "../game/connect4/store.ts";
 import { setServerClock } from "../game/sky/clock.ts";
 import { playerState } from "../game/state.ts";
 import { accessToken } from "./auth.ts";
@@ -310,6 +311,28 @@ function syncCatan(r: Room) {
   useCatan.setState({ seats, view: t.view ? (JSON.parse(t.view) as CatanView) : null, waitingFor: t.waitingFor, waitUntil: t.waitUntil });
 }
 
+/** Connect Four (Andrew, 2026-10-16): the server holds the game; we send moves. */
+export const c4Send = {
+  sit: (seat: number) => room?.send(MSG.c4Sit, { seat }),
+  stand: () => room?.send(MSG.c4Stand),
+  start: () => room?.send(MSG.c4Start),
+  drop: (col: number) => room?.send(MSG.c4Act, { action: { type: "drop", col } satisfies C4Action }),
+};
+
+let lastC4 = "";
+
+/** Copy the Connect Four table into its store (only when something changed). */
+function syncC4(r: Room) {
+  const t = r.state?.c4 as NetCatan | undefined;
+  if (!t) return;
+  const seats: string[] = [];
+  t.seats.forEach((id) => seats.push(id));
+  const key = `${seats.join(",")}|${t.waitingFor}|${t.waitUntil}|${t.view}`;
+  if (key === lastC4) return;
+  lastC4 = key;
+  useC4.setState({ seats, game: t.view ? (JSON.parse(t.view) as C4Game) : null, waitingFor: t.waitingFor, waitUntil: t.waitUntil });
+}
+
 /** Jump the party's clock (dev and tests; the server ignores it in production). */
 export function setDevTime(time: number | string) {
   room?.send(MSG.devTime, { time });
@@ -420,6 +443,11 @@ function bind(r: Room) {
   r.onStateChange(() => {
     syncLanes(r);
     syncCatan(r);
+    syncC4(r);
+  });
+  r.onMessage(SERVER_MSG.c4Error, (m: { error: string }) => useC4.setState({ error: { text: m.error, at: performance.now() } }));
+  r.onMessage(SERVER_MSG.c4Won, (w: { id: string; name: string }) => {
+    useC4.setState((st) => ({ wins: [...st.wins.slice(-4), { ...w, at: performance.now(), mine: w.id === r.sessionId }] }));
   });
   r.onMessage(SERVER_MSG.catanPrivate, (mine: CatanPrivate | null) => useCatan.setState({ mine }));
   r.onMessage(SERVER_MSG.catanError, (m: { error: string }) => useCatan.setState({ error: { text: m.error, at: performance.now() } }));
@@ -451,6 +479,8 @@ function bind(r: Room) {
     useBowlNews.setState({ games: [] });
     resetCatan();
     lastCatan = "";
+    resetC4();
+    lastC4 = "";
   });
 
   usePartyStore.setState({ status: "in-party", sessionId: r.sessionId, error: null });

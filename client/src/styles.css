@@ -698,3 +698,9 @@ body.catan-seated .controls-hint { display: none; }
 .catan-menu { position: absolute; top: 14px; right: 14px; display: flex; gap: 6px; }
 .catan-menu button { padding: 5px 10px !important; font-size: 12px !important; background: rgb(20 26 22 / 0.7) !important; }
 .catan-vote { left: 50%; top: 110px; translate: -50% 0; width: 440px; display: grid; gap: 8px; border: 2px solid var(--ember); }
+
+/* Connect Four (round 2): reuses the Catan table's panels. */
+.c4-disc { display: inline-block; width: 14px; height: 14px; margin-right: 8px; border-radius: 50%; vertical-align: -2px; box-shadow: inset 0 -2px 0 rgb(0 0 0 / 0.25); }
+/* Beside the grid, not over it. */
+.catan-hud .c4-side { left: auto; right: 24px; translate: none; width: 300px; }
+.catan-hud .c4-top { top: 80px; bottom: auto; }
