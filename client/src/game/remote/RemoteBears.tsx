@@ -17,6 +17,9 @@ import { cameraState, playerState } from "../state.ts";
 import { invisibleColliders } from "../world/invisible.ts";
 import { bearSounds } from "../audio/footsteps.ts";
 import { CAST_RELEASE_S } from "../player/BearAnimator.ts";
+import { applyRide, useRider } from "../bike/rider.ts";
+import { groundY } from "../world/ground.ts";
+import { inGarage } from "@den/shared";
 
 /** Name tags: fully visible up close, gone by 30 m (GAME_SPEC §5.3). */
 const TAG_FULL = 15;
@@ -54,6 +57,9 @@ function RemoteBearView({ id }: { id: string }) {
   const bear = remotes.get(id);
   const start = bear?.current ?? { x: 0, y: 0, z: 0 };
   const yaw = useRef(0);
+  const rider = useRider(visual);
+  /** On a bike: lean worked out from how fast they're turning, and tip from the slope. */
+  const ride = useRef({ yaw: 0, lean: 0, pitch: 0 });
   useRod(id, model, visual, () => ({ rod: remotes.get(id)?.fish.rod ?? false, action: animator.action, yaw: yaw.current }));
   // Bowling: a ball in the paw while it's their turn at the line (it leaves the paw when they roll).
   useHeldBall(model, visual, () => {
@@ -120,6 +126,17 @@ function RemoteBearView({ id }: { id: string }) {
     reel.current.line = line;
     animator.update(dt, s.action === "locomotion" || s.action === "crouch" ? s.speed : 0);
     applyLipHold(id, model, yaw.current, remotes.get(id)?.fish.state === "landed", animator.action !== "celebrate" && animator.action !== "cast", dt);
+    if (visual.current) {
+      const r = ride.current, riding = animator.action === "ride";
+      const turn = Math.atan2(Math.sin(s.yaw - r.yaw), Math.cos(s.yaw - r.yaw)) / Math.max(dt, 1e-3);
+      r.yaw = s.yaw;
+      const lean = riding ? Math.max(-0.75, Math.min(0.75, -Math.atan((turn * s.speed) / 9.8))) : 0;
+      r.lean += (lean - r.lean) * Math.min(1, dt * 5);
+      const fx = Math.sin(s.yaw) * 1.1, fz = Math.cos(s.yaw) * 1.1;
+      const slope = !riding || inGarage(s.x, s.z) ? 0 : Math.atan2(groundY(s.x + fx, s.z + fz) - groundY(s.x - fx, s.z - fz), 2.2);
+      r.pitch += (Math.max(-0.35, Math.min(0.35, -slope)) - r.pitch) * Math.min(1, dt * 8);
+      applyRide(rider, model, visual.current, riding, s.speed, r.lean, r.pitch, dt);
+    }
     bearSounds(animator, s.x, s.y, s.z);
     b.current = { x: s.x, y: s.y, z: s.z, speed: s.speed, action: s.action, flashlight: s.flashlight, aimYaw: s.aimYaw, aimPitch: s.aimPitch };
 

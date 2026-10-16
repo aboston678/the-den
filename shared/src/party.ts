@@ -1,3 +1,4 @@
+import { BIKE_MAX_SPEED } from "./bike.ts";
 import { BEAR } from "./constants.ts";
 
 // Networking rules shared by the browser and the game server (GAME_SPEC §7).
@@ -33,6 +34,8 @@ export const MSG = {
   c4Stand: "c4Stand", // get up (mid-game that's leaving the game)
   c4Start: "c4Start", // start a game (both chairs taken)
   c4Act: "c4Act", // { action }: a move (C4Action), checked against the rules
+  // The motorcycle (Andrew, 2026-10-16).
+  bike: "bike", // { do: "take" | "mount" | "park", x?, y?, z?, yaw? }: take the garage bike, get on yours, park it where it is
 } as const;
 
 /** Messages the server sends to everyone in the party. */
@@ -57,7 +60,7 @@ export const SERVER_MSG = {
   c4Won: "c4Won",
 } as const;
 
-export const BEAR_ACTIONS = ["locomotion", "jump", "fall", "roar", "dance", "cast", "reel", "celebrate", "bowl", "sit", "stand", "crouch"] as const;
+export const BEAR_ACTIONS = ["locomotion", "jump", "fall", "roar", "dance", "cast", "reel", "celebrate", "bowl", "sit", "stand", "crouch", "ride"] as const;
 export type BearAction = (typeof BEAR_ACTIONS)[number];
 
 export interface Pose {
@@ -81,7 +84,7 @@ export const WORLD_HALF_SIZE = 150;
  * server clamps it: no faster than a sprint (with slack for network jitter), no leaving the map.
  * Returns the pose the server should store.
  */
-export function sanitizePose(input: unknown, prev: Pose, seconds: number): Pose {
+export function sanitizePose(input: unknown, prev: Pose, seconds: number, riding = false): Pose {
   const raw = (input ?? {}) as Record<string, unknown>;
   const num = (v: unknown, fallback: number) => (typeof v === "number" && Number.isFinite(v) ? v : fallback);
   const clampN = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
@@ -90,8 +93,9 @@ export function sanitizePose(input: unknown, prev: Pose, seconds: number): Pose 
   let z = clampN(num(raw.z, prev.z), -WORLD_HALF_SIZE, WORLD_HALF_SIZE);
   const y = clampN(num(raw.y, prev.y), -30, 60);
 
-  // At most sprint speed × 1.5 for the elapsed time, plus a metre of slack.
-  const maxStep = BEAR.sprintSpeed * 1.5 * Math.max(0, Math.min(seconds, 1)) + 1;
+  // At most sprint speed × 1.5 for the elapsed time, plus a metre of slack (a bike's top speed while riding).
+  const top = riding ? BIKE_MAX_SPEED * 1.2 : BEAR.sprintSpeed * 1.5;
+  const maxStep = top * Math.max(0, Math.min(seconds, 1)) + 1;
   const dx = x - prev.x, dz = z - prev.z;
   const dist = Math.hypot(dx, dz);
   if (dist > maxStep) {
@@ -99,13 +103,14 @@ export function sanitizePose(input: unknown, prev: Pose, seconds: number): Pose 
     z = prev.z + (dz / dist) * maxStep;
   }
 
-  const action = BEAR_ACTIONS.includes(raw.action as BearAction) ? (raw.action as BearAction) : prev.action;
+  let action = BEAR_ACTIONS.includes(raw.action as BearAction) ? (raw.action as BearAction) : prev.action;
+  if (action === "ride" && !riding) action = "locomotion"; // only on a bike the server gave you
   return {
     x,
     y,
     z,
     yaw: num(raw.yaw, prev.yaw) % (Math.PI * 2),
-    speed: clampN(num(raw.speed, 0), 0, BEAR.sprintSpeed * 1.2),
+    speed: clampN(num(raw.speed, 0), 0, riding ? BIKE_MAX_SPEED * 1.1 : BEAR.sprintSpeed * 1.2),
     action,
     flashlight: typeof raw.flashlight === "boolean" ? raw.flashlight : prev.flashlight,
     aimYaw: num(raw.aimYaw, prev.aimYaw) % (Math.PI * 2),

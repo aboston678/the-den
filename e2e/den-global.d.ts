@@ -72,6 +72,16 @@ interface Window {
       dev: (dice?: [number, number], give?: Record<string, number>, vp?: boolean) => void;
       screenOf: (kind: "vertex" | "edge" | "hex", id: number) => { x: number; y: number };
     };
+    /** The motorcycle (round 2): riding, speed, the E prompt, and every bear's bike as this browser sees them. */
+    bike?: {
+      state: () => {
+        riding: boolean;
+        speed: number;
+        prompt: string | null;
+        me: { state: string; x: number; y: number; z: number; yaw: number };
+        others: Record<string, { state: string; x: number; y: number; z: number; yaw: number }>;
+      };
+    };
     /** Connect Four (round 2): the table as this browser sees it, and moves (sent to the server like clicks). */
     c4?: {
       state: () => {

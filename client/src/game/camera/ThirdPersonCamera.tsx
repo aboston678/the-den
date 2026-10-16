@@ -61,6 +61,13 @@ export function ThirdPersonCamera() {
 
   useFrame((_, rawDt) => {
     const dt = Math.min(rawDt, 0.1);
+    // Speed widens the view a little on the motorcycle.
+    const cam = camera as PerspectiveCamera;
+    const fov = approach(cam.fov, CAMERA.fov + cameraState.fovKick, 20 * dt);
+    if (fov !== cam.fov) {
+      cam.fov = fov;
+      cam.updateProjectionMatrix();
+    }
     // A set shot (bowling): ease there, then hold it.
     const shot = cameraState.override;
     if (shot) {

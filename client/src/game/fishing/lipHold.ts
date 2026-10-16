@@ -1,4 +1,5 @@
-import { type Object3D, Quaternion, Vector3 } from "three";
+import { type Object3D, Vector3 } from "three";
+import { reachTo } from "../player/reach.ts";
 
 // Holding a landed fish up by its lip (game-night fixes): the bear's left arm reaches out to the side
 // and a little forward at shoulder height, so the fish hangs where the camera behind the bear can see
@@ -20,21 +21,7 @@ interface Arm {
 const arms = new WeakMap<Object3D, Arm | null>();
 
 const UP = new Vector3(0, 1, 0);
-const v = { s: new Vector3(), e: new Vector3(), h: new Vector3(), t: new Vector3(), f: new Vector3(), l: new Vector3(), a: new Vector3(), b: new Vector3(), p: new Vector3() };
-const q = { d: new Quaternion(), w: new Quaternion(), p: new Quaternion(), i: new Quaternion() };
-
-/** Turn `bone` (in world space) so the direction from it to `from` points at `to` instead, by `k` (0…1). */
-function aim(bone: Object3D, from: Vector3, to: Vector3, k: number) {
-  const o = bone.getWorldPosition(v.p);
-  v.a.subVectors(from, o).normalize();
-  v.b.subVectors(to, o).normalize();
-  q.d.setFromUnitVectors(v.a, v.b);
-  q.d.slerp(q.i.identity(), 1 - k);
-  bone.getWorldQuaternion(q.w);
-  bone.parent!.getWorldQuaternion(q.p);
-  bone.quaternion.copy(q.p.invert().multiply(q.d.multiply(q.w)));
-  bone.updateMatrixWorld(true);
-}
+const v = { s: new Vector3(), h: new Vector3(), e: new Vector3(), t: new Vector3(), f: new Vector3(), l: new Vector3(), a: new Vector3(), b: new Vector3() };
 
 /**
  * Call after the bear's animation has updated this frame. `holding`: a landed fish is in its paw;
@@ -57,24 +44,14 @@ export function applyLipHold(id: string, model: Object3D, yaw: number, holding: 
   model.updateWorldMatrix(true, true); // the bear's group may have moved and turned this frame
   const k = arm.weight * arm.weight * (3 - 2 * arm.weight); // smoothstep
   if (k > 0) {
-    // The arm held out nearly straight to the bear's left, a little forward and down from the shoulder.
+    // The arm held out nearly straight to the bear's left, a little forward and down from the shoulder;
+    // the elbow bends a little down and back.
     const s = arm.upper.getWorldPosition(v.s), e = arm.fore.getWorldPosition(v.e), h = arm.hand.getWorldPosition(v.h);
-    const l1 = s.distanceTo(e), l2 = e.distanceTo(h);
+    const reach = (s.distanceTo(e) + e.distanceTo(h)) * 0.94;
     v.f.set(Math.sin(yaw), 0, Math.cos(yaw)); // forward
     v.l.set(Math.cos(yaw), 0, -Math.sin(yaw)); // the bear's left
-    const target = v.t.set(0, 0, 0).addScaledVector(v.l, 0.8).addScaledVector(v.f, 0.5).addScaledVector(UP, -0.25).normalize()
-      .multiplyScalar((l1 + l2) * 0.94).add(s);
-    // Two-bone reach: the elbow bends a little down and back.
-    const dir = v.a.subVectors(target, s);
-    const d = Math.min(dir.length(), (l1 + l2) * 0.97);
-    dir.normalize();
-    const along = (l1 * l1 - l2 * l2 + d * d) / (2 * d), out = Math.sqrt(Math.max(0, l1 * l1 - along * along));
-    const pole = v.b.set(0, -1, 0).addScaledVector(v.f, -0.4);
-    pole.addScaledVector(dir, -pole.dot(dir)).normalize();
-    const elbow = v.p.copy(s).addScaledVector(dir, along).addScaledVector(pole, out).clone();
-    const reach = s.clone().addScaledVector(dir, d);
-    aim(arm.upper, e, elbow, k);
-    aim(arm.fore, arm.hand.getWorldPosition(v.h), reach, k);
+    const target = v.t.set(0, 0, 0).addScaledVector(v.l, 0.8).addScaledVector(v.f, 0.5).addScaledVector(UP, -0.25).normalize().multiplyScalar(reach).add(s);
+    reachTo(arm.upper, arm.fore, arm.hand, target, v.b.set(0, -1, 0).addScaledVector(v.f, -0.4), k);
   }
   const r = lipHands.get(id) ?? { hand: new Vector3(), yaw: 0, weight: 0 };
   // The grip: a little past the wrist, along the forearm.

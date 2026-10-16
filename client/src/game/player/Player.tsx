@@ -3,8 +3,10 @@ import { CapsuleCollider, RigidBody, type RapierCollider, type RapierRigidBody, 
 import { useEffect, useMemo, useRef } from "react";
 import type { KinematicCharacterController } from "@dimforge/rapier3d-compat";
 import { type Group, Matrix4, Vector3 } from "three";
-import { BEAR, NET_TICK_HZ } from "@den/shared";
-import { CAPSULE, CAPSULE_CENTER, CONTROLLER_OFFSET, CROUCH_SHRINK, JUMP_AIR_TIME, MOVE } from "../config.ts";
+import { BEAR, BIKE, NET_TICK_HZ, bikeBlocked, bikeSpeedStep, bikeTopSpeed, bikeTurnRate, inGarage } from "@den/shared";
+import { CAMERA, CAPSULE, CAPSULE_CENTER, CONTROLLER_OFFSET, CROUCH_SHRINK, JUMP_AIR_TIME, MOVE } from "../config.ts";
+import { applyRide, useRider } from "../bike/rider.ts";
+import { onTrackAsphalt } from "../bike/track.ts";
 import { castTo, sendPose, useFishStore } from "../../net/party.ts";
 import { useRod } from "../fishing/rig.ts";
 import { applyLipHold } from "../fishing/lipHold.ts";
@@ -71,6 +73,7 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
   }, [world]);
 
   const { model, animator } = useBearModel();
+  const rider = useRider(visual);
   const toes = useMemo(() => ["LeftToeBase", "RightToeBase"].map((n) => model.getObjectByName(n)!), [model]);
   useRod("me", model, visual, () => ({ rod: useFishStore.getState().me.rod, action: animator.action, yaw: playerState.yaw }));
   useHeldBall(model, visual, () => {
@@ -81,7 +84,7 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
   // Start facing away from the camera (which begins on the +z side looking toward −z).
   const s = useRef({ vy: 0, speed: 0, yaw: Math.PI, dir: { x: 0, z: -1 }, airTime: 0, actionTime: 0, roarReadyAt: 0, atStairFoot: false, short: false, groundY: 0, ready: false,
     pushX: 0, pushZ: 0, staggerUntil: 0, sendTimer: 0, castAt: null as { x: number; z: number } | null, released: false,
-    chair: null as SeatMove | null });
+    chair: null as SeatMove | null, riding: false, lean: 0, pitch: 0, crashAt: 0 });
 
   useFrame(({ clock }, rawDt) => {
     const controller = controllerRef.current;
@@ -139,7 +142,17 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
     // no walking, jumping or dancing.
     const held = playerState.hold;
     const seated = playerState.seat !== null || st.chair !== null;
-    if (held || seated) dir.x = dir.z = 0;
+    // On the motorcycle the keys ride it instead (below).
+    const riding = playerState.riding;
+    if (riding !== st.riding) {
+      st.riding = riding;
+      st.speed = 0;
+      st.lean = st.pitch = 0;
+      st.vy = 0;
+      cameraState.distance = riding ? 6 : CAMERA.distance; // pulled back to see the bike (scroll still zooms)
+      if (!riding) cameraState.fovKick = 0;
+    }
+    if (held || seated || riding) dir.x = dir.z = 0;
     const moving = dir.x !== 0 || dir.z !== 0;
     const sprint = isHeld("ShiftLeft") || isHeld("ShiftRight");
     const grounded = playerState.grounded;
@@ -151,18 +164,20 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
     // --- actions: dance (B), roar (Y), jump (Space) ---
     let action = animator.action;
     if (consumePress("KeyF")) playerState.flashlight = !playerState.flashlight;
-    if (consumePress("KeyB") && grounded && !held && !seated) {
+    if (riding && animator.action !== "ride") start("ride");
+    if (!riding && animator.action === "ride") start("locomotion");
+    if (consumePress("KeyB") && grounded && !held && !seated && !riding) {
       if (action === "dance") start("locomotion");
       else if (action === "locomotion") start("dance");
     }
     // Crouch (C): toggles; sprinting or jumping stands the bear up, if there's room overhead.
-    if (consumePress("KeyC") && grounded && !held && !seated) {
+    if (consumePress("KeyC") && grounded && !held && !seated && !riding) {
       if (action === "locomotion" || action === "dance") start("crouch");
       else if (action === "crouch" && canStand()) start("locomotion");
     }
     if (action === "crouch" && sprint && moving && canStand()) start("locomotion");
     action = animator.action;
-    if (consumePress("KeyY") && grounded && !held && !seated && now >= st.roarReadyAt && (action === "locomotion" || action === "dance")) {
+    if (consumePress("KeyY") && grounded && !held && !seated && !riding && now >= st.roarReadyAt && (action === "locomotion" || action === "dance")) {
       start("roar");
       st.roarReadyAt = now + MOVE.roarCooldown;
       void playAt("roar", playerState.position.x, playerState.position.y + 1.6, playerState.position.z, 1.8, 8);
@@ -218,7 +233,7 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
     // while walking still roars instead of being cancelled in the same frame).
     if (moving && (action === "dance" || (action === "roar" && st.actionTime >= ROAR_PLANTED_S))) start("locomotion");
     if (action === "roar" && animator.roarFinished) start("locomotion");
-    if (consumePress("Space") && grounded && !held && !seated && animator.action !== "jump" && st.vy <= 0 && (animator.action !== "crouch" || canStand())) {
+    if (consumePress("Space") && grounded && !held && !seated && !riding && animator.action !== "jump" && st.vy <= 0 && (animator.action !== "crouch" || canStand())) {
       st.vy = MOVE.jumpVelocity;
       start("jump");
     }
@@ -242,6 +257,7 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
         cameraState.shake = Math.max(cameraState.shake, 0.3);
       }
     }
+    if (riding) st.pushX = st.pushZ = 0; // a bike isn't shoved about by bears on foot
     const pushDecay = Math.exp(-6 * dt);
     st.pushX *= pushDecay;
     st.pushZ *= pushDecay;
@@ -258,10 +274,53 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
       collider.current.setHalfHeight(CAPSULE.halfHeight - (crouched ? CROUCH_SHRINK / 2 : 0));
       collider.current.setTranslationWrtParent({ x: 0, y: crouched ? -CROUCH_SHRINK / 2 : 0, z: 0 });
     }
-    st.speed = approach(st.speed, targetSpeed, MOVE.acceleration * dt);
-    if (moving && canMove) {
+    if (!riding) st.speed = approach(st.speed, targetSpeed, MOVE.acceleration * dt);
+    if (riding) rideStep(dt);
+    else if (moving && canMove) {
       st.dir = dir;
       st.yaw = turnToward(st.yaw, facingYaw(dir), MOVE.turnSpeed * dt);
+    }
+
+    /** The motorcycle (Andrew, 2026-10-16): W throttle, S brake/back up, A/D steer, Shift tuck. */
+    function rideStep(dt: number) {
+      const here = playerState.position;
+      const top = bikeTopSpeed(here.x, here.z, onTrackAsphalt(here.x, here.z));
+      st.speed = bikeSpeedStep(st.speed, dt, {
+        throttle: isHeld("KeyW") || isHeld("ArrowUp"),
+        brake: isHeld("KeyS") || isHeld("ArrowDown"),
+        tuck: sprint,
+      }, top);
+      const steer = (isHeld("KeyA") || isHeld("ArrowLeft") ? 1 : 0) - (isHeld("KeyD") || isHeld("ArrowRight") ? 1 : 0);
+      // A bike only turns while it's rolling (backing up steers the other way round).
+      const yawRate = steer * bikeTurnRate(st.speed) * Math.sign(st.speed) * Math.min(1, Math.abs(st.speed) / 1.5);
+      st.yaw += yawRate * dt;
+      st.dir = { x: Math.sin(st.yaw), z: Math.cos(st.yaw) };
+      // Lean into the turn (+ = to the right), and tip with the slope under the wheels.
+      const lean = Math.max(-0.75, Math.min(0.75, -Math.atan((yawRate * st.speed) / 9.8)));
+      st.lean += (lean - st.lean) * Math.min(1, dt * 6);
+      const fx = st.dir.x * 1.1, fz = st.dir.z * 1.1;
+      const slope = inGarage(here.x, here.z) ? 0 : Math.atan2(groundY(here.x + fx, here.z + fz) - groundY(here.x - fx, here.z - fz), 2.2);
+      st.pitch += (Math.max(-0.35, Math.min(0.35, -slope)) - st.pitch) * Math.min(1, dt * 8);
+      // Anything just ahead of the front wheel (a tree, a wall, the house, the edge of the map) stops it dead.
+      const ahead = 1.25 + Math.abs(st.speed) * dt, sgn = Math.sign(st.speed) || 1;
+      const hit = world.castRay(
+        new rapier.Ray({ x: here.x, y: here.y + 0.7, z: here.z }, { x: st.dir.x * sgn, y: 0, z: st.dir.z * sgn }),
+        ahead, true, undefined, undefined, undefined, undefined, (c) => c.handle !== collider.current!.handle && !c.isSensor(),
+      );
+      if (hit || bikeBlocked(here.x + st.dir.x * sgn * ahead, here.z + st.dir.z * sgn * ahead)) {
+        if (Math.abs(st.speed) > 8 && now - st.crashAt > 1) {
+          st.crashAt = now;
+          void playAt("bike-crash", here.x, here.y + 0.8, here.z, Math.min(1.5, Math.abs(st.speed) / 15), 6);
+          cameraState.shake = Math.max(cameraState.shake, 0.4);
+        }
+        st.speed = 0;
+      }
+      // Under way, the camera swings round behind the bike (stopped, look around freely); the view widens with speed.
+      if (st.speed > 2) {
+        const behind = Math.atan2(Math.sin(st.yaw + Math.PI - cameraState.yaw), Math.cos(st.yaw + Math.PI - cameraState.yaw));
+        cameraState.yaw += behind * Math.min(1, dt * 2.5 * Math.min(1, st.speed / 8));
+      }
+      cameraState.fovKick = 14 * Math.min(1, Math.abs(st.speed) / BIKE.trackSpeed);
     }
 
     // --- vertical: gravity ---
@@ -355,6 +414,7 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
 
     // --- outputs ---
     const groundSpeed = Math.hypot(moved.x, moved.z) / dt; // slower when pushing into a wall
+    if (riding && Math.abs(st.speed) > groundSpeed + 2) st.speed = Math.sign(st.speed) * (groundSpeed + 2); // scraping along something
     playerState.position.set(p.x + moved.x, p.y + moved.y - CAPSULE_CENTER, p.z + moved.z);
     playerState.speed = groundSpeed;
     playerState.grounded = nowGrounded || (st.airTime < COYOTE && st.vy <= 0);
@@ -369,6 +429,7 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
     }
     animator.update(dt, Math.min(st.speed, groundSpeed));
     applyLipHold("me", model, playerState.yaw, fish.state === "landed", animator.action !== "celebrate" && animator.action !== "cast", dt);
+    if (visual.current) applyRide(rider, model, visual.current, riding && animator.action === "ride", st.speed, st.lean, st.pitch, dt);
     bearSounds(animator, playerState.position.x, playerState.position.y, playerState.position.z);
 
     // --- tell the party where we are, 20 times a second ---

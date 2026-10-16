@@ -131,6 +131,13 @@ Base + 14 extra clips ≈ 47.5 + 112 = **~160 credits**.
 - **Bumping:** bears are solid to each other. When capsules touch, both get pushed apart along the contact (soft shove; stronger if sprinting, with a small stagger). Each client applies the shove to its own bear.
 - **Name tags** above every other bear (fade with distance, hidden behind walls).
 
+### 5.4 The motorcycle (Andrew, 2026-10-16)
+
+- **The bike:** a red sport bike with a black frame and red-striped wheels in the ZX-6R spirit (no logos or lettering), Higgsfield image→3D from concept #4 (`assets/concepts/motorcycle/`), `npm run build:bike` → `bike.glb`, sized ~2.45 m long for the chunky bear.
+- **One per bear:** a bike always waits in the garage, lined up with the south garage door. E next to it ("Ride the motorcycle") gives you your own; E while riding slowly ("Get off") parks it where you are and steps you off beside it, and everyone sees it parked there; E next to your parked bike gets back on. Taking a new one from the garage replaces your old one; leaving the party removes it. No riding with a fishing rod in your paw. The server checks you're next to the bike, and only a riding bear may move at bike speeds.
+- **Riding** (arcade, on the bear's own collision capsule): W throttle, S brake (held when stopped: back up slowly), A/D steer (tight when slow, wide when fast; it only turns while rolling), Shift tuck (+12% top speed). Top speeds: 26 m/s on the driveway and paving, 13 m/s on grass and in the woods, 6 m/s in the garage, 50 m/s on the racetrack. Anything in front of the wheel (trees, walls, the edge of the map) stops it dead with a crunch; it can't go into the house except the garage. Doors still open with E as you ride up.
+- **Looks:** the bear sits in the held sitting pose, raised onto the seat, hunched over the tank with both paws on the grips (`bike/rider.ts`); bike and bear lean into turns and tip with the slope. Under way, the camera swings behind the bike and pulls back to 6 m, and the view widens with speed. Engine sound made in code, its note rising with speed, heard by everyone nearby.
+
 ---
 
 ## 6. Controls
@@ -142,7 +149,8 @@ Base + 14 extra clips ≈ 47.5 + 112 = **~160 credits**.
 | Shift (hold) | Sprint |
 | Space | Jump |
 | C | Crouch / stand up |
-| E | Interact: open/close doors, take/return fishing rod, sit at the Catan or Connect Four table, join a bowling lane |
+| E | Interact: open/close doors, take/return fishing rod, sit at the Catan or Connect Four table, join a bowling lane, get on / off the motorcycle |
+| On the motorcycle | W throttle · S brake / back up · A/D steer · Shift tuck · E get off (when slow) |
 | Y | Roar |
 | B | Dance |
 | F | Flashlight on/off |
@@ -389,7 +397,7 @@ Fish models: one per species via Higgsfield image→3D (9 credits each; the catf
 
 ## 21. Not in v1
 
-Voice or text chat · mobile/touch · controllers · other bear species or skins · swimming · vehicles · public matchmaking · monetization · weather.
+Voice or text chat · mobile/touch · controllers · other bear species or skins · swimming · vehicles other than the motorcycle (§5.4, added 2026-10-16) · public matchmaking · monetization · weather.
 
 ---
 

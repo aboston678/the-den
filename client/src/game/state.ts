@@ -35,6 +35,8 @@ export const playerState = {
   seat: null as import("@den/shared").CatanSeat | null,
   /** True while the bear is in a chair (sitting down, seated, or getting up). */
   seated: false,
+  /** On the motorcycle (set by bike/BikeControls once the server agrees): W/S/A/D ride it. */
+  riding: false,
   /** Bowling: play the bowl now (set by the bowling controls; the player clears it). */
   bowlRequest: false,
   /** Bowling: set by the player when the ball leaves the paw; the bowling controls clear it. */
@@ -62,6 +64,8 @@ export const cameraState = {
   mouse: null as ((dx: number, dy: number) => void) | null,
   /** The mouse pointer is free for clicking on things (the Catan board): no capturing it, and letting it go doesn't pause. */
   freeMouse: false,
+  /** Extra field of view (degrees) for a sense of speed on the motorcycle. */
+  fovKick: 0,
 };
 
 export type { BearAction } from "@den/shared";
@@ -101,6 +105,7 @@ declare global {
       /** Catan (Phase 4): the table as this client sees it, plus test controls (catan/dev.ts). */
       catan?: import("./catan/dev.ts").CatanDev;
       c4?: import("./connect4/dev.ts").C4Dev;
+      bike?: { state: () => { riding: boolean; speed: number; prompt: string | null; me: import("./bike/store.ts").BikeView; others: Record<string, import("./bike/store.ts").BikeView> } };
       /** Other bears as this client sees them. */
       remotes: () => { id: string; name: string; x: number; z: number; action: string; flashlight: boolean; tagVisible: boolean; connected: boolean; fish: { rod: boolean; state: string; species: string } }[];
     };

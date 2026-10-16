@@ -27,6 +27,12 @@ export const Player = schema(
     surges: t.uint16(),
     catchSpecies: t.string().default(""),
     catchWeight: t.float32(),
+    // The motorcycle (2026-10-16): "" none, "riding", or "parked" at bikeX/Y/Z facing bikeYaw.
+    bike: t.string().default(""),
+    bikeX: t.float32(),
+    bikeY: t.float32(),
+    bikeZ: t.float32(),
+    bikeYaw: t.float32(),
   },
   "Player",
 );

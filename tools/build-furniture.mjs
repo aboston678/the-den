@@ -4,7 +4,8 @@
 // to a game-friendly triangle count, and packed into one compressed GLB.
 //
 // Usage: npm run build:furniture  ->  client/public/models/furniture.glb
-//        npm run build:fish       ->  client/public/models/fish.glb (the 5 species, each 1 m long; the game scales by weight)
+//        npm run build:fish       ->  client/public/models/fish.glb (the 6 species, each 1 m long; the game scales by weight)
+//        npm run build:bike       ->  client/public/models/bike.glb (the garage motorcycle, round 2)
 
 import { statSync } from "node:fs";
 import { Document, NodeIO } from "@gltf-transform/core";
@@ -18,7 +19,8 @@ import sharp from "sharp";
 
 const SRC = "assets/models/phase2";
 const FISH = process.argv.includes("--fish");
-const OUT = process.env.OUT ?? (FISH ? "client/public/models/fish.glb" : "client/public/models/furniture.glb");
+const BIKE = process.argv.includes("--bike");
+const OUT = process.env.OUT ?? (FISH ? "client/public/models/fish.glb" : BIKE ? "client/public/models/bike.glb" : "client/public/models/furniture.glb");
 
 /**
  * name -> real-world size (metres, before the house's 1.25× scale) along one measure:
@@ -49,6 +51,9 @@ const FISH_PIECES = {
   "fish-jenna-catfish": { l: 1, yaw: 180, tris: 6000, texture: 1024 },
 };
 
+/** The motorcycle (round 2): a sport bike sized for the chunky 2.1 m bear (a real one is ~2.05 m long), front toward +z. */
+const BIKE_PIECES = { motorcycle: { l: 2.45, yaw: Number(process.env.BIKE_YAW ?? 0), tris: 16000, texture: 1024 } };
+
 await MeshoptEncoder.ready;
 await MeshoptDecoder.ready;
 await MeshoptSimplifier.ready;
@@ -61,7 +66,7 @@ const only = process.argv.slice(2).filter((a) => !a.startsWith("--"));
 
 const out = new Document();
 const report = [];
-for (const [name, spec] of Object.entries(FISH ? FISH_PIECES : PIECES)) {
+for (const [name, spec] of Object.entries(FISH ? FISH_PIECES : BIKE ? BIKE_PIECES : PIECES)) {
   if (only.length && !only.includes(name)) continue;
   const doc = await io.read(`${SRC}/${name}.glb`);
   const scene = doc.getRoot().listScenes()[0];

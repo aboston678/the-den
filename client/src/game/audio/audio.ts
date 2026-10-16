@@ -1,7 +1,8 @@
 import { Audio, AudioListener, Object3D, PositionalAudio } from "three";
 import { settings, useSettings } from "../../ui/settings.ts";
 import {
-  ballReturnBuffer, ballRollBuffer, castWhooshBuffer, diceRollBuffer, fanfareBuffer, garageDoorBuffer, lineSnapBuffer, plopBuffer, reelClickBuffer, splashBuffer, sweepBuffer,
+  ballReturnBuffer, ballRollBuffer, castWhooshBuffer, crashBuffer, diceRollBuffer, engineBuffer, fanfareBuffer, garageDoorBuffer, lineSnapBuffer, plopBuffer, reelClickBuffer,
+  splashBuffer, sweepBuffer,
 } from "./synth.ts";
 import { asset } from "../../asset.ts";
 
@@ -74,6 +75,8 @@ const MADE_IN_CODE: Record<string, (ctx: BaseAudioContext) => AudioBuffer> = {
   "dice-roll": diceRollBuffer,
   "garage-door": garageDoorBuffer,
   fanfare: fanfareBuffer,
+  engine: engineBuffer,
+  "bike-crash": crashBuffer,
 };
 
 /** A sound from client/public/audio/ (built by `npm run build:audio`), or one made in code. */

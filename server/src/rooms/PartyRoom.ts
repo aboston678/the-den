@@ -28,6 +28,7 @@ import { Bowling, type GameResult, LANE_IDS } from "./bowling.ts";
 import { Catan, type CatanResult } from "./catan.ts";
 import { type C4Result, Connect4 } from "./connect4.ts";
 import { type Catch, Fishing } from "./fishing.ts";
+import { bikeMessage } from "./bike.ts";
 import { recordBowlingGame, recordC4Game, recordCatanGame, recordCatch } from "../stats.ts";
 
 const num = (v: unknown) => (typeof v === "number" ? v : Number.NaN);
@@ -78,7 +79,7 @@ export class PartyRoom extends Room<{ state: PartyState }> {
       const now = Date.now();
       const seconds = (now - (this.lastPoseAt.get(client.sessionId) ?? now - 50)) / 1000;
       this.lastPoseAt.set(client.sessionId, now);
-      const pose = sanitizePose(message, poseOf(player), seconds);
+      const pose = sanitizePose(message, poseOf(player), seconds, player.bike === "riding");
       Object.assign(player, pose);
     });
 
@@ -202,6 +203,12 @@ export class PartyRoom extends Room<{ state: PartyState }> {
       const done = this.catan.tick(table, Date.now());
       if (done) void this.announceCatan(done);
     }, 250);
+
+    // The motorcycle (Andrew, 2026-10-16): take the garage one, park it, get back on.
+    this.onMessage(MSG.bike, (client, message) => {
+      const p = playing(client);
+      if (p) bikeMessage(p, message);
+    });
 
     // Connect Four (Andrew, 2026-10-16): like Catan, but two chairs and nothing secret.
     this.c4.setup(this.state.c4);

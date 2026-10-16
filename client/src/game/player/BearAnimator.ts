@@ -131,6 +131,12 @@ export class BearAnimator {
       sit.reset().play();
       sit.time = SIT.from;
       sit.timeScale = SIT.speed;
+    } else if (action === "ride") {
+      // On the motorcycle: straight into the seated pose (the bear's lifted onto the seat; bike/rider.ts).
+      const sit = this.actions.get("SitDown")!;
+      sit.reset().play();
+      sit.time = SIT.to;
+      sit.timeScale = 0;
     } else if (action === "stand") {
       const stand = this.actions.get("StandUp")!;
       stand.reset().play();
@@ -180,7 +186,8 @@ export class BearAnimator {
         sit.time = SIT.to;
         sit.timeScale = 0;
       }
-    } else if (this.current === "stand") target.StandUp = 1;
+    } else if (this.current === "ride") target.SitDown = 1;
+    else if (this.current === "stand") target.StandUp = 1;
     else if (this.current === "crouch") target.CrouchWalk = 1; // stood still, it holds its pose
 
     // Crouched, the sneak plays as fast as the bear is going (frozen mid-step when it stops).

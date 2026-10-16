@@ -8,6 +8,7 @@ import { applyRemoteFrame } from "../game/bowling/remoteFrames.ts";
 import { type LanePhase, type LaneView, resetLanes, useLanes } from "../game/bowling/store.ts";
 import { resetCatan, useCatan } from "../game/catan/store.ts";
 import { resetC4, useC4 } from "../game/connect4/store.ts";
+import { type BikeView, NO_BIKE, dropBike, setBike, useBikes } from "../game/bike/store.ts";
 import { setServerClock } from "../game/sky/clock.ts";
 import { playerState } from "../game/state.ts";
 import { accessToken } from "./auth.ts";
@@ -45,7 +46,15 @@ interface NetPlayer {
   surges: number;
   catchSpecies: string;
   catchWeight: number;
+  bike: string;
+  bikeX: number;
+  bikeY: number;
+  bikeZ: number;
+  bikeYaw: number;
 }
+
+/** A player's motorcycle as the server says. */
+const bikeOf = (p: NetPlayer): BikeView => ({ state: p.bike ?? "", x: p.bikeX, y: p.bikeY, z: p.bikeZ, yaw: p.bikeYaw });
 
 /** A player's fishing as the server says (GAME_SPEC §13). */
 const fishOf = (p: NetPlayer): FishView => ({
@@ -311,6 +320,13 @@ function syncCatan(r: Room) {
   useCatan.setState({ seats, view: t.view ? (JSON.parse(t.view) as CatanView) : null, waitingFor: t.waitingFor, waitUntil: t.waitUntil });
 }
 
+/** The motorcycle (Andrew, 2026-10-16): take the garage bike, get on ours, park it here. */
+export const bikeSend = {
+  take: () => room?.send(MSG.bike, { do: "take" }),
+  mount: () => room?.send(MSG.bike, { do: "mount" }),
+  park: (x: number, y: number, z: number, yaw: number) => room?.send(MSG.bike, { do: "park", x, y, z, yaw }),
+};
+
 /** Connect Four (Andrew, 2026-10-16): the server holds the game; we send moves. */
 export const c4Send = {
   sit: (seat: number) => room?.send(MSG.c4Sit, { seat }),
@@ -414,14 +430,19 @@ function bind(r: Room) {
         });
       };
       snap();
+      setBike(id, bikeOf(p));
       $.onChange(p, () => {
         const wasConnected = bear.connected;
         snap();
         bear.fish = fishOf(p);
+        setBike(id, bikeOf(p));
         if (wasConnected !== p.connected) sync();
       });
     } else {
-      const mine = () => useFishStore.setState({ me: fishOf(p) });
+      const mine = () => {
+        useFishStore.setState({ me: fishOf(p) });
+        setBike("me", bikeOf(p));
+      };
       mine();
       $.onChange(p, mine);
     }
@@ -429,6 +450,7 @@ function bind(r: Room) {
   });
   $.onRemove("players", (_value: unknown, key: unknown) => {
     remotes.delete(key as string);
+    dropBike(key as string);
     sync();
   });
 
@@ -481,6 +503,7 @@ function bind(r: Room) {
     lastCatan = "";
     resetC4();
     lastC4 = "";
+    useBikes.setState({ me: NO_BIKE, others: {} });
   });
 
   usePartyStore.setState({ status: "in-party", sessionId: r.sessionId, error: null });

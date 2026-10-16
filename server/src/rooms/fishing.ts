@@ -68,7 +68,7 @@ export class Fishing {
   rod(id: string, p: Player, take: boolean) {
     if (take) {
       const b = rodBucket();
-      if (Math.hypot(p.x - b.x, p.z - b.z) > BUCKET_REACH + 1) return;
+      if (Math.hypot(p.x - b.x, p.z - b.z) > BUCKET_REACH + 1 || p.bike === "riding") return; // no fishing from the motorcycle
       p.rod = true;
     } else {
       p.rod = false;

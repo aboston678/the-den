@@ -236,3 +236,36 @@ export function fanfareBuffer(ctx: BaseAudioContext) {
   }
   return toBuffer(ctx, data, rate);
 }
+
+/**
+ * A sport bike's engine at idle-ish revs: a buzzy four-cylinder note (40 firing pulses a second with
+ * its harmonics) over a low rumble. Exactly one second, whole cycles only, so it loops cleanly;
+ * the rider's speed speeds up its playback (pitch) for the revs.
+ */
+export function engineBuffer(ctx: BaseAudioContext) {
+  const rate = 22050, data = new Float32Array(rate);
+  const r = rng(41);
+  let lp = 0;
+  for (let i = 0; i < data.length; i++) {
+    const t = i / rate;
+    const phase = (t * 40) % 1;
+    const pulse = Math.exp(-phase * 7) - 0.15; // each cylinder firing: a sharp knock that dies away
+    const buzz = Math.sin(2 * Math.PI * 80 * t) * 0.35 + Math.sin(2 * Math.PI * 120 * t) * 0.2 + Math.sin(2 * Math.PI * 240 * t) * 0.08;
+    lp += (r() - lp) * 0.08;
+    data[i] = pulse * 0.8 + buzz + lp * 0.5 * (0.6 + 0.4 * Math.sin(2 * Math.PI * 4 * t));
+  }
+  return toBuffer(ctx, data, rate);
+}
+
+/** A bike hitting something hard: a crunch and a thud. */
+export function crashBuffer(ctx: BaseAudioContext) {
+  const rate = 22050, data = new Float32Array(Math.round(rate * 0.7));
+  const r = rng(77);
+  let lp = 0;
+  for (let i = 0; i < data.length; i++) {
+    const t = i / rate;
+    lp += (r() - lp) * 0.3;
+    data[i] = lp * Math.exp(-t * 9) * 1.4 + Math.sin(2 * Math.PI * 55 * t) * Math.exp(-t * 12) * 1.2;
+  }
+  return toBuffer(ctx, data, rate);
+}

@@ -7,6 +7,8 @@ import { CatanControls } from "./catan/CatanControls.tsx";
 import { CatanTable } from "./catan/CatanTable.tsx";
 import { Connect4Board } from "./connect4/Connect4Board.tsx";
 import { Connect4Controls } from "./connect4/Connect4Controls.tsx";
+import { BikeControls } from "./bike/BikeControls.tsx";
+import { Bikes } from "./bike/Bikes.tsx";
 import { FishingControls } from "./fishing/FishingControls.tsx";
 import { FishingLines } from "./fishing/FishingLines.tsx";
 import { ThirdPersonCamera } from "./camera/ThirdPersonCamera.tsx";
@@ -45,6 +47,10 @@ export function GameScene() {
         <CatanTable />
         <Connect4Controls />
         <Connect4Board />
+        <BikeControls />
+        <Suspense fallback={null}>
+          <Bikes />
+        </Suspense>
         <Suspense fallback={null}>
           <FishingLines />
         </Suspense>
