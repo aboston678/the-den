@@ -28,6 +28,8 @@ const MAX_DT = 0.1;
 const COYOTE = 0.15;
 /** Only switch to the falling pose after actually dropping this far below the last ground height. */
 const FALL_DROP = 0.4;
+/** Seconds a roar holds the bear still before walking off cancels it. */
+const ROAR_PLANTED_S = 1.2;
 /** Ground probe: a ray from this high above the feet straight down (stays inside the bear). */
 const PROBE_FROM = 1.0;
 const UP = new Vector3(0, 1, 0);
@@ -179,7 +181,9 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
     if (animator.action === "celebrate" && (animator.finished("Celebrate") || moving)) start("locomotion");
     action = animator.action;
 
-    if (moving && (action === "dance" || action === "roar")) start("locomotion"); // moving cancels
+    // Moving cancels a dance, or a roar once it's under way (a roar plants the bear first, so pressing Y
+    // while walking still roars instead of being cancelled in the same frame).
+    if (moving && (action === "dance" || (action === "roar" && st.actionTime >= ROAR_PLANTED_S))) start("locomotion");
     if (action === "roar" && animator.roarFinished) start("locomotion");
     if (consumePress("Space") && grounded && !held && !seated && animator.action !== "jump" && st.vy <= 0) {
       st.vy = MOVE.jumpVelocity;

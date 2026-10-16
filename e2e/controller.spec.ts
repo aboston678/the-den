@@ -77,6 +77,20 @@ test("dance and roar start, and moving cancels them", async ({ page }) => {
   expect((await den(page)).action).toBe("locomotion");
 });
 
+test("Y roars while walking: the bear stops and roars (game-night bug: it was cancelled at once)", async ({ page }) => {
+  await page.keyboard.down("KeyW");
+  await page.waitForTimeout(600);
+  await page.keyboard.press("KeyY");
+  await page.waitForTimeout(300);
+  expect((await den(page)).action).toBe("roar");
+  await page.waitForTimeout(1300); // still holding W: once planted, walking on cancels it
+  await page.keyboard.up("KeyW");
+  expect((await den(page)).action).toBe("locomotion");
+  if ((await page.evaluate(() => window.__den!.audio().state)) === "running") {
+    expect(await page.evaluate(() => window.__den!.audio().recent)).toContain("roar");
+  }
+});
+
 test("camera pulls in when a wall is behind the bear", async ({ page }) => {
   // Inside the test room (back wall at z = −13), 1.5 m from the back wall, with the camera
   // swung round to the −z side so the wall is right behind it.

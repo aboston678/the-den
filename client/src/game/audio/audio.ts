@@ -31,14 +31,24 @@ export function getListener() {
     };
     follow();
     useSettings.subscribe(follow);
-    const resume = () => {
-      if (listener!.context.state === "suspended") void listener!.context.resume();
-    };
+    // Not just "suspended": Safari also parks the sound in "interrupted" (after another tab or app
+    // plays sound), and nothing would ever wake it.
+    const resume = () => void wake();
     window.addEventListener("pointerdown", resume);
     window.addEventListener("keydown", resume);
     resume();
   }
   return listener;
+}
+
+/** Restart the sound if the browser has paused it; true once it's running. */
+async function wake() {
+  const ctx = listener?.context;
+  if (!ctx || ctx.state === "closed") return false;
+  if (ctx.state !== "running") {
+    await Promise.race([ctx.resume().catch(() => {}), new Promise((r) => setTimeout(r, 400))]);
+  }
+  return ctx.state === "running";
 }
 
 /** Sends a sound through the Effects or Ambience volume instead of straight to the speakers. */
@@ -95,7 +105,7 @@ soundRoot.name = "sounds";
  */
 export async function playAt(name: string, x: number, y: number, z: number, volume = 1, range = 6, bus: Bus = "effects") {
   const l = getListener();
-  if (l.context.state !== "running") return;
+  if (l.context.state !== "running" && !(await wake())) return; // a key press counts as a gesture: try waking it
   const buffer = await loadSound(name).catch(() => null);
   if (!buffer) return;
   const sound = new PositionalAudio(l);

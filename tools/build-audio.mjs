@@ -25,7 +25,9 @@ const SOUNDS = {
   "loon-3": ["loon.mp3", 89, 9, "once", -20],
   thrush: ["hermit-thrush.mp3", 0, 7.1, "once", -20],
   flicker: ["flicker.mp3", 0, 4.2, "once", -20],
-  roar: ["grizzly-a.mp3", 0.7, 4.6, "once", -14],
+  // The roar is Andrew's "I'm shaving here" clip (2026-10-15; kept in git as assets/audio/im-shaving-here.mp3,
+  // see docs/ASSETS.md). The old grizzly growl was ["grizzly-a.mp3", 0.7, 4.6, "once", -14].
+  roar: ["../im-shaving-here.mp3", 0, 3.37, "once", -14],
   // The pins crashing (Andrew's pick, 2026-10-13; kept in git as assets/audio/bowling-strike.m4a, see docs/ASSETS.md).
   "pin-strike": ["../bowling-strike.m4a", 0, 2.55, "once", -14],
 };
