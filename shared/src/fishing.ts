@@ -16,14 +16,21 @@ export interface Species {
   /** How hard it pulls: surge strength and how fast it runs. */
   fight: number;
   jumps: boolean;
+  /** Weight curve exponent: min + (max − min) × r^curve. Default 2.2 (big fish rare); 1 = even spread. */
+  curve?: number;
+  /** The fight's line tension uses weight × this (default 1), so a monster doesn't snap the line on the first press. */
+  pullPerLb?: number;
 }
 
+// Every species jumps clear of the water while you reel it in (Andrew, 2026-10-16), so you can see what's on.
+// The Jenna Catfish (Andrew's own monster) is 1 hooked fish in 4, always 200–400 lb.
 export const SPECIES: Species[] = [
-  { id: "sunfish", name: "Pumpkinseed sunfish", chance: 28, minLb: 0.1, maxLb: 1.0, fight: 0.6, jumps: false },
-  { id: "perch", name: "Yellow perch", chance: 24, minLb: 0.1, maxLb: 1.5, fight: 0.6, jumps: false },
-  { id: "crappie", name: "Crappie", chance: 16, minLb: 0.25, maxLb: 2.5, fight: 1.0, jumps: false },
-  { id: "smallmouth", name: "Smallmouth bass", chance: 17, minLb: 0.5, maxLb: 8.0, fight: 1.5, jumps: true },
-  { id: "largemouth", name: "Largemouth bass", chance: 15, minLb: 0.5, maxLb: 8.0, fight: 1.5, jumps: false },
+  { id: "sunfish", name: "Pumpkinseed sunfish", chance: 21, minLb: 0.1, maxLb: 1.0, fight: 0.6, jumps: true },
+  { id: "perch", name: "Yellow perch", chance: 18, minLb: 0.1, maxLb: 1.5, fight: 0.6, jumps: true },
+  { id: "crappie", name: "Crappie", chance: 12, minLb: 0.25, maxLb: 2.5, fight: 1.0, jumps: true },
+  { id: "smallmouth", name: "Smallmouth bass", chance: 12.75, minLb: 0.5, maxLb: 8.0, fight: 1.5, jumps: true },
+  { id: "largemouth", name: "Largemouth bass", chance: 11.25, minLb: 0.5, maxLb: 8.0, fight: 1.5, jumps: true },
+  { id: "jenna_catfish", name: "Jenna Catfish", chance: 25, minLb: 200, maxLb: 400, fight: 3.0, jumps: true, curve: 1, pullPerLb: 0.02 },
 ];
 export const speciesById = (id: string) => SPECIES.find((s) => s.id === id);
 
@@ -51,8 +58,8 @@ export function rollSpecies(r: number): Species {
   return SPECIES[SPECIES.length - 1]!;
 }
 
-/** Weight in pounds: min + (max − min) × r^2.2, so big fish are rare. */
-export const rollWeight = (s: Species, r: number) => s.minLb + (s.maxLb - s.minLb) * Math.pow(r, 2.2);
+/** Weight in pounds: min + (max − min) × r^2.2, so big fish are rare (the species' own curve if it has one). */
+export const rollWeight = (s: Species, r: number) => s.minLb + (s.maxLb - s.minLb) * Math.pow(r, s.curve ?? 2.2);
 
 /** Seconds until a bite, from a random number 0…1. */
 export const rollBiteDelay = (r: number) => BITE_MIN_S + (BITE_MAX_S - BITE_MIN_S) * r;
@@ -96,6 +103,7 @@ export const FIGHT = {
   surgePerLb: 0.02,
   runPerSurge: 0.4, // metres the fish takes on a surge, × fight
   driftPerS: 0.15, // metres the fish slowly pulls out, × fight
+  maxSurgeFight: 1.5, // the surge's tension uses at most this much of the fight
 } as const;
 
 export function startFight(species: Species, weight: number, line: number, r: number): Fight {
@@ -108,14 +116,16 @@ export function startFight(species: Species, weight: number, line: number, r: nu
  */
 export function stepFight(f: Fight, dt: number, presses: number, rand: () => number): "snapped" | "landed" | null {
   const s = speciesById(f.species)!;
+  const pull = f.weight * (s.pullPerLb ?? 1);
   f.time += dt;
-  f.tension += presses * (FIGHT.tensionPerPress + FIGHT.tensionPerLb * f.weight);
+  f.tension += presses * (FIGHT.tensionPerPress + FIGHT.tensionPerLb * pull);
   f.line -= presses * FIGHT.reelPerPress;
   f.tension -= FIGHT.drainPerS * dt;
   f.line += FIGHT.driftPerS * s.fight * dt;
   f.surgeIn -= dt;
   if (f.surgeIn <= 0) {
-    f.tension += (FIGHT.surgeBase + FIGHT.surgePerLb * f.weight) * s.fight;
+    // A surge's yank tops out at a bass's fight; a stronger fish (the catfish) runs further instead.
+    f.tension += (FIGHT.surgeBase + FIGHT.surgePerLb * pull) * Math.min(s.fight, FIGHT.maxSurgeFight);
     f.line += FIGHT.runPerSurge * s.fight;
     f.surgeIn = 1.5 + rand() * 2.5;
     f.surges++;

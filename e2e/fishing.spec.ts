@@ -112,6 +112,53 @@ test("take a rod, cast, hook a fish, reel it in: the whole party sees it", async
   await expect.poll(async () => (await fish(a)).rod).toBe(false);
 });
 
+test("the Jenna Catfish: she leaps clear of the water for everyone, and lands at 312 lb", async ({ browser }) => {
+  test.setTimeout(240_000);
+  const a = await newPlayer(browser);
+  const b = await newPlayer(browser);
+  const code = await hostGame(a, "Angler", { play: false });
+  await joinGame(b, code, "Watcher");
+  await a.getByTestId("play").click();
+  await waitForBear(a);
+  await waitForBear(b);
+  await toTheBucket(a);
+  await toTheBucket(b, -3.5);
+  await a.keyboard.press("KeyE");
+  await expect.poll(async () => (await fish(a)).rod).toBe(true);
+  const toWater = (streamCenter(0) - 6 - (rodBucket().x + 0.6) - 3) / 22;
+  await a.evaluate(() => window.__den!.fish.quickBite(1.5, "jenna_catfish", 312));
+  expect(await a.evaluate((p) => window.__den!.fish.cast(p), toWater)).toBe(true);
+  await expect(a.getByTestId("fish-on")).toBeVisible({ timeout: 10_000 });
+  await a.keyboard.press("KeyR");
+  await expect.poll(async () => (await fish(a)).state).toBe("fight");
+  // The other bear knows what's on the line, and both see her in the air.
+  await expect.poll(() => b.evaluate(() => window.__den!.remotes()[0]?.fish.species)).toBe("jenna_catfish");
+  await expect.poll(() => a.evaluate(() => window.__den!.fish.leaping().includes("me")), { timeout: 8000, intervals: [50] }).toBe(true);
+  await a.waitForTimeout(350);
+  await a.screenshot({ path: "test-results/fishing/7-catfish-leap.png" });
+  await expect.poll(() => b.evaluate(() => window.__den!.fish.leaping().length), { timeout: 10_000, intervals: [50] }).toBeGreaterThan(0);
+  await b.screenshot({ path: "test-results/fishing/7-catfish-leap-other-bear.png" });
+  for (let i = 0; i < 400 && (await fish(a)).state === "fight"; i++) {
+    if ((await fish(a)).tension < 0.55) await a.keyboard.press("KeyR");
+    await a.waitForTimeout(150);
+  }
+  expect((await fish(a)).state).toBe("landed");
+  await expect(a.getByTestId("catch-card")).toContainText("Jenna Catfish");
+  await expect(a.getByTestId("catch-card")).toContainText("312 lb");
+  await expect(b.getByTestId("catch-toast")).toContainText("Angler caught a 312 lb jenna catfish");
+  await a.waitForTimeout(2500);
+  for (const [name, turn] of [["behind", Math.PI + 0.5], ["front", 0.3]] as const) {
+    await a.evaluate((turn) => {
+      const d = window.__den!;
+      d.camera.yaw = d.player.yaw + turn;
+      d.camera.pitch = 0.12;
+      d.camera.distance = 4.2;
+    }, turn);
+    await a.waitForTimeout(500);
+    await a.screenshot({ path: `test-results/fishing/8-catfish-held-${name}.png` });
+  }
+});
+
 test("a bite nobody strikes gets away; a cast onto dry land is refused", async ({ page }) => {
   test.setTimeout(90_000);
   await hostGame(page, "Dozy");

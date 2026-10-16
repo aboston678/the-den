@@ -98,7 +98,7 @@ Run like Phases 2–4 (Andrew, 2026-10-14): Catan leave/vote-to-end fix goes liv
 ## Andrew's requests, round 2 (branch `garage-and-games`, 2026-10-16)
 Plan approved by Andrew 2026-10-16: spawn by the garage, Jenna Catfish + jumping fish, Connect Four in the basement stair landing, a rideable motorcycle (one per bear) and a racetrack joined to the map past the driveway's end with a lap timer. One review before it goes live. Credits: ~19 (bike concepts + bike model + catfish model), batch OK asked before spending.
 - [x] **R2.1 Spawn in front of the garage.** Bears start on the apron in two rows of three facing the garage doors (`shared/src/world/spawn.ts`); joining mid-game lands there too. Tests: `world.test.ts`, `e2e/property.spec.ts` (walks back from the closed doors), tour shot. GAME_SPEC §1/§4/§7 updated.
-- [ ] **R2.2 Jenna Catfish + fish jump while reeling.**
+- [x] **R2.2 Jenna Catfish + fish jump while reeling.** New species in `shared/src/fishing.ts` (25% of hooked fish, 200–400 lb even spread; tension counts 2% of her weight and surges cap at a bass's yank: careful reeling lands her in ~14–28 s, mashing snaps). Others scaled ×0.75. Server shares species + weight from the strike. Every fish leaps across the line on surges and every few seconds (`FishingLines.tsx`); the catfish breaches ~3 m and is held by the lip leaning out, tail on the ground. Model from Andrew's picture (9 credits), `npm run build:fish`. Tests: `fishing.test.ts`, server `fishing.test.ts`, `e2e/fishing.spec.ts` (two bears: the other sees her leap; card "Jenna Catfish 312 lb"). Pictures: `LEAP=1 [SPECIES=…] npx playwright test e2e/tools-leap.spec.ts` → `review/fixes/`. **Saving a catch over 20 lb needs the database script (R2.4).**
 - [ ] **R2.3 Connect Four** in the basement stair landing, wins on the leaderboard.
 - [ ] **R2.4 Database script** (Andrew pastes it in Supabase): fish over 20 lb, Connect Four wins.
 - [ ] **R2.5 Motorcycle** in the garage, one per bear.
@@ -146,6 +146,10 @@ Starting balance: 1,210 (2026-10-11)
 | 2026-10-13 | Bear round 2 3D model from concept #1 (Andrew's pick): texture + PBR + A-pose + rig (2.1 m) + Idle (job ee970570-578e-4fc8-a3d9-06fb91489991; Andrew approved) | `meshy_v7_image_to_3d` | 47.5 | 677 |
 | 2026-10-13 | Bowling alley mural (summer woods, painted), job 00e34ca3-061d-4613-8c9e-3ef2e7ee0690 (price check 0.25) | `gpt_image_2_5` | 0.25 | 676.75 |
 | 2026-10-15 | Crouch walk clip: Cautious_Crouch_Walk_Forward_inplace (616), Andrew's pick "A" (price check 8), job 7d419a5b-e377-45cb-9e0c-ebe7dffeaf4d | `meshy_rigging` | 8 | 668.75 |
+| 2026-10-16 | Balance check before round 2: account shows **497.25**, not 668.75: ~171.5 credits spent outside this project (told Andrew) | | | 497.25 |
+| 2026-10-16 | Motorcycle concepts ×4 (price check 0.25 each; Andrew picked #4); jobs e9a7aca2, 000a0fef, 45226e8e, 76e6d40c (`assets/concepts/motorcycle/`) | `gpt_image_2_5` | 1 | 496.25 |
+| 2026-10-16 | Jenna Catfish image→3D from Andrew's picture (price check 9; batch OK'd by Andrew), job 5700ae09-f801-46f7-8b6c-bd5f36d2dcab | `tripo_h3_1_image_to_3d` | 9 | 487.25 |
+| 2026-10-16 | Motorcycle image→3D from concept #4 (price check 9; same batch), job 1d22d7d0-e006-4f20-8d75-7225546967b5 | `tripo_h3_1_image_to_3d` | 9 | 478.25 |
 
 ## Decision log
 | Date | Decision | Why |

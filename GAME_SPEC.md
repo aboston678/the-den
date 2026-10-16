@@ -247,13 +247,16 @@ The house dogs (Merlin, Raptor, Luna) are out of the game. No free realistic ani
 
 | Species | Chance | Weight (lb) | Fight |
 |---|---|---|---|
-| Sunfish (pumpkinseed) | 28% | 0.1 – 1.0 | weak |
-| Yellow perch | 24% | 0.1 – 1.5 | weak |
-| Crappie | 16% | 0.25 – 2.5 | medium |
-| Smallmouth bass | 17% | 0.5 – 8.0 | strong, jumps |
-| Largemouth bass | 15% | 0.5 – 8.0 | strong |
+| Sunfish (pumpkinseed) | 21% | 0.1 – 1.0 | weak |
+| Yellow perch | 18% | 0.1 – 1.5 | weak |
+| Crappie | 12% | 0.25 – 2.5 | medium |
+| Smallmouth bass | 12.75% | 0.5 – 8.0 | strong |
+| Largemouth bass | 11.25% | 0.5 – 8.0 | strong |
+| **Jenna Catfish** (Andrew, 2026-10-16) | 25% (1 hooked fish in 4, random) | 200 – 400, evenly spread | a long fight (~14 s at 200 lb, ~28 s at 400 lb for a careful reeler); mashing snaps her |
 
-Weight = min + (max − min) × r^2.2 (r random 0–1), so big fish are rare. Fish models: one per species via Higgsfield image→3D (9 credits each), static mesh with a code-driven wiggle.
+Weight = min + (max − min) × r^2.2 (r random 0–1), so big fish are rare (the catfish is an even spread). The catfish's line tension counts her as 2% of her weight, and a surge's yank tops out at a bass's, so she runs further instead of snapping the line on the first press.
+**Jumps (2026-10-16):** every hooked fish leaps clear of the water while you reel it in (on every surge, plus every few seconds), across the line at the lure, so everyone can see what's on; the server shares the species and weight from the strike. Small fish hop ~1–1.6 m (drawn a little bigger in the air), the catfish breaches ~2.4–3.2 m with a big splash. She is held up by the lip like the rest, leaning out with her tail on the ground.
+Fish models: one per species via Higgsfield image→3D (9 credits each; the catfish from Andrew's own picture), static mesh with a code-driven wiggle.
 
 ---
 

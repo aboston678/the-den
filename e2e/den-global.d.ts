@@ -37,6 +37,8 @@ interface Window {
       me: () => { rod: boolean; state: string; lureX: number; lureZ: number; tension: number; line: number; species: string; weight: number };
       catches: () => { id: string; name: string; species: string; weight: number; best: boolean; mine: boolean }[];
       quickBite: (seconds?: number, species?: string, weight?: number) => void;
+      /** Bears whose hooked fish is in the air right now ("me" for ours). */
+      leaping: () => string[];
     };
     /** Bowling (Phase 3): the lanes as this browser sees them; setLanes shows made-up bowlers (dev only). */
     bowl?: {

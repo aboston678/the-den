@@ -7,6 +7,7 @@ import { playAt } from "../audio/audio.ts";
 import { indoor } from "../house/lights.ts";
 import { consumePress } from "../input/keyboard.ts";
 import { cameraState, playerState } from "../state.ts";
+import { leaping } from "./FishingLines.tsx";
 
 // Our own fishing controls (GAME_SPEC §6, §13): E at the rod bucket takes or returns a rod; hold
 // the left mouse button to charge a cast and let go to throw toward where the camera looks; R
@@ -79,6 +80,7 @@ export function FishingControls() {
         me: () => useFishStore.getState().me,
         catches: () => useFishStore.getState().catches,
         quickBite: (seconds = 1, species?: string, weight?: number) => devFish(seconds, species, weight),
+        leaping: () => [...leaping],
       };
     }
     return () => {

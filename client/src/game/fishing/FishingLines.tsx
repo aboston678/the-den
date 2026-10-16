@@ -15,11 +15,13 @@ import { asset } from "../../asset.ts";
 
 // What everyone sees of everyone's fishing (GAME_SPEC §13): the line from the rod tip to a
 // red-and-white bobber, the cast flying out, the bobber plunging on a bite and thrashing in a
-// fight, splashes, and the fish held up when it's landed. Driven by the server's fishing state.
+// fight, the fish leaping clear of the water while you reel it in (so you can see what's on),
+// splashes, and the fish held up when it's landed. Driven by the server's fishing state.
 
 const FISH_URL = asset("/models/fish.glb");
 const FISH_NODES: Record<string, string> = {
   sunfish: "fish-sunfish", perch: "fish-yellow-perch", crappie: "fish-crappie", smallmouth: "fish-smallmouth-bass", largemouth: "fish-largemouth-bass",
+  jenna_catfish: "fish-jenna-catfish",
 };
 const SEGMENTS = 24;
 const FLIGHT_S = 0.7;
@@ -29,15 +31,24 @@ const WATER = STREAM.waterY + 0.02;
  * Each fish model's lower lip (model units: 1 m long, nose toward +z, belly at y = 0, see
  * tools/build-furniture.mjs), measured from the models' shapes.
  */
-const LIP_Y: Record<string, number> = { sunfish: 0.31, perch: 0.21, crappie: 0.29, smallmouth: 0.21, largemouth: 0.22 };
+const LIP_Y: Record<string, number> = { sunfish: 0.31, perch: 0.21, crappie: 0.29, smallmouth: 0.21, largemouth: 0.22, jenna_catfish: 0.17 };
 const LIP_Z = 0.47;
 /** The catch is drawn a bit bigger than life so it reads next to a 2.1 m bear. */
 const HELD_SCALE = 1.25;
 const UP = new Vector3(0, 1, 0);
-const tmp = { f: new Vector3(), x: new Vector3(), y: new Vector3(), m: new Matrix4(), sway: new Quaternion(), lip: new Vector3() };
+const tmp = { f: new Vector3(), x: new Vector3(), y: new Vector3(), nose: new Vector3(), m: new Matrix4(), sway: new Quaternion(), lip: new Vector3() };
 
-/** A fish's length (metres) from its weight in pounds. */
-export const fishLength = (lb: number) => Math.min(0.62, Math.max(0.14, 0.28 * Math.cbrt(lb)));
+/** A fish's length (metres) from its weight in pounds. The Jenna Catfish is a monster: 1.5–2.1 m. */
+export const fishLength = (lb: number, species = "") =>
+  species === "jenna_catfish" ? 1.5 + 0.6 * Math.min(1, Math.max(0, (lb - 200) / 200)) : Math.min(0.62, Math.max(0.14, 0.28 * Math.cbrt(lb)));
+/** Which bears' fish are in the air right now ("me" for ours), for tests. */
+export const leaping = new Set<string>();
+/** How high a hooked fish leaps (metres above the water). */
+const jumpHeight = (lb: number, species: string) => (species === "jenna_catfish" ? 2.4 + 0.004 * (lb - 200) : 0.8 + 0.4 * Math.cbrt(lb));
+/** Small fish are drawn bigger still in the air, so a leap reads from the bank. */
+const LEAP_SCALE = 1.5;
+/** Paw height above the bear's feet when holding a fish up by the lip (a huge fish rests its tail on the ground). */
+const PAW_HEIGHT = 1.45;
 
 interface View {
   line: Line;
@@ -53,6 +64,14 @@ interface View {
   /** A released fish dropping back into the water. */
   dropVel: Vector3;
   dropT: number;
+  /** A hooked fish's leap: 0…1 through the jump (1 = in the water), where it comes up, which way it flies. */
+  jumpT: number;
+  jumpFrom: Vector3;
+  jumpDir: Vector3;
+  jumpH: number;
+  jumpS: number;
+  /** Clock time of the next leap of its own (on top of the one on every surge). */
+  nextJump: number;
 }
 
 export function FishingLines() {
@@ -92,7 +111,10 @@ export function FishingLines() {
       fish.add(m);
     }
     root.add(line, bobber, ring, fish);
-    v = { line, bobber, ring, fish, prev: "", prevSurges: 0, flightFrom: new Vector3(), flightT: 1, ringT: 1, pos: new Vector3(), dropVel: new Vector3(), dropT: 1 };
+    v = {
+      line, bobber, ring, fish, prev: "", prevSurges: 0, flightFrom: new Vector3(), flightT: 1, ringT: 1, pos: new Vector3(), dropVel: new Vector3(), dropT: 1,
+      jumpT: 1, jumpFrom: new Vector3(), jumpDir: new Vector3(), jumpH: 1, jumpS: 1, nextJump: 0,
+    };
     views.set(id, v);
     return v;
   };
@@ -135,10 +157,19 @@ export function FishingLines() {
           v.dropT = 0;
         }
         if (f.state === "snapped" && rig) void playAt("line-snap", rig.tip.x, rig.tip.y, rig.tip.z, 0.8, 4);
+        if (f.state === "fight") v.nextJump = t + 0.8; // it shows itself straight after the strike
         v.prev = f.state;
       }
-      if (f.state === "fight" && f.surges !== v.prevSurges) splash(v, v.pos, "splash", 0.5);
+      // Every surge is a leap (synced, so everyone sees it), plus one of its own every few seconds.
+      if (f.state === "fight" && f.species && v.jumpT >= 1 && (f.surges !== v.prevSurges || t >= v.nextJump)) {
+        startJump(v, target, rig?.yaw ?? 0, f);
+        v.nextJump = t + 3 + Math.random() * 3;
+      } else if (f.state === "fight" && f.surges !== v.prevSurges) splash(v, v.pos, "splash", 0.5);
       v.prevSurges = f.surges;
+      if (f.state !== "fight") v.jumpT = 1;
+      const jumping = v.jumpT < 1;
+      if (jumping) leaping.add(id);
+      else leaping.delete(id);
 
       // The bobber: flying out, floating, plunging on a bite, dragged under in a fight.
       v.bobber.visible = out && !!rig;
@@ -149,6 +180,24 @@ export function FishingLines() {
           v.pos.lerpVectors(v.flightFrom, target, k);
           v.pos.y += Math.sin(Math.PI * k) * 3;
           if (k === 1) splash(v, target, "plop", 0.6);
+        } else if (jumping) {
+          // The line follows the fish's mouth through the air.
+          v.jumpT = Math.min(1, v.jumpT + dt / v.jumpS);
+          const k = v.jumpT, big = f.species === "jenna_catfish";
+          const len = fishLength(f.weight, f.species) * (big ? 1 : HELD_SCALE * LEAP_SCALE);
+          const y = WATER - len * 0.6 + (v.jumpH + len * 1.2) * 4 * k * (1 - k);
+          const vy = (v.jumpH + len * 1.2) * 4 * (1 - 2 * k);
+          const across = (big ? 2.2 : 1) * (k - 0.5);
+          v.fish.position.set(v.jumpFrom.x + v.jumpDir.x * across, y, v.jumpFrom.z + v.jumpDir.z * across);
+          tmp.f.set(v.jumpDir.x * (big ? 2.2 : 1), vy * v.jumpS * 0.25, v.jumpDir.z * (big ? 2.2 : 1)).normalize();
+          v.fish.lookAt(tmp.f.add(v.fish.position));
+          v.fish.rotateZ(Math.sin(t * 22) * 0.35); // thrashing
+          v.fish.rotateY(Math.sin(t * 15) * 0.2);
+          for (const c of v.fish.children) c.visible = c.name === f.species;
+          v.fish.scale.setScalar(len);
+          tmp.lip.set(0, 0.5 * (LIP_Y[f.species] ?? 0.22), LIP_Z).multiplyScalar(len).applyQuaternion(v.fish.quaternion);
+          v.pos.copy(v.fish.position).add(tmp.lip);
+          if (k >= 1) splash(v, v.fish.position, "splash", big ? 1 : 0.7);
         } else {
           const bob = f.state === "bite" ? -0.1 + Math.sin(t * 25) * 0.04 : f.state === "fight" ? -0.06 + Math.sin(t * 17) * 0.05 : Math.sin(t * 2.2) * 0.012;
           v.pos.set(target.x + (f.state === "fight" ? Math.sin(t * 7) * 0.15 : 0), WATER + bob, target.z + (f.state === "fight" ? Math.cos(t * 5) * 0.15 : 0));
@@ -173,9 +222,10 @@ export function FishingLines() {
       // The catch: held up by the lip in the left paw (lipHold.ts) for as long as the angler likes, then
       // dropped back in.
       const lip = lipHands.get(id);
-      v.fish.visible = (f.state === "landed" && !!(lip ?? rig)) || (f.state === "released" && v.dropT < 1);
-      if (v.fish.visible) {
-        const len = fishLength(f.weight) * HELD_SCALE;
+      v.fish.visible = (f.state === "landed" && !!(lip ?? rig)) || (f.state === "released" && v.dropT < 1) || (jumping && v.bobber.visible);
+      if (v.fish.visible && !jumping) {
+        const big = f.species === "jenna_catfish";
+        const len = fishLength(f.weight, f.species) * (big ? 1 : HELD_SCALE);
         for (const c of v.fish.children) c.visible = c.name === f.species;
         v.fish.scale.setScalar(len);
         if (f.state === "released") {
@@ -195,10 +245,14 @@ export function FishingLines() {
           // Nose up, its side to the camera behind the bear, swinging a little from the paw.
           tmp.f.set(Math.sin(lip.yaw), 0, Math.cos(lip.yaw));
           tmp.x.copy(tmp.f).negate(); // the fish's flank faces back
-          tmp.y.crossVectors(UP, tmp.x);
-          tmp.m.makeBasis(tmp.x, tmp.y, UP);
+          // Nose up; a fish longer than the bear can lift leans out to the side with its tail on the ground.
+          const lean = Math.asin(Math.min(1, PAW_HEIGHT / len));
+          tmp.y.set(Math.cos(lip.yaw), 0, -Math.sin(lip.yaw)); // the bear's left
+          tmp.nose.copy(UP).multiplyScalar(Math.sin(lean)).addScaledVector(tmp.y, -Math.cos(lean));
+          tmp.y.crossVectors(tmp.nose, tmp.x);
+          tmp.m.makeBasis(tmp.x, tmp.y, tmp.nose);
           v.fish.quaternion.setFromRotationMatrix(tmp.m);
-          tmp.sway.setFromAxisAngle(tmp.f, Math.sin(t * 4.5) * 0.12 + Math.sin(t * 13) * 0.04);
+          tmp.sway.setFromAxisAngle(tmp.f, (Math.sin(t * 4.5) * 0.12 + Math.sin(t * 13) * 0.04) * (big ? 0.3 : 1));
           v.fish.quaternion.premultiply(tmp.sway);
           tmp.lip.set(0, LIP_Y[f.species] ?? 0.22, LIP_Z).multiplyScalar(len).applyQuaternion(v.fish.quaternion);
           v.fish.position.copy(lip.hand).addScaledVector(UP, -0.07).sub(tmp.lip);
@@ -220,6 +274,19 @@ export function FishingLines() {
   });
 
   return <primitive object={root} />;
+}
+
+/** A hooked fish breaks the surface at the lure and arcs across the line, then dives back in. */
+function startJump(v: View, at: Vector3, bearYaw: number, f: FishView) {
+  const big = f.species === "jenna_catfish";
+  v.jumpT = 0;
+  v.jumpFrom.copy(at);
+  // Across the line (left or right), so the whole fish shows side-on to the angler.
+  const side = Math.random() < 0.5 ? 1 : -1;
+  v.jumpDir.set(Math.cos(bearYaw) * side, 0, -Math.sin(bearYaw) * side);
+  v.jumpH = jumpHeight(f.weight, f.species);
+  v.jumpS = 2 * Math.sqrt((2 * v.jumpH) / 9.8) * (big ? 1.5 : 1.4); // a touch of slow motion
+  splash(v, at, "splash", big ? 1 : 0.6);
 }
 
 function splash(v: View, at: Vector3, sound: "plop" | "splash", volume: number) {

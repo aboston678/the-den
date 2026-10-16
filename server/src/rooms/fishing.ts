@@ -112,6 +112,9 @@ export class Fishing {
       a.forced = undefined;
       a.fight = startFight(species, weight, Math.max(4, Math.hypot(p.lureX - p.x, p.lureZ - p.z)), this.rand());
       a.presses = 0;
+      // Everyone can see what's on the line (it jumps while it fights); the catch card waits for the landing.
+      p.catchSpecies = species.id;
+      p.catchWeight = weight;
       p.fishing = "fight";
     } else if (p.fishing === "fight") a.presses++;
   }

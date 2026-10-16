@@ -42,8 +42,12 @@ const PIECES = {
   boat: { l: 6.9, yaw: 0, tris: 25000, texture: 1024 },
 };
 
-/** The fish (milestone 2.4): 1 m long, nose toward +x, small textures. */
-const FISH_PIECES = Object.fromEntries(["sunfish", "yellow-perch", "crappie", "smallmouth-bass", "largemouth-bass"].map((n) => [`fish-${n}`, { l: 1, yaw: 0, tris: 3000, texture: 512 }]));
+/** The fish (milestone 2.4): 1 m long, nose toward +z, small textures. */
+const FISH_PIECES = {
+  ...Object.fromEntries(["sunfish", "yellow-perch", "crappie", "smallmouth-bass", "largemouth-bass"].map((n) => [`fish-${n}`, { l: 1, yaw: 0, tris: 3000, texture: 512 }])),
+  // Andrew's Jenna Catfish (2026-10-16): her picture faces the other way, and the face gets a sharper texture.
+  "fish-jenna-catfish": { l: 1, yaw: 180, tris: 6000, texture: 1024 },
+};
 
 await MeshoptEncoder.ready;
 await MeshoptDecoder.ready;

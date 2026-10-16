@@ -51,6 +51,9 @@ describe("fishing on the server", () => {
     expect(p.fishing).toBe("bite");
     f.reel("a", p, 1200); // strike
     expect(p.fishing).toBe("fight");
+    // Everyone can see what's on the line straight away (it jumps while it fights).
+    expect(p.catchSpecies).toBe("perch");
+    expect(p.catchWeight).toBeCloseTo(0.8);
     let t = 1200, landed = null;
     while (!landed && t < 60_000) {
       t += 50;

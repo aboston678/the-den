@@ -47,6 +47,21 @@ describe("fishing", () => {
     expect(rollWeight(bass, 0.5)).toBeLessThan(2.2); // median well under the middle of the range
   });
 
+  it("the Jenna Catfish is 1 hooked fish in 4 and always weighs 200 to 400 lb", () => {
+    const cat = speciesById("jenna_catfish")!;
+    expect(cat.chance).toBe(25);
+    for (let i = 0; i <= 100; i++) {
+      const w = rollWeight(cat, i / 100);
+      expect(w).toBeGreaterThanOrEqual(200);
+      expect(w).toBeLessThanOrEqual(400);
+    }
+    expect(rollWeight(cat, 0.5)).toBeCloseTo(300); // an even spread, not mostly small ones
+  });
+
+  it("every species jumps while you reel it in", () => {
+    for (const s of SPECIES) expect(s.jumps).toBe(true);
+  });
+
   it("bites come 10 to 45 seconds after the cast", () => {
     expect(rollBiteDelay(0)).toBe(BITE_MIN_S);
     expect(rollBiteDelay(1)).toBe(BITE_MAX_S);
@@ -77,6 +92,27 @@ describe("fishing", () => {
 
   it("mashing R flat out snaps a big bass's line", () => {
     for (let seed = 1; seed <= 5; seed++) expect(play(startFight(speciesById("smallmouth")!, 7, 20, 0.5), () => 12, seed).result).toBe("snapped");
+  });
+
+  it("a careful player lands any Jenna Catfish, a long fight that grows with her weight", () => {
+    const cat = speciesById("jenna_catfish")!;
+    const avg = (w: number) => {
+      let total = 0;
+      for (let seed = 1; seed <= 10; seed++) {
+        const r = play(startFight(cat, w, 20, 0.5), careful, seed);
+        expect(r.result).toBe("landed");
+        total += r.time;
+      }
+      return total / 10;
+    };
+    const small = avg(200), big = avg(400);
+    expect(small).toBeGreaterThan(11);
+    expect(big).toBeGreaterThan(small + 8);
+    expect(big).toBeLessThan(40);
+  });
+
+  it("mashing R snaps a Jenna Catfish's line", () => {
+    for (let seed = 1; seed <= 5; seed++) expect(play(startFight(speciesById("jenna_catfish")!, 250, 20, 0.5), () => 12, seed).result).toBe("snapped");
   });
 
   it("a small sunfish comes in quickly", () => {

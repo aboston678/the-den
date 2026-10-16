@@ -20,6 +20,8 @@
     { "name": "fish-yellow-perch", "job": "374d3e9d-0885-47bc-9cd3-fee6521113be", "source": "dfdd7d6b-7a82-418e-abfd-a1be13375e64", "faces": 8000 },
     { "name": "fish-crappie", "job": "b474bd9a-0bef-4f33-987d-2ec8d8ef4260", "source": "a85e807d-ae80-468b-998d-bcd33ccd57bf", "faces": 8000 },
     { "name": "fish-smallmouth-bass", "job": "f6374d0f-f838-40a8-b3a1-ee0dce3d22be", "source": "ef823cd4-0ca7-467d-8fa6-45c90ac36472", "faces": 8000 },
-    { "name": "fish-largemouth-bass", "job": "c6de643d-d7f8-42da-b928-854d3fba9e9d", "source": "bd526e3b-eae7-4c6b-9f6c-7eeb03bc0737", "faces": 8000 }
+    { "name": "fish-largemouth-bass", "job": "c6de643d-d7f8-42da-b928-854d3fba9e9d", "source": "bd526e3b-eae7-4c6b-9f6c-7eeb03bc0737", "faces": 8000 },
+    { "name": "fish-jenna-catfish", "job": "5700ae09-f801-46f7-8b6c-bd5f36d2dcab", "source": "Andrew's own picture (assets/concepts/fish/6-jenna-catfish.png, media 3a1daa44-7c6b-4cc4-ae43-daeb3912654a), 2026-10-16", "faces": 12000 },
+    { "name": "motorcycle", "job": "1d22d7d0-e006-4f20-8d75-7225546967b5", "source": "76e6d40c-a8c3-4789-b42f-5082b519890d (assets/concepts/motorcycle/bike-4.png, Andrew's pick), 2026-10-16", "faces": 30000 }
   ]
 }
