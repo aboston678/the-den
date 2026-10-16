@@ -177,7 +177,11 @@ function doorOpenings(p: WallPiece): Opening[] {
     if (Math.abs(c - p.c) > 0.02 || u < p.u0 || u > p.u1) continue;
     const y0 = Math.max(floorOf(p.level, d.a), floorOf(p.level, d.b === "outside" || d.b === "deck" || d.b === "porch" ? null : d.b));
     const h = d.type === "garage" ? GARAGE_DOOR_HEIGHT : d.type === "opening" ? 2.1 : DOOR_HEIGHT;
-    out.push({ u0: u - d.width / 2, u1: u + d.width / 2, y0, y1: y0 + h, kind: "door", door: d });
+    // Never taller than the wall it's cut into (basement walls under the sunken great room are low):
+    // an opening reaching past the top would turn the wall's outline inside out.
+    let minTop = Infinity;
+    for (let s = u - d.width / 2; s <= u + d.width / 2 + 1e-6; s += 0.05) minTop = Math.min(minTop, p.top(s));
+    out.push({ u0: u - d.width / 2, u1: u + d.width / 2, y0, y1: Math.min(y0 + h, minTop - 0.1), kind: "door", door: d });
   }
   return out;
 }
@@ -221,6 +225,36 @@ function windowOpenings(p: WallPiece): Opening[] {
 
 // --- geometry ---
 
+/**
+ * Points along a wall's top edge, left to right. Straight stretches get their two ends, roof slopes
+ * enough points to follow them, and a sudden change in height (the basement ceiling dropping under the
+ * sunken great room) a vertical step instead of a slant.
+ */
+function topEdge(p: WallPiece): [number, number][] {
+  const pts: [number, number][] = [[p.u0, p.top(p.u0)]];
+  const span = (a: number, b: number, ya: number, yb: number) => {
+    const m = (a + b) / 2, ym = p.top(m);
+    if (b - a < 0.004 || (Math.abs(ym - (ya + yb) / 2) < 0.005 && b - a <= 0.2)) {
+      pts.push([b, yb]);
+      return;
+    }
+    span(a, m, ya, ym);
+    span(m, b, ym, yb);
+  };
+  const steps = Math.max(1, Math.ceil((p.u1 - p.u0) / 0.2));
+  for (let i = 0; i < steps; i++) {
+    const a = p.u0 + ((p.u1 - p.u0) * i) / steps, b = p.u0 + ((p.u1 - p.u0) * (i + 1)) / steps;
+    span(a, b, p.top(a), p.top(b));
+  }
+  // Drop points in the middle of straight runs.
+  return pts.filter((q, i) => {
+    const prev = pts[i - 1], next = pts[i + 1];
+    if (!prev || !next) return true;
+    const t = (q[0] - prev[0]) / (next[0] - prev[0] || 1);
+    return Math.abs(prev[1] + (next[1] - prev[1]) * t - q[1]) > 1e-4;
+  });
+}
+
 /** The wall's face outline: bottom edge with notches for doors, then the top edge (which may follow the roof). */
 function outline(p: WallPiece): Shape {
   const s = new Shape();
@@ -233,11 +267,7 @@ function outline(p: WallPiece): Shape {
     s.lineTo(Math.min(p.u1, n.u1), p.bottom);
   }
   s.lineTo(p.u1, p.bottom);
-  const steps = Math.max(1, Math.ceil((p.u1 - p.u0) / 0.2));
-  for (let i = steps; i >= 0; i--) {
-    const u = p.u0 + ((p.u1 - p.u0) * i) / steps;
-    s.lineTo(u, p.top(u));
-  }
+  for (const [u, y] of topEdge(p).reverse()) s.lineTo(u, y);
   for (const o of p.openings) {
     if (o.kind === "door" && o.y0 <= p.bottom + 0.01) continue;
     const h = new Path();
