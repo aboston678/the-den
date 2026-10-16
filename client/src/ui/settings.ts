@@ -17,10 +17,12 @@ export interface Settings {
   showFps: boolean;
   /** Cartoon (the game's look since 2026-10-13) or the old realistic one (game/artStyle.ts); changing it reloads the page. */
   artStyle: "realistic" | "cartoon";
+  /** Go full screen when you press Play or Resume (ui/fullscreen.ts). */
+  fullscreen: boolean;
 }
 
 const KEY = "den.settings";
-export const DEFAULT_SETTINGS: Settings = { music: 0.8, effects: 1, ambience: 0.9, sensitivity: 1, invertY: false, graphics: "auto", showFps: false, artStyle: "cartoon" };
+export const DEFAULT_SETTINGS: Settings = { music: 0.8, effects: 1, ambience: 0.9, sensitivity: 1, invertY: false, graphics: "auto", showFps: false, artStyle: "cartoon", fullscreen: false };
 
 function load(): Settings {
   try {

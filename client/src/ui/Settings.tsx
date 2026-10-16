@@ -1,5 +1,6 @@
 import { useQuality } from "../game/quality.ts";
 import { type GraphicsPreset, type Settings, updateSettings, useSettings } from "./settings.ts";
+import { enterFullscreen, exitFullscreen } from "./fullscreen.ts";
 
 // The settings panel (GAME_SPEC §11.4), from the home screen or the pause menu.
 
@@ -61,6 +62,14 @@ export function SettingsPanel({ onClose }: { onClose: () => void }) {
         <label className="setting check">
           <span>Show frame rate</span>
           <input type="checkbox" checked={s.showFps} data-testid="setting-fps" onChange={(e) => updateSettings({ showFps: e.target.checked })} />
+        </label>
+        <label className="setting check">
+          <span>Play in full screen</span>
+          <input type="checkbox" checked={s.fullscreen} data-testid="setting-fullscreen" onChange={(e) => {
+            updateSettings({ fullscreen: e.target.checked });
+            if (e.target.checked) enterFullscreen();
+            else exitFullscreen();
+          }} />
         </label>
         <button className="primary" data-testid="settings-done" onClick={onClose}>Done</button>
       </div>

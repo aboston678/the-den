@@ -132,3 +132,27 @@ test("Show frame rate puts the frame rate and graphics level in the party badge"
   await expect.poll(async () => Number((await page.getByTestId("fps").textContent())!.split(" ")[0])).toBeGreaterThan(40);
   await page.screenshot({ path: "test-results/menus/fps.png", clip: { x: 0, y: 0, width: 520, height: 60 } });
 });
+
+// Game-night fixes: play without the browser's address bar and tabs.
+test("full screen from the pause menu, and the Play in full screen setting is remembered", async ({ page }) => {
+  test.setTimeout(90_000);
+  failOnErrors(page);
+  await hostGame(page, "Wide");
+  const full = () => page.evaluate(() => !!document.fullscreenElement);
+  await page.keyboard.press("Escape");
+  await page.getByTestId("pause-fullscreen").click();
+  await expect.poll(full).toBe(true);
+  await expect(page.getByTestId("pause-fullscreen")).toHaveText("Leave full screen");
+  await page.getByTestId("pause-fullscreen").click();
+  await expect.poll(full).toBe(false);
+
+  await page.getByTestId("pause-settings").click();
+  await page.getByTestId("setting-fullscreen").check();
+  await page.getByTestId("settings-done").click();
+  await expect.poll(full).toBe(true);
+  await page.evaluate(() => document.exitFullscreen());
+  await expect.poll(full).toBe(false);
+  await page.getByTestId("resume").click(); // with the setting on, Resume goes back to full screen
+  await expect.poll(full).toBe(true);
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem("den.settings")!).fullscreen)).toBe(true);
+});

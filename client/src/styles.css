@@ -204,6 +204,8 @@ button:disabled {
 .home-settings {
   margin-top: auto;
   align-self: flex-start;
+  display: flex;
+  gap: 8px;
 }
 .home-tag {
   position: absolute;

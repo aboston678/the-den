@@ -3,6 +3,7 @@ import { useState } from "react";
 import { chooseUsername, signInWithGoogle, signOut, useAuth } from "../../net/auth.ts";
 import { createParty, joinParty, leaveParty, savedNickname, startGame, usePartyStore } from "../../net/party.ts";
 import { SettingsPanel } from "../Settings.tsx";
+import { fullscreenIfWanted, toggleFullscreen, useFullscreen } from "../fullscreen.ts";
 import { HomeStage, type StageBear } from "./HomeStage.tsx";
 import { FriendsPanel, usePendingRequests } from "./Friends.tsx";
 import { LeaderboardPanel } from "./Leaderboard.tsx";
@@ -18,6 +19,7 @@ export function Home() {
   const [joinCode, setJoinCode] = useState("");
   const [copied, setCopied] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const full = useFullscreen();
   const [social, setSocial] = useState<"leaderboard" | "friends" | null>(null);
   const busy = status === "connecting";
   const inParty = status === "in-party" || status === "reconnecting";
@@ -120,7 +122,10 @@ export function Home() {
               ))}
             </ul>
             {isHost ? (
-              <button data-testid="play" className="primary big" onClick={startGame}>
+              <button data-testid="play" className="primary big" onClick={() => {
+                fullscreenIfWanted();
+                startGame();
+              }}>
                 Play
               </button>
             ) : (
@@ -139,9 +144,14 @@ export function Home() {
             </button>
           </div>
         )}
-        <button className="quiet home-settings" data-testid="open-settings" onClick={() => setShowSettings(true)}>
-          Settings
-        </button>
+        <div className="home-settings">
+          <button className="quiet" data-testid="open-settings" onClick={() => setShowSettings(true)}>
+            Settings
+          </button>
+          <button className="quiet" data-testid="home-fullscreen" onClick={toggleFullscreen}>
+            {full ? "Leave full screen" : "Full screen"}
+          </button>
+        </div>
       </div>
       {showSettings && <SettingsPanel onClose={() => setShowSettings(false)} />}
       {social === "leaderboard" && <LeaderboardPanel onClose={() => setSocial(null)} />}

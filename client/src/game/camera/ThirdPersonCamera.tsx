@@ -7,6 +7,7 @@ import { approach } from "../player/movement.ts";
 import { cameraState, playerState } from "../state.ts";
 import { invisibleColliders } from "../world/invisible.ts";
 import { settings } from "../../ui/settings.ts";
+import { fullscreenIfWanted } from "../../ui/fullscreen.ts";
 
 const target = new Vector3();
 const offset = new Vector3();
@@ -33,6 +34,7 @@ export function ThirdPersonCamera() {
 
     const canvas = gl.domElement;
     const lock = () => {
+      fullscreenIfWanted(); // Esc left full screen; a click on the game goes back (if that's the setting)
       if (document.pointerLockElement !== canvas && !cameraState.freeMouse) void Promise.resolve(canvas.requestPointerLock?.()).catch(() => {}); // may be refused; the next click tries again
     };
     const look = (e: MouseEvent) => {

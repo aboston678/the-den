@@ -3,6 +3,7 @@ import { cameraState } from "../game/state.ts";
 import { leaveParty } from "../net/party.ts";
 import { CONTROLS } from "./Hud.tsx";
 import { SettingsPanel } from "./Settings.tsx";
+import { fullscreenIfWanted, toggleFullscreen, useFullscreen } from "./fullscreen.ts";
 
 // The pause menu (GAME_SPEC §11.6). Esc frees the mouse (the browser does that); when that
 // happens, or Esc is pressed with the mouse already free, this menu opens. The party plays on.
@@ -11,6 +12,7 @@ export function Pause() {
   const [open, setOpen] = useState(false);
   const [settings, setSettings] = useState(false);
   const wasLocked = useRef(false);
+  const full = useFullscreen();
 
   useEffect(() => {
     const lockChange = () => {
@@ -33,6 +35,7 @@ export function Pause() {
 
   const resume = () => {
     setOpen(false);
+    fullscreenIfWanted();
     // Browsers can refuse (e.g. straight after Esc); a click on the game locks it then.
     if (!cameraState.freeMouse) void Promise.resolve(document.querySelector("canvas")?.requestPointerLock?.()).catch(() => {});
   };
@@ -45,6 +48,7 @@ export function Pause() {
         <h2>Paused</h2>
         <p className="note">The party keeps playing.</p>
         <button className="primary big" data-testid="resume" onClick={resume}>Resume</button>
+        <button data-testid="pause-fullscreen" onClick={toggleFullscreen}>{full ? "Leave full screen" : "Full screen"}</button>
         <button data-testid="pause-settings" onClick={() => setSettings(true)}>Settings</button>
         <button className="quiet" data-testid="leave-game" onClick={() => leaveParty()}>Leave to home screen</button>
         <dl className="pause-controls">

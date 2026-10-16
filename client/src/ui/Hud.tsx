@@ -99,7 +99,7 @@ export function PartyList() {
 
 export const CONTROLS: [string, string][] = [
   ["WASD", "move"], ["Shift", "sprint"], ["Space", "jump"], ["Mouse", "look (click first)"], ["Scroll", "zoom"],
-  ["E", "doors, rod bucket"], ["Hold mouse", "cast (with a rod)"], ["R", "reel"], ["F", "flashlight"], ["Y", "roar"], ["B", "dance"], ["Tab", "party"], ["Esc", "menu"],
+  ["E", "doors, rod bucket"], ["Hold mouse", "cast (with a rod)"], ["R", "reel"], ["F", "flashlight"], ["Y", "roar"], ["B", "dance"], ["Tab", "party"], ["Esc", "menu (full screen, settings)"],
 ];
 
 /** A one-line controls reminder for the first moments in the game. */
