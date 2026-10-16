@@ -134,6 +134,7 @@ Starting balance: 1,210 (2026-10-11)
 | 2026-10-13 | Bear round 2 concepts ×4: original pear-shaped goofy bear (0.25 each; job ids in `assets/concepts/bear-v2/README.md`) | `gpt_image_2_5` | 1 | 724.5 |
 | 2026-10-13 | Bear round 2 3D model from concept #1 (Andrew's pick): texture + PBR + A-pose + rig (2.1 m) + Idle (job ee970570-578e-4fc8-a3d9-06fb91489991; Andrew approved) | `meshy_v7_image_to_3d` | 47.5 | 677 |
 | 2026-10-13 | Bowling alley mural (summer woods, painted), job 00e34ca3-061d-4613-8c9e-3ef2e7ee0690 (price check 0.25) | `gpt_image_2_5` | 0.25 | 676.75 |
+| 2026-10-15 | Crouch walk clip: Cautious_Crouch_Walk_Forward_inplace (616), Andrew's pick "A" (price check 8), job 7d419a5b-e377-45cb-9e0c-ebe7dffeaf4d | `meshy_rigging` | 8 | 668.75 |
 
 ## Decision log
 | Date | Decision | Why |
