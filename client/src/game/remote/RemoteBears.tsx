@@ -118,7 +118,7 @@ function RemoteBearView({ id }: { id: string }) {
       void playAt("reel-click", s.x, s.y + 1.2, s.z, 0.5, 3);
     }
     reel.current.line = line;
-    animator.update(dt, s.action === "locomotion" ? s.speed : 0);
+    animator.update(dt, s.action === "locomotion" || s.action === "crouch" ? s.speed : 0);
     applyLipHold(id, model, yaw.current, remotes.get(id)?.fish.state === "landed", animator.action !== "celebrate" && animator.action !== "cast", dt);
     bearSounds(animator, s.x, s.y, s.z);
     b.current = { x: s.x, y: s.y, z: s.z, speed: s.speed, action: s.action, flashlight: s.flashlight, aimYaw: s.aimYaw, aimPitch: s.aimPitch };

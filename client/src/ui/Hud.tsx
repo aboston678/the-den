@@ -98,7 +98,7 @@ export function PartyList() {
 }
 
 export const CONTROLS: [string, string][] = [
-  ["WASD", "move"], ["Shift", "sprint"], ["Space", "jump"], ["Mouse", "look (click first)"], ["Scroll", "zoom"],
+  ["WASD", "move"], ["Shift", "sprint"], ["Space", "jump"], ["C", "crouch"], ["Mouse", "look (click first)"], ["Scroll", "zoom"],
   ["E", "doors, rod bucket"], ["Hold mouse", "cast (with a rod)"], ["R", "reel"], ["F", "flashlight"], ["Y", "roar"], ["B", "dance"], ["Tab", "party"], ["Esc", "menu (full screen, settings)"],
 ];
 
@@ -111,7 +111,7 @@ export function ControlsHint() {
   }, []);
   return (
     <div className={`controls-hint${faded ? " faded" : ""}`}>
-      Click to look around · <b>WASD</b> move · <b>Shift</b> sprint · <b>Space</b> jump · <b>E</b> doors · <b>F</b> flashlight · <b>Y</b> roar · <b>B</b> dance · <b>Esc</b> menu
+      Click to look around · <b>WASD</b> move · <b>Shift</b> sprint · <b>Space</b> jump · <b>C</b> crouch · <b>E</b> doors · <b>F</b> flashlight · <b>Y</b> roar · <b>B</b> dance · <b>Esc</b> menu
     </div>
   );
 }

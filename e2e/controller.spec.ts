@@ -91,6 +91,32 @@ test("Y roars while walking: the bear stops and roars (game-night bug: it was ca
   }
 });
 
+test("C crouches: a slow sneak, a shorter bear, and C or sprint stands back up (game-night fixes)", async ({ page }) => {
+  await page.keyboard.press("KeyC");
+  await expect.poll(async () => (await den(page)).action).toBe("crouch");
+  await page.keyboard.down("KeyW");
+  await page.waitForTimeout(500);
+  const a = await den(page);
+  await page.waitForTimeout(1500);
+  const b = await den(page);
+  await page.keyboard.up("KeyW");
+  const sneak = Math.hypot(b.position.x - a.position.x, b.position.z - a.position.z) / (b.gameTime - a.gameTime);
+  expect(sneak).toBeGreaterThan(0.85); // 1.0 m/s
+  expect(sneak).toBeLessThan(1.1);
+  const tall = await page.evaluate(() => window.__den!.player.colliderHandle);
+  expect(tall).toBeGreaterThanOrEqual(0);
+  await page.evaluate(() => { window.__den!.camera.yaw += Math.PI / 2; });
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: "test-results/controller-crouch.png" });
+  await page.keyboard.press("KeyC");
+  await expect.poll(async () => (await den(page)).action).toBe("locomotion");
+
+  await page.keyboard.press("KeyC");
+  await expect.poll(async () => (await den(page)).action).toBe("crouch");
+  await hold(page, ["ShiftLeft", "KeyW"], 400);
+  await expect.poll(async () => (await den(page)).action).toBe("locomotion");
+});
+
 test("camera pulls in when a wall is behind the bear", async ({ page }) => {
   // Inside the test room (back wall at z = −13), 1.5 m from the back wall, with the camera
   // swung round to the −z side so the wall is right behind it.

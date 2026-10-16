@@ -12,6 +12,7 @@ import { TOON } from "./artStyle.ts";
 export const CLIP = {
   walkNaturalSpeed: TOON ? 0.62 : 0.95, // m/s at timeScale 1 (walking_2, Andrew's pick 2026-10-12; was Casual_Walk 0.71)
   runNaturalSpeed: TOON ? 6.0 : 6.55,
+  crouchNaturalSpeed: TOON ? 0.74 : 1.1, // Cautious_Crouch_Walk_Forward_inplace (game-night fixes), measured
   jumpTakeoff: 0.57, // s into the Jump clip where the feet leave the ground
   jumpLand: 1.1,
 } as const;
@@ -38,6 +39,8 @@ export const CAPSULE = {
   radius: 0.45,
   halfHeight: BEAR.heightM / 2 - 0.45,
 } as const;
+/** Crouched, the capsule is this much shorter (its feet stay put). */
+export const CROUCH_SHRINK = BEAR.heightM - BEAR.crouchHeightM;
 /** Rapier keeps the capsule this far off the ground (its "skin"); the model is lowered to match. */
 export const CONTROLLER_OFFSET = 0.02;
 /** Height of the capsule's centre above the bear's feet (including the skin gap). */

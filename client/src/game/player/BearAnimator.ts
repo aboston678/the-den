@@ -1,10 +1,10 @@
-import { type AnimationAction, type AnimationClip, AnimationMixer, LoopOnce, LoopRepeat, type Object3D } from "three";
+import { type AnimationAction, type AnimationClip, AnimationMixer, LoopOnce, LoopRepeat, type Object3D, Quaternion, type QuaternionKeyframeTrack } from "three";
 import { CLIP, CROSSFADE, MOVE } from "../config.ts";
 import type { BearAction } from "../state.ts";
 import { crossed, footfalls } from "./footfalls.ts";
 import { locomotionWeights } from "./movement.ts";
 
-const LOOPING = ["Idle", "Walk", "Run", "Dance", "Reel"] as const;
+const LOOPING = ["Idle", "Walk", "Run", "Dance", "Reel", "CrouchWalk"] as const;
 const ONE_SHOT = ["Jump", "Roar", "Cast", "Celebrate", "Bowl", "SitDown", "StandUp"] as const;
 /** The cast clip's long wind-up is skipped and the throw sped up (GAME_SPEC §13: casting should feel snappy). */
 export const CAST = { from: 1.4, speed: 1.3, release: 2.6 } as const;
@@ -27,6 +27,28 @@ export const STAND = { from: 1.2, to: 3.9, speed: 1.45 } as const;
 type ClipName = (typeof LOOPING)[number] | (typeof ONE_SHOT)[number];
 
 /**
+ * The crouch walk (Cautious_Crouch_Walk) hunches the back ~60° and reaches the arms forward, which on a
+ * round bear tips him nearly flat. Ease the back, head and arms partway back toward his standing pose.
+ */
+const CROUCH_EASE: Record<string, number> = { Spine: 0.55, Spine01: 0.55, Spine02: 0.55, neck: 0.35, Head: 0.15, LeftArm: 0.6, RightArm: 0.6, LeftForeArm: 0.4, RightForeArm: 0.4 };
+
+function easeCrouch(crouch: AnimationClip, idle: AnimationClip) {
+  const out = crouch.clone();
+  const a = new Quaternion(), b = new Quaternion();
+  for (const track of out.tracks) {
+    const [bone, prop] = track.name.split(".");
+    const k = CROUCH_EASE[bone!];
+    if (!k || prop !== "quaternion") continue;
+    const rest = idle.tracks.find((t) => t.name === track.name) as QuaternionKeyframeTrack | undefined;
+    if (!rest) continue;
+    b.fromArray(rest.values, 0);
+    const v = track.values;
+    for (let i = 0; i < v.length; i += 4) a.fromArray(v, i).slerp(b, k).toArray(v, i);
+  }
+  return out;
+}
+
+/**
  * Blends the bear's clips: idle/walk/run by speed (each sped up or slowed down to match the
  * ground speed so feet don't slide), with jump, roar and dance faded in on top.
  * Weights move toward their targets over CROSSFADE seconds.
@@ -45,8 +67,9 @@ export class BearAnimator {
   constructor(root: Object3D, clips: AnimationClip[]) {
     this.mixer = new AnimationMixer(root);
     for (const name of [...LOOPING, ...ONE_SHOT]) {
-      const clip = clips.find((c) => c.name === name);
+      let clip = clips.find((c) => c.name === name);
       if (!clip) throw new Error(`bear.glb is missing the ${name} clip`);
+      if (name === "CrouchWalk") clip = easeCrouch(clip, clips.find((c) => c.name === "Idle")!);
       const action = this.mixer.clipAction(clip);
       if ((ONE_SHOT as readonly string[]).includes(name)) {
         action.setLoop(LoopOnce, 1);
@@ -127,7 +150,7 @@ export class BearAnimator {
 
   update(dt: number, speed: number) {
     const target: Record<ClipName, number> = {
-      Idle: 0, Walk: 0, Run: 0, Dance: 0, Jump: 0, Roar: 0, Reel: 0, Cast: 0, Celebrate: 0, Bowl: 0, SitDown: 0, StandUp: 0,
+      Idle: 0, Walk: 0, Run: 0, Dance: 0, Jump: 0, Roar: 0, Reel: 0, Cast: 0, Celebrate: 0, Bowl: 0, SitDown: 0, StandUp: 0, CrouchWalk: 0,
     };
     if (this.current === "locomotion") {
       const loco = locomotionWeights(speed, MOVE.walkSpeed, MOVE.sprintSpeed);
@@ -150,6 +173,10 @@ export class BearAnimator {
         sit.timeScale = 0;
       }
     } else if (this.current === "stand") target.StandUp = 1;
+    else if (this.current === "crouch") target.CrouchWalk = 1; // stood still, it holds its pose
+
+    // Crouched, the sneak plays as fast as the bear is going (frozen mid-step when it stops).
+    this.actions.get("CrouchWalk")!.timeScale = speed / CLIP.crouchNaturalSpeed;
 
     // Match leg speed to ground speed (never slower than the clip's own pace).
     this.actions.get("Walk")!.timeScale = Math.max(1, speed / CLIP.walkNaturalSpeed);

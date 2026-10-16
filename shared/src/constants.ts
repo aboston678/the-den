@@ -27,6 +27,9 @@ export const BEAR = {
   heightM: 2.1,
   walkSpeed: 1.8,
   sprintSpeed: 6.0,
+  /** Crouched (C): a slow sneak, and the bear is 1.4 m tall instead of 2.1 (game-night fixes). */
+  crouchSpeed: 1.0,
+  crouchHeightM: 1.4,
   jumpApexM: 1.1,
   gravity: 20,
 } as const;

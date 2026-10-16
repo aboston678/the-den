@@ -84,6 +84,12 @@
       "job": "df8b6572-694e-47b5-ad16-f1783887eb13",
       "file": "bowl.glb",
       "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3KSfYE82xmSZSyzEC1rV4Jsxvlh/hf_20261011_203608_df8b6572-694e-47b5-ad16-f1783887eb13.glb"
+    },
+    "CrouchWalk": {
+      "action": "Cautious_Crouch_Walk_Forward_inplace (616)",
+      "job": "7d419a5b-e377-45cb-9e0c-ebe7dffeaf4d",
+      "file": "crouch-walk.glb",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3KSfYE82xmSZSyzEC1rV4Jsxvlh/hf_20261016_013334_7d419a5b-e377-45cb-9e0c-ebe7dffeaf4d.glb"
     }
   },
   "unused": {

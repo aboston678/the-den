@@ -107,3 +107,13 @@ test("the host role passes on when the host leaves", async ({ browser }) => {
   await expect(b.getByTestId("play")).toBeVisible();
   await expect(b.getByTestId("party-list")).not.toContainText("Alpha");
 });
+
+// Game-night fixes: crouching is part of the synced pose.
+test("a crouching bear is seen crouching by the others", async ({ browser }) => {
+  const { a, b } = await twoBears(browser);
+  await expect.poll(async () => (await others(b)).length).toBe(1);
+  await a.keyboard.press("KeyC");
+  await expect.poll(() => b.evaluate(() => window.__den!.remotes()[0]?.action), { timeout: 3000 }).toBe("crouch");
+  await a.keyboard.press("KeyC");
+  await expect.poll(() => b.evaluate(() => window.__den!.remotes()[0]?.action), { timeout: 3000 }).toBe("locomotion");
+});

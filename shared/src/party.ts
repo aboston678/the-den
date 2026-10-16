@@ -48,7 +48,7 @@ export const SERVER_MSG = {
   catanWon: "catanWon",
 } as const;
 
-export const BEAR_ACTIONS = ["locomotion", "jump", "fall", "roar", "dance", "cast", "reel", "celebrate", "bowl", "sit", "stand"] as const;
+export const BEAR_ACTIONS = ["locomotion", "jump", "fall", "roar", "dance", "cast", "reel", "celebrate", "bowl", "sit", "stand", "crouch"] as const;
 export type BearAction = (typeof BEAR_ACTIONS)[number];
 
 export interface Pose {

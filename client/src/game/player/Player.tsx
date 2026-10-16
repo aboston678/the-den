@@ -3,8 +3,8 @@ import { CapsuleCollider, RigidBody, type RapierCollider, type RapierRigidBody, 
 import { useEffect, useMemo, useRef } from "react";
 import type { KinematicCharacterController } from "@dimforge/rapier3d-compat";
 import { type Group, Matrix4, Vector3 } from "three";
-import { NET_TICK_HZ } from "@den/shared";
-import { CAPSULE, CAPSULE_CENTER, CONTROLLER_OFFSET, JUMP_AIR_TIME, MOVE } from "../config.ts";
+import { BEAR, NET_TICK_HZ } from "@den/shared";
+import { CAPSULE, CAPSULE_CENTER, CONTROLLER_OFFSET, CROUCH_SHRINK, JUMP_AIR_TIME, MOVE } from "../config.ts";
 import { castTo, sendPose, useFishStore } from "../../net/party.ts";
 import { useRod } from "../fishing/rig.ts";
 import { applyLipHold } from "../fishing/lipHold.ts";
@@ -79,7 +79,7 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
   });
 
   // Start facing away from the camera (which begins on the +z side looking toward −z).
-  const s = useRef({ vy: 0, speed: 0, yaw: Math.PI, dir: { x: 0, z: -1 }, airTime: 0, actionTime: 0, roarReadyAt: 0, atStairFoot: false, groundY: 0, ready: false,
+  const s = useRef({ vy: 0, speed: 0, yaw: Math.PI, dir: { x: 0, z: -1 }, airTime: 0, actionTime: 0, roarReadyAt: 0, atStairFoot: false, short: false, groundY: 0, ready: false,
     pushX: 0, pushZ: 0, staggerUntil: 0, sendTimer: 0, castAt: null as { x: number; z: number } | null, released: false,
     chair: null as SeatMove | null });
 
@@ -91,6 +91,22 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
     const dt = Math.min(rawDt, MAX_DT);
     const st = s.current;
     const now = clock.elapsedTime;
+
+    /** Whether a full-height bear fits here (getting up from a crouch). */
+    const canStand = () => {
+      const p = body.current!.translation();
+      let blocked = false;
+      world.intersectionsWithShape(
+        { x: p.x, y: p.y + 0.1, z: p.z }, { x: 0, y: 0, z: 0, w: 1 }, new rapier.Capsule(CAPSULE.halfHeight, CAPSULE.radius - 0.05),
+        (c) => {
+          if (c.isSensor() || invisibleColliders.has(c.handle)) return true;
+          blocked = true;
+          return false;
+        },
+        undefined, undefined, collider.current!,
+      );
+      return !blocked;
+    };
 
     /** Height of the floor under (x, feetY, z), probing from inside the bear, or null. */
     const floorBelow = (x: number, feetY: number, z: number) => {
@@ -139,6 +155,13 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
       if (action === "dance") start("locomotion");
       else if (action === "locomotion") start("dance");
     }
+    // Crouch (C): toggles; sprinting or jumping stands the bear up, if there's room overhead.
+    if (consumePress("KeyC") && grounded && !held && !seated) {
+      if (action === "locomotion" || action === "dance") start("crouch");
+      else if (action === "crouch" && canStand()) start("locomotion");
+    }
+    if (action === "crouch" && sprint && moving && canStand()) start("locomotion");
+    action = animator.action;
     if (consumePress("KeyY") && grounded && !held && !seated && now >= st.roarReadyAt && (action === "locomotion" || action === "dance")) {
       start("roar");
       st.roarReadyAt = now + MOVE.roarCooldown;
@@ -195,7 +218,7 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
     // while walking still roars instead of being cancelled in the same frame).
     if (moving && (action === "dance" || (action === "roar" && st.actionTime >= ROAR_PLANTED_S))) start("locomotion");
     if (action === "roar" && animator.roarFinished) start("locomotion");
-    if (consumePress("Space") && grounded && !held && !seated && animator.action !== "jump" && st.vy <= 0) {
+    if (consumePress("Space") && grounded && !held && !seated && animator.action !== "jump" && st.vy <= 0 && (animator.action !== "crouch" || canStand())) {
       st.vy = MOVE.jumpVelocity;
       start("jump");
     }
@@ -224,9 +247,17 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
     st.pushZ *= pushDecay;
 
     // --- horizontal: accelerate toward walk/sprint speed, turn to face the way we go ---
-    const canMove = action === "locomotion" || action === "jump" || action === "fall";
+    const crouched = action === "crouch";
+    const canMove = action === "locomotion" || action === "jump" || action === "fall" || crouched;
     const staggered = playerState.gameTime < st.staggerUntil;
-    const targetSpeed = (canMove && moving ? (sprint ? MOVE.sprintSpeed : MOVE.walkSpeed) : 0) * (staggered ? 0.3 : 1);
+    const pace = crouched ? BEAR.crouchSpeed : sprint ? MOVE.sprintSpeed : MOVE.walkSpeed;
+    const targetSpeed = (canMove && moving ? pace : 0) * (staggered ? 0.3 : 1);
+    // A crouched bear is shorter: shrink the capsule, keeping its feet where they are.
+    if (crouched !== st.short && collider.current) {
+      st.short = crouched;
+      collider.current.setHalfHeight(CAPSULE.halfHeight - (crouched ? CROUCH_SHRINK / 2 : 0));
+      collider.current.setTranslationWrtParent({ x: 0, y: crouched ? -CROUCH_SHRINK / 2 : 0, z: 0 });
+    }
     st.speed = approach(st.speed, targetSpeed, MOVE.acceleration * dt);
     if (moving && canMove) {
       st.dir = dir;
