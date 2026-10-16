@@ -1,6 +1,7 @@
 import { getListener } from "../../game/audio/audio.ts";
 import { settings, useSettings } from "../settings.ts";
 import song from "./song.json" with { type: "json" };
+import { asset } from "../../asset.ts";
 
 // The menu music (GAME_SPEC §10, §11): Andrew's 19 s intro clip, then the full song carrying on
 // from exactly where the clip ends (tools/build-music.mjs works out where), looping in the lobby,
@@ -30,7 +31,7 @@ const buffers = new Map<string, Promise<AudioBuffer>>();
 function load(name: string) {
   let p = buffers.get(name);
   if (!p) {
-    p = fetch(`/audio/${name}.mp3`).then((r) => r.arrayBuffer()).then((d) => ctx().decodeAudioData(d));
+    p = fetch(asset(`/audio/${name}.mp3`)).then((r) => r.arrayBuffer()).then((d) => ctx().decodeAudioData(d));
     buffers.set(name, p);
   }
   return p;

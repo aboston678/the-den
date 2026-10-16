@@ -5,6 +5,7 @@ import { TOON } from "../../artStyle.ts";
 import { ignoreLampsAndFlashlights, ignorePointLights } from "../lighting.ts";
 import type { LodPart } from "./InstancedLod.tsx";
 import type { Placement } from "./scatter.ts";
+import { asset } from "../../../asset.ts";
 
 // The cartoon scenery (art-style remake, 2026-10-13): Higgsfield image→3D models of a pine, birch,
 // maple, leafy bush, fern and two mossy rocks (tools/build-toon-scenery.mjs, starting pictures in
@@ -12,7 +13,7 @@ import type { Placement } from "./scatter.ts";
 // forest's models, each copy stretched to the size of the tree, bush or rock it replaces, so the
 // forest layout, detail levels, colliders and far-tree pictures all work as before.
 
-export const TOON_SCENERY_URL = "/models/toon-scenery.glb";
+export const TOON_SCENERY_URL = asset("/models/toon-scenery.glb");
 if (TOON) useGLTF.preload(TOON_SCENERY_URL);
 
 /** The cartoon scenery file in cartoon mode, else null. (TOON never changes while the page is open, so the hook order is stable.) */

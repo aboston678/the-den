@@ -12,12 +12,13 @@ import { foliageGlow, roadsideBushes, toonParts, useToonScenery } from "./toonTr
 import { FERNS, ROCKS, SAPLING_KINDS, SHRUBS, TREE_KINDS, type Placement, type Scatter, scatterAll } from "./scatter.ts";
 import { ignoreLampsAndFlashlights, ignorePointLights } from "../lighting.ts";
 import { removeBody } from "../physics.ts";
+import { asset } from "../../../asset.ts";
 
 // The forest and everything on its floor (GAME_SPEC §4): EZ-Tree trees (tools/build-trees.mjs) and
 // CC0 Poly Haven rocks, ferns, logs, stumps and shrubs (tools/build-outdoor-props.mjs).
 
-const TREES_URL = "/models/trees.glb";
-const PROPS_URL = "/models/outdoor-props.glb";
+const TREES_URL = asset("/models/trees.glb");
+const PROPS_URL = asset("/models/outdoor-props.glb");
 
 /** Rocks, logs, stumps and shrubs are drawn this far (they're low and few). */
 const PROP_FAR = 110;

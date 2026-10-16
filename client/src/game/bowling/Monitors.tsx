@@ -5,13 +5,14 @@ import { CanvasTexture, Mesh, MeshBasicMaterial, PlaneGeometry, SRGBColorSpace, 
 import { KIOSK_SCREENS, MASKING, SCREENS } from "./alleyGeometry.ts";
 import { drawScoreboard } from "./scoreboard.ts";
 import { type LaneView, useLanes } from "./store.ts";
+import { asset } from "../../asset.ts";
 
 // The alley's screens (GAME_SPEC §15): three hung over the foul line (left and right = each
 // lane's scorecard, middle = the painted woods), the kiosk's two small screens (one per lane), and
 // the mural on the masking wall over the pins. Scorecards are canvases redrawn only when a lane
 // changes; screens are unlit so the cartoon lighting doesn't dim them. Floorplan metres.
 
-export const MURAL_URL = "/textures/bowling/woods-mural.webp";
+export const MURAL_URL = asset("/textures/bowling/woods-mural.webp");
 const CANVAS = { w: 1024, h: 576 };
 
 interface Board {

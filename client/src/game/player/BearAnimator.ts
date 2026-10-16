@@ -25,6 +25,8 @@ export const SIT = { from: 1.6, to: 4.5, speed: 1.5 } as const;
 /** Getting up: just the rising part of Sit_to_Stand. */
 export const STAND = { from: 1.2, to: 3.9, speed: 1.45 } as const;
 type ClipName = (typeof LOOPING)[number] | (typeof ONE_SHOT)[number];
+/** Clips added after the first bear builds, and what to play if a bear file doesn't have them yet. */
+const FALLBACK: Partial<Record<ClipName, ClipName>> = { CrouchWalk: "Walk" };
 
 /**
  * The crouch walk (Cautious_Crouch_Walk) hunches the back ~60° and reaches the arms forward, which on a
@@ -68,8 +70,14 @@ export class BearAnimator {
     this.mixer = new AnimationMixer(root);
     for (const name of [...LOOPING, ...ONE_SHOT]) {
       let clip = clips.find((c) => c.name === name);
+      // A newer clip missing from an older bear file: stand in with a close one rather than stopping the game.
+      if (!clip && FALLBACK[name]) {
+        console.warn(`[den] the bear has no ${name} clip; using ${FALLBACK[name]}`);
+        clip = clips.find((c) => c.name === FALLBACK[name])?.clone();
+        if (clip) clip.name = name;
+      }
       if (!clip) throw new Error(`bear.glb is missing the ${name} clip`);
-      if (name === "CrouchWalk") clip = easeCrouch(clip, clips.find((c) => c.name === "Idle")!);
+      if (name === "CrouchWalk" && clips.some((c) => c.name === "CrouchWalk")) clip = easeCrouch(clip, clips.find((c) => c.name === "Idle")!);
       const action = this.mixer.clipAction(clip);
       if ((ONE_SHOT as readonly string[]).includes(name)) {
         action.setLoop(LoopOnce, 1);

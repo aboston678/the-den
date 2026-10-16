@@ -10,6 +10,7 @@ import { invisibleColliders } from "../../world/invisible.ts";
 import { removeBody } from "../../world/physics.ts";
 import { indoor } from "../lights.ts";
 import { toWorld } from "../space.ts";
+import { asset } from "../../../asset.ts";
 
 // The furniture in the rooms: hero pieces (Higgsfield models in furniture.glb, one instanced mesh
 // per model, so the four Catan chairs are a single draw) and the code-built meshes, all hidden when
@@ -17,7 +18,7 @@ import { toWorld } from "../space.ts";
 // that the rooms are already furnished before you can make them out through the windows). Plus a solid box for every piece you can bump into. The
 // camera ignores furniture (it would keep snapping in). Positions are floorplan metres.
 
-export const FURNITURE_URL = "/models/furniture.glb";
+export const FURNITURE_URL = asset("/models/furniture.glb");
 /** Drawn for the first few frames wherever you are, so its shaders and textures are ready before you walk up (no stutter). */
 const WARM_FRAMES = 3;
 const HOUSE_MIN = toWorld([0, 0, 0]), HOUSE_MAX = toWorld([34, 0, 11.5]);

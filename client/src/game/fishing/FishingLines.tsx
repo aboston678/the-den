@@ -11,12 +11,13 @@ import { remotes } from "../../net/remotes.ts";
 import { playAt } from "../audio/audio.ts";
 import { rigs } from "./rig.ts";
 import { lipHands } from "./lipHold.ts";
+import { asset } from "../../asset.ts";
 
 // What everyone sees of everyone's fishing (GAME_SPEC §13): the line from the rod tip to a
 // red-and-white bobber, the cast flying out, the bobber plunging on a bite and thrashing in a
 // fight, splashes, and the fish held up when it's landed. Driven by the server's fishing state.
 
-const FISH_URL = "/models/fish.glb";
+const FISH_URL = asset("/models/fish.glb");
 const FISH_NODES: Record<string, string> = {
   sunfish: "fish-sunfish", perch: "fish-yellow-perch", crappie: "fish-crappie", smallmouth: "fish-smallmouth-bass", largemouth: "fish-largemouth-bass",
 };

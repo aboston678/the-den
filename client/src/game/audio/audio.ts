@@ -3,6 +3,7 @@ import { settings, useSettings } from "../../ui/settings.ts";
 import {
   ballReturnBuffer, ballRollBuffer, castWhooshBuffer, diceRollBuffer, fanfareBuffer, garageDoorBuffer, lineSnapBuffer, plopBuffer, reelClickBuffer, splashBuffer, sweepBuffer,
 } from "./synth.ts";
+import { asset } from "../../asset.ts";
 
 // Sound for the game (GAME_SPEC §10): one listener on the camera, decoded sounds cached by name,
 // short positional one-shots (roars, birds, loons), and flat ones (menu clicks). Effects and
@@ -84,7 +85,7 @@ export function loadSound(name: string) {
     buffers.set(name, p);
   }
   if (!p) {
-    p = fetch(`/audio/${name}.mp3`)
+    p = fetch(asset(`/audio/${name}.mp3`))
       .then((r) => {
         if (!r.ok) throw new Error(`missing sound ${name}`);
         return r.arrayBuffer();
