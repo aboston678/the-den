@@ -2,7 +2,7 @@ import { useGLTF } from "@react-three/drei";
 import { useEffect, useMemo } from "react";
 import { Group, type Object3D, PositionalAudio, Quaternion, Vector3 } from "three";
 import { asset } from "../../asset.ts";
-import { BIKE } from "@den/shared";
+import { autoGear, bikeRevs } from "@den/shared";
 import { getListener, loadSound, toBus } from "../audio/audio.ts";
 import { reachTo } from "../player/reach.ts";
 
@@ -26,6 +26,8 @@ export interface Rider {
   loading: boolean;
   /** 0…1: on the bike (eases in and out for the arms). */
   k: number;
+  /** Other bears' bikes: the gear an automatic box would be in, for the engine note. */
+  gear: number;
 }
 
 /** The bike model, a fresh copy for each use. */
@@ -50,7 +52,7 @@ export function useBikeCopy() {
 /** Set up a bear's ride: the bike (hidden until they're riding) in its turning group. */
 export function useRider(visual: React.RefObject<Group | null>): Rider {
   const bike = useBikeCopy();
-  const rider = useMemo<Rider>(() => ({ bike, sound: null, loading: false, k: 0 }), [bike]);
+  const rider = useMemo<Rider>(() => ({ bike, sound: null, loading: false, k: 0, gear: 1 }), [bike]);
   useEffect(() => {
     const g = visual.current;
     if (!g) return;
@@ -98,15 +100,18 @@ function notePose(b: Record<string, Object3D | undefined>) {
 
 /**
  * Call after the bear's animation has updated this frame. `lean` (radians, + = to the bear's right)
- * and `pitch` (+ = nose down) tip the bear and bike together; `speed` sets the engine note.
+ * and `pitch` (+ = nose down) tip the bear and bike together; `revs` (0…1) set the engine note, or
+ * for other bears' bikes it follows `speed` through an automatic box.
  */
-export function applyRide(r: Rider, model: Object3D, visual: Group, riding: boolean, speed: number, lean: number, pitch: number, dt: number) {
+export function applyRide(r: Rider, model: Object3D, visual: Group, riding: boolean, speed: number, lean: number, pitch: number, dt: number, revs?: number) {
   r.k = Math.max(0, Math.min(1, r.k + (riding ? dt : -dt) * 5));
   r.bike.visible = riding;
   model.position.set(0, riding ? SEAT.lift : 0, riding ? SEAT.back : 0);
   visual.rotation.x = riding ? pitch : 0;
   visual.rotation.z = riding ? lean : 0;
-  engine(r, riding, speed);
+  if (!riding) r.gear = 1;
+  else if (revs === undefined) r.gear = autoGear(speed, r.gear);
+  engine(r, riding, revs ?? bikeRevs(speed, r.gear));
   let b = bones.get(model);
   if (!b) {
     b = Object.fromEntries(RIDE_BONES.map((n) => [n, model.getObjectByName(n)]));
@@ -139,8 +144,8 @@ export function applyRide(r: Rider, model: Object3D, visual: Group, riding: bool
   notePose(b);
 }
 
-/** The engine: idles at a standstill, rising to a scream at top speed. */
-function engine(r: Rider, riding: boolean, speed: number) {
+/** The engine: idles at a standstill and rises to a scream at the redline in every gear, so you hear each shift. */
+function engine(r: Rider, riding: boolean, revs: number) {
   if (riding && !r.sound && !r.loading && getListener().context.state === "running") {
     r.loading = true;
     void loadSound("engine").then((buffer) => {
@@ -161,8 +166,7 @@ function engine(r: Rider, riding: boolean, speed: number) {
   if (riding && !s.isPlaying) s.play();
   if (!riding && s.isPlaying) s.stop();
   if (!riding) return;
-  const revs = Math.min(1, Math.abs(speed) / BIKE.trackSpeed);
-  s.setPlaybackRate(0.75 + revs * 2.3);
+  s.setPlaybackRate(0.6 + revs * 2.2);
   s.setVolume(0.35 + revs * 0.45);
 }
 

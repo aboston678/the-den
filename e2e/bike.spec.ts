@@ -3,7 +3,8 @@ import { GARAGE_BIKE } from "../shared/src/index.ts";
 import { closePlayers, failOnErrors, hostGame, joinGame, newPlayer, waitForBear } from "./helpers.ts";
 
 // The motorcycle (round 2, Andrew 2026-10-16): open the garage door, get on the garage bike, ride out
-// onto the driveway and steer, a second bear sees (and hears) you riding, stop and park, get back on.
+// onto the driveway and steer, a second bear sees (and hears) you riding, the speedometer and manual
+// gears (round 3), stop and park, get back on.
 //   npx playwright test e2e/bike.spec.ts   (screenshots in test-results/bike/)
 
 test.afterEach(closePlayers);
@@ -58,7 +59,15 @@ test("ride the garage motorcycle out onto the driveway; another bear sees it; pa
 
   // Ride out of the garage (west) and down the driveway a little, then steer.
   const start = await me(ann);
-  await hold(ann, ["KeyW"], 1800);
+  await hold(ann, ["KeyW"], 1500);
+  // The speedometer (round 3): mph, the gear the automatic box picked, the rev bar.
+  await ann.keyboard.down("KeyW");
+  await expect(ann.getByTestId("bike-hud")).toBeVisible();
+  await expect(ann.getByTestId("bike-mode")).toHaveText("Auto");
+  expect(Number(await ann.getByTestId("bike-mph").textContent())).toBeGreaterThan(5);
+  expect(Number(await ann.getByTestId("bike-gear").textContent())).toBeGreaterThan(1);
+  await ann.keyboard.up("KeyW");
+  await expect(bob.getByTestId("bike-hud")).toHaveCount(0); // only the rider sees it
   const out = await me(ann);
   expect(out.x).toBeLessThan(start.x - 8); // out through the door onto the apron
   expect((await bike(ann)).speed).toBeGreaterThan(5);
@@ -75,6 +84,20 @@ test("ride the garage motorcycle out onto the driveway; another bear sees it; pa
   await ann.keyboard.up("KeyW");
   await hold(ann, ["KeyS"], 1500);
   await expect.poll(async () => (await bike(ann)).prompt, { timeout: 10_000 }).toBe("Get off");
+  // Manual gears: M switches, Q up, Z down; back to automatic for the rest.
+  await expect(ann.getByTestId("bike-gear")).toHaveText("1");
+  await ann.keyboard.press("KeyM");
+  await expect(ann.getByTestId("bike-mode")).toHaveText("Manual");
+  await ann.keyboard.press("KeyQ");
+  await expect(ann.getByTestId("bike-gear")).toHaveText("2");
+  await ann.keyboard.press("KeyQ");
+  await expect(ann.getByTestId("bike-gear")).toHaveText("3");
+  await ann.keyboard.press("KeyZ");
+  await expect(ann.getByTestId("bike-gear")).toHaveText("2");
+  await shot(ann, "4-manual-gears");
+  await ann.keyboard.press("KeyM");
+  await expect(ann.getByTestId("bike-mode")).toHaveText("Auto");
+  await expect(ann.getByTestId("bike-gear")).toHaveText("1"); // the automatic drops back to first at a crawl
   const stop = await me(ann);
   await ann.keyboard.press("KeyE");
   await expect.poll(async () => (await bike(ann)).riding).toBe(false);

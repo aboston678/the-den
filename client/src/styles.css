@@ -712,3 +712,26 @@ body.catan-seated .controls-hint { display: none; }
 .lap-times span { color: rgb(239 230 210 / 0.65); text-transform: uppercase; font-size: 13px; }
 .lap-times b { font-variant-numeric: tabular-nums; }
 .lap-toast { top: 180px; }
+
+/* The motorcycle's dials (round 3), bottom right while riding. */
+.bike-hud { position: fixed; right: 20px; bottom: 20px; z-index: 15; width: 220px; padding: 10px 14px 12px; border-radius: 14px; background: rgb(12 18 14 / 0.82); color: var(--cream); pointer-events: none; display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; font-family: "Oswald", system-ui, sans-serif; }
+.bike-dial { grid-column: 1 / -1; width: 100%; height: auto; margin-bottom: -44px; }
+.bike-dial .dial-arc { fill: none; stroke: rgb(239 230 210 / 0.25); stroke-width: 3; }
+.bike-dial .tick { stroke: rgb(239 230 210 / 0.55); stroke-width: 1.5; }
+.bike-dial .tick.big { stroke: var(--cream); stroke-width: 2.5; }
+.bike-dial .tick-label { fill: rgb(239 230 210 / 0.8); font-size: 10px; text-anchor: middle; font-family: "Oswald", system-ui, sans-serif; }
+.bike-dial .needle { stroke: var(--ember); stroke-width: 3.5; stroke-linecap: round; }
+.bike-dial .hub { fill: var(--ember); }
+.bike-readout { display: flex; align-items: baseline; gap: 6px; }
+.bike-readout b { font-size: 40px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+.bike-readout span, .bike-gear span { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: rgb(239 230 210 / 0.65); }
+.bike-gear { display: grid; justify-items: center; align-content: end; line-height: 1; }
+.bike-gear b { font-size: 34px; font-weight: 700; transition: color 0.15s; }
+.bike-gear i { font-style: normal; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ember); margin-top: 3px; }
+.bike-hud.refused .bike-gear b { color: #ff5a4a; }
+.bike-revs { grid-column: 1 / -1; position: relative; height: 8px; border-radius: 4px; background: linear-gradient(90deg, rgb(239 230 210 / 0.18) 0 88%, rgb(220 60 50 / 0.45) 88%); overflow: hidden; }
+.bike-revs div { height: 100%; width: 0; background: linear-gradient(90deg, #8fd16a, #f2c84b 70%, #ff5a4a); border-radius: 4px; }
+.bike-hud.redline .bike-revs div { animation: redline 0.12s steps(2) infinite; }
+@keyframes redline { 50% { opacity: 0.55; } }
+.bike-keys { grid-column: 1 / -1; font: 12px system-ui, sans-serif; color: rgb(239 230 210 / 0.7); text-align: center; }
+.bike-keys b { color: var(--ember); }

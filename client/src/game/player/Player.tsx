@@ -3,7 +3,7 @@ import { CapsuleCollider, RigidBody, type RapierCollider, type RapierRigidBody, 
 import { useEffect, useMemo, useRef } from "react";
 import type { KinematicCharacterController } from "@dimforge/rapier3d-compat";
 import { type Group, Matrix4, Vector3 } from "three";
-import { BEAR, BIKE, NET_TICK_HZ, bikeBlocked, bikeSpeedStep, bikeTopSpeed, bikeTurnRate, inGarage, onTrackAsphalt } from "@den/shared";
+import { BEAR, BIKE, GEARS, NET_TICK_HZ, autoGear, bikeBlocked, bikeRevs, bikeSpeedStep, bikeTopSpeed, bikeTurnRate, canShiftDown, inGarage, onTrackAsphalt } from "@den/shared";
 import { CAMERA, CAPSULE, CAPSULE_CENTER, CONTROLLER_OFFSET, CROUCH_SHRINK, JUMP_AIR_TIME, MOVE } from "../config.ts";
 import { applyRide, useRider } from "../bike/rider.ts";
 import { autopilot } from "../bike/autopilot.ts";
@@ -28,6 +28,7 @@ import { useBearModel } from "./useBearModel.ts";
 import { STAIR_FEET } from "../house/structure.ts";
 import { toWorld } from "../house/space.ts";
 import { bearSounds } from "../audio/footsteps.ts";
+import { settings, updateSettings } from "../../ui/settings.ts";
 
 const MAX_DT = 0.1;
 /** Grace period after leaving the ground in which the bear still counts as grounded ("coyote time"). */
@@ -87,7 +88,7 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
   // Start facing away from the camera (which begins on the +z side looking toward −z).
   const s = useRef({ vy: 0, speed: 0, yaw: Math.PI, dir: { x: 0, z: -1 }, airTime: 0, actionTime: 0, roarReadyAt: 0, atStairFoot: false, short: false, groundY: 0, ready: false,
     pushX: 0, pushZ: 0, staggerUntil: 0, sendTimer: 0, castAt: null as { x: number; z: number } | null, released: false,
-    chair: null as SeatMove | null, riding: false, lean: 0, pitch: 0, crashAt: 0 });
+    chair: null as SeatMove | null, riding: false, lean: 0, pitch: 0, crashAt: 0, gear: 1 });
 
   useFrame(({ clock }, rawDt) => {
     const controller = controllerRef.current;
@@ -152,6 +153,7 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
       st.speed = 0;
       st.lean = st.pitch = 0;
       st.vy = 0;
+      st.gear = 1;
       cameraState.distance = riding ? 6 : CAMERA.distance; // pulled back to see the bike (scroll still zooms)
       if (!riding) cameraState.fovKick = 0;
     }
@@ -277,6 +279,9 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
       collider.current.setHalfHeight(CAPSULE.halfHeight - (crouched ? CROUCH_SHRINK / 2 : 0));
       collider.current.setTranslationWrtParent({ x: 0, y: crouched ? -CROUCH_SHRINK / 2 : 0, z: 0 });
     }
+    // The gearbox keys (round 3): M switches automatic/manual, Q/Z shift up/down in manual.
+    const gearUp = consumePress("KeyQ"), gearDown = consumePress("KeyZ"), gearMode = consumePress("KeyM");
+
     if (!riding) st.speed = approach(st.speed, targetSpeed, MOVE.acceleration * dt);
     if (riding) rideStep(dt);
     else if (moving && canMove) {
@@ -284,16 +289,25 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
       st.yaw = turnToward(st.yaw, facingYaw(dir), MOVE.turnSpeed * dt);
     }
 
-    /** The motorcycle (Andrew, 2026-10-16): W throttle, S brake/back up, A/D steer, Shift tuck. */
+    /** The motorcycle (Andrew, 2026-10-16): W throttle, S brake/back up, A/D steer, Shift tuck; gears (round 3). */
     function rideStep(dt: number) {
       const here = playerState.position;
       const top = bikeTopSpeed(here.x, here.z, onTrackAsphalt(here.x, here.z));
       const auto = playerState.autopilot ? autopilot(playerState.autopilot, here.x, here.z, st.yaw, st.speed) : null;
+      if (gearMode) updateSettings({ gears: settings().gears === "manual" ? "auto" : "manual" });
+      const manual = settings().gears === "manual" && !auto;
+      if (manual && gearUp && st.gear < GEARS) st.gear++;
+      if (manual && gearDown) {
+        if (canShiftDown(st.speed, st.gear)) st.gear--;
+        else if (st.gear > 1) playerState.bike.refusedAt = performance.now(); // would over-rev: the HUD flashes
+      }
       st.speed = bikeSpeedStep(st.speed, dt, {
         throttle: auto ? auto.throttle : isHeld("KeyW") || isHeld("ArrowUp"),
         brake: auto ? auto.brake : isHeld("KeyS") || isHeld("ArrowDown"),
         tuck: sprint,
-      }, top);
+      }, top, st.gear);
+      if (!manual) st.gear = autoGear(st.speed, st.gear);
+      Object.assign(playerState.bike, { speed: st.speed, gear: st.gear, revs: bikeRevs(st.speed, st.gear), manual });
       const steer = auto ? auto.steer : (isHeld("KeyA") || isHeld("ArrowLeft") ? 1 : 0) - (isHeld("KeyD") || isHeld("ArrowRight") ? 1 : 0);
       // A bike only turns while it's rolling (backing up steers the other way round).
       const yawRate = steer * bikeTurnRate(st.speed) * Math.sign(st.speed) * Math.min(1, Math.abs(st.speed) / 1.5);
@@ -435,7 +449,7 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
     }
     animator.update(dt, Math.min(st.speed, groundSpeed));
     applyLipHold("me", model, playerState.yaw, fish.state === "landed", animator.action !== "celebrate" && animator.action !== "cast", dt);
-    if (visual.current) applyRide(rider, model, visual.current, riding && animator.action === "ride", st.speed, st.lean, st.pitch, dt);
+    if (visual.current) applyRide(rider, model, visual.current, riding && animator.action === "ride", st.speed, st.lean, st.pitch, dt, bikeRevs(st.speed, st.gear));
     bearSounds(animator, playerState.position.x, playerState.position.y, playerState.position.z);
 
     // --- tell the party where we are, 20 times a second ---

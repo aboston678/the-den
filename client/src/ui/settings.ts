@@ -16,11 +16,13 @@ export interface Settings {
   showFps: boolean;
   /** Go full screen when you press Play or Resume (ui/fullscreen.ts). */
   fullscreen: boolean;
+  /** The motorcycle's gearbox (round 3): automatic, or manual with Q up / Z down. M switches while riding. */
+  gears: "auto" | "manual";
 }
 
 const KEY = "den.settings";
 /** Medium graphics and full screen from the start (Andrew, round 3). */
-export const DEFAULT_SETTINGS: Settings = { music: 0.8, effects: 1, ambience: 0.9, sensitivity: 1, invertY: false, graphics: "medium", showFps: false, fullscreen: true };
+export const DEFAULT_SETTINGS: Settings = { music: 0.8, effects: 1, ambience: 0.9, sensitivity: 1, invertY: false, graphics: "medium", showFps: false, fullscreen: true, gears: "auto" };
 /** Bumped when new defaults should reach browsers that already saved settings. */
 const VERSION = 2;
 

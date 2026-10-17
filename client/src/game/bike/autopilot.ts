@@ -24,7 +24,8 @@ export function autopilot(route: Route, x: number, z: number, yaw: number, speed
   // Slow for the bends coming up: how much the route turns over the next ~60 m.
   const a = ahead(10), b = ahead(40), c = ahead(70);
   const bend = Math.abs(Math.atan2((b.x - a.x) * (c.z - b.z) - (b.z - a.z) * (c.x - b.x), (b.x - a.x) * (c.x - b.x) + (b.z - a.z) * (c.z - b.z)));
-  const target = Math.min(route.maxSpeed, 8 + 40 / (1 + bend * 6));
+  // …and for being pointed away from the route (grass no longer slows a bike that runs wide, round 3).
+  const target = Math.min(route.maxSpeed, 8 + 40 / (1 + bend * 6), 8 + 40 / (1 + Math.max(0, Math.abs(angle) - 0.1) * 8));
   const end = !route.loop && best >= n - 3;
   return { throttle: !end && speed < target, brake: end || speed > target + 3, steer: Math.max(-1, Math.min(1, -angle * 2.5)) };
 }

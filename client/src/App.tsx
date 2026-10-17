@@ -9,6 +9,7 @@ import { BowlingHud } from "./ui/BowlingHud.tsx";
 import { CatanHud } from "./ui/CatanHud.tsx";
 import { Connect4Hud } from "./ui/Connect4Hud.tsx";
 import { LapHud } from "./ui/LapHud.tsx";
+import { BikeHud } from "./ui/BikeHud.tsx";
 import { ConnectionBadge, ControlsHint, PartyList } from "./ui/Hud.tsx";
 import { LoadingScreen } from "./ui/LoadingScreen.tsx";
 import { NameTags } from "./ui/NameTags.tsx";
@@ -66,6 +67,7 @@ export function App() {
       <CatanHud />
       <Connect4Hud />
       <LapHud />
+      <BikeHud />
       <PartyList />
       <Pause />
       <LoadingScreen />

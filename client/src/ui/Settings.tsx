@@ -34,6 +34,14 @@ export function SettingsPanel({ onClose }: { onClose: () => void }) {
           <output />
         </label>
         <p className="note setting-note">Low runs on older laptops; High adds glow and soft shadows for strong graphics cards.</p>
+        <label className="setting">
+          <span>Motorcycle gears</span>
+          <select value={s.gears} data-testid="setting-gears" onChange={(e) => updateSettings({ gears: e.target.value as "auto" | "manual" })}>
+            <option value="auto">Automatic</option>
+            <option value="manual">Manual (Q up, Z down)</option>
+          </select>
+          <output />
+        </label>
         <Slider label="Music" value={s.music} testId="setting-music" onChange={(music) => updateSettings({ music })} />
         <Slider label="Effects" value={s.effects} testId="setting-effects" onChange={(effects) => updateSettings({ effects })} />
         <Slider label="Ambience" value={s.ambience} testId="setting-ambience" onChange={(ambience) => updateSettings({ ambience })} />
