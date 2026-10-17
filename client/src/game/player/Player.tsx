@@ -45,6 +45,8 @@ const atStairFoot = (x: number, y: number, z: number) => FEET.some((f) => x > f.
 const ROAR_PLANTED_S = 1.2;
 /** Ground probe: a ray from this high above the feet straight down (stays inside the bear). */
 const PROBE_FROM = 1.0;
+/** Feet below this (metres) means the bear fell out of the level (the lowest ground, by the stream, is ~−10.6; the catch-all floor is at −20). */
+const FELL_OUT_Y = -16;
 const UP = new Vector3(0, 1, 0);
 const tmpMatrix = new Matrix4();
 const tmpMatrix2 = new Matrix4();
@@ -384,6 +386,8 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
       st.vy = 0;
     }
 
+    // Safety net: a bear that ever drops out of the world (a gap in the level) goes back to where it spawned.
+    if (p.y - CAPSULE_CENTER < FELL_OUT_Y && !playerState.teleportTo) playerState.teleportTo = { x: spawn[0], y: spawn[1], z: spawn[2] };
     const tp = playerState.teleportTo;
     if (tp) {
       let y = tp.y;

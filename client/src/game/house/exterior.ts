@@ -299,7 +299,7 @@ function chimney(out: GeoBuckets) {
 
 // --- greenhouse ---
 
-const GH = { x0: 0, x1: 11, z0: 8.5, z1: 12.5, backY: 3.2, wallY: 2.0, curve: 0.8 };
+const GH = { x0: 0, x1: 11, z0: 8.5, z1: 12.5, backY: 3.2, wallY: 2.0, curve: 0.8, footY: -2.9 };
 /** The greenhouse's cross-section, from the garage wall down over the curved eave to the ground. */
 function greenhouseProfile(): [number, number][] {
   const pts: [number, number][] = [[GH.z0, GH.backY]];
@@ -354,6 +354,19 @@ function greenhouse(out: GeoBuckets, solids: SolidBox[]) {
   boxFaces([GH.x0, -0.2, GH.z1 - 0.08], [GH.x1, 0.35, GH.z1 + 0.04], { top: "foundation", sides: "foundation" }, out);
   boxFaces([GH.x0, -0.3, GH.z0], [GH.x1, 0, GH.z1], { top: "concrete", sides: "foundation", bottom: "foundation" }, out);
   solids.push({ min: [GH.x0, -0.3, GH.z0], max: [GH.x1, 0, GH.z1] });
+  // Foundation under the floor: the back lawn drops ~2.7 m under the east end, so without it there
+  // was an open hole under the greenhouse that bears fell through (Andrew, round 3).
+  boxFaces([GH.x0, GH.footY, GH.z0], [GH.x1, -0.3, GH.z1 + 0.04], { top: "foundation", sides: "foundation" }, out);
+  solids.push({ min: [GH.x0, GH.footY, GH.z0], max: [GH.x1, -0.3, GH.z1 + 0.04] });
+  // Concrete steps from the east door down to the lawn by the den: a landing, then east along the den's wall.
+  const [d0, d1] = [10.0, 11.0], rise = 0.225, run = 0.3, n = 12, lx = GH.x1 + 0.6;
+  boxFaces([GH.x1, GH.footY, d0], [lx, 0, d1], { top: "concrete", sides: "foundation" }, out);
+  solids.push({ min: [GH.x1, GH.footY, d0], max: [lx, 0, d1] });
+  for (let k = 1; k < n; k++) {
+    const x0 = lx + (k - 1) * run, top = -k * rise;
+    boxFaces([x0, GH.footY, d0], [x0 + run, top, d1], { top: "concrete", sides: "foundation" }, out);
+    solids.push({ min: [x0, GH.footY, d0], max: [x0 + run, top, d1] });
+  }
   // Walls you bump into: the long glass side and the two ends (leaving the doorway).
   solids.push({ min: [GH.x0, 0, GH.z1 - 0.08], max: [GH.x1, 2.4, GH.z1 + 0.04] });
   solids.push({ min: [GH.x0 - 0.04, 0, GH.z0], max: [GH.x0 + 0.04, 2.6, GH.z1] });
