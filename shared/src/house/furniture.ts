@@ -113,6 +113,8 @@ export const KINDS = {
   dresser: { w: 1.2, d: 0.5, h: 0.9 },
   curio_cabinet: { w: 0.55, d: 0.4, h: 1.8 },
   armoire: { w: 1.0, d: 0.6, h: 2.0 },
+  // Bear hunt (2026-10-17): the hunters' steel gun locker; the guns on its racks are drawn by the hunt code.
+  gun_locker: { w: 1.5, d: 0.5, h: 1.95 },
   drapes: { w: 2.6, d: 0.08, h: 2.2, mount: "wall" },
   globe: { w: 0.32, d: 0.32, h: 0.42, mount: "surface" },
   pennant: { w: 0.7, d: 0.02, h: 0.26, mount: "wall" },
@@ -365,6 +367,7 @@ const BASEMENT: Placement[] = [
   P("side_table", "den", 21.15, 7.65),
   P("table_lamp", "den", 21.15, 7.65, { y: 0.6 }),
   W("armoire", "den", "e", 5.85),
+  W("gun_locker", "den", "n", 14.6),
   P("floor_lamp", "den", 21.6, 9.6),
   W("frame", "den", "s", 20.3, { y: 1.0, w: 1.0, h: 0.75, look: "map" }),
   W("drapes", "den", "s", 17.5, { look: "floral" }),

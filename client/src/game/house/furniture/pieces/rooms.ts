@@ -100,6 +100,18 @@ export const armoire: Builder = (k, { w, d, h }) => {
   }
 };
 
+/** The bear hunt's gun locker: an open-fronted dark steel cabinet with a rack rail and a shelf (guns added by the hunt code). */
+export const gunLocker: Builder = (k, { w, d, h }) => {
+  const steel = "metal:#2f3a33", inside = "paint:#1d221f";
+  k.box([-w / 2, 0, -d / 2], [w / 2, 0.06, d / 2], steel); // base
+  k.box([-w / 2, h - 0.05, -d / 2], [w / 2, h, d / 2], steel); // top
+  k.box([-w / 2, 0.06, -d / 2], [w / 2, h - 0.05, -d / 2 + 0.03], inside); // back
+  for (const sx of [-1, 1]) k.box([sx < 0 ? -w / 2 : w / 2 - 0.03, 0.06, -d / 2], [sx < 0 ? -w / 2 + 0.03 : w / 2, h - 0.05, d / 2], steel); // sides
+  k.box([-w / 2 + 0.03, 0.42, -d / 2 + 0.03], [w / 2 - 0.03, 0.45, d / 2 - 0.04], steel); // butt shelf
+  k.box([-w / 2 + 0.03, 1.55, -d / 2 + 0.03], [w / 2 - 0.03, 1.58, d / 2 - 0.1], steel); // top shelf
+  k.rodX(-w / 2 + 0.03, w / 2 - 0.03, 1.2, d / 2 - 0.08, 0.012, "metal:#9a9fa3"); // barrel rail
+};
+
 /** Curtains either side of a doorway on a rod (the den's french doors). */
 export const drapes: Builder = (k, { w, d, h }, look) => {
   const fabric = look === "floral" ? "tex:fabric_floral" : "fabric:#e8dcc4";

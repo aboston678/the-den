@@ -201,6 +201,7 @@ Starting balance: 1,210 (2026-10-11)
 | 2026-10-17 | Bear hunt: hunter 3D model from Andrew's character sheet (front view), texture + PBR + A-pose + rig (1.85 m) + Idle (price check 47.5; Andrew OK'd the 109.75 batch), job aaa75d8f-caa0-474f-8ca9-c781b21c5c9b | `meshy_v7_image_to_3d` | 47.5 | 412 |
 | 2026-10-17 | Bear hunt gun pictures ×5: sniper, pistol, AR, shotgun, scope (price check 0.25 each; same batch); jobs 57ada2c2, c0275ba8, 6f8ac421, 36bc3d11, facf603e (`assets/concepts/hunt/`) | `gpt_image_2_5` | 1.25 | 410.75 |
 | 2026-10-17 | Bear hunt gun models ×5 image→3D: sniper c8d3c374, pistol a1f6d83e, AR 2e1d9a82, shotgun 83cbf383, scope c00d1d89 (price check 9 each; same batch) | `tripo_h3_1_image_to_3d` | 45 | 365.75 |
+| 2026-10-17 | Bear hunt clips rigged on the hunter: Right_Hand_Sword_Slash (219) for the bear's swipe (Andrew's pick C), job f25310c4-dae4-4e49-b7a8-e03b0504044c; Knock_Down (187) for a swiped hunter (pick D), job 2aaaae59-9147-4abc-9eb5-511677949bd8 (price check 8 each; same batch) | `meshy_rigging` | 16 | 349.75 |
 
 ## Decision log
 | Date | Decision | Why |

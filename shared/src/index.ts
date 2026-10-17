@@ -25,3 +25,6 @@ export * from "./connect4/rules.ts";
 export * from "./connect4/seats.ts";
 export * from "./bike.ts";
 export * from "./track.ts";
+export * from "./hunt/rules.ts";
+export * from "./hunt/spots.ts";
+export * from "./hunt/shot.ts";

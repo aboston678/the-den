@@ -77,6 +77,7 @@ const BUILDERS: Record<CodeKind, Builder> = {
   dresser: rooms.dresser,
   curio_cabinet: rooms.curioCabinet,
   armoire: rooms.armoire,
+  gun_locker: rooms.gunLocker,
   drapes: rooms.drapes,
   globe: rooms.globe,
   pennant: rooms.pennant,
