@@ -75,6 +75,14 @@ export function useBikeCopy() {
 /** Every bike in the scene, for the dev/test switch below. */
 const liveBikes = new Set<Group>();
 
+/** Dev and tests: turn every bike's wheels to `angle` (radians), to check the tyres are whole all the way round. */
+export function setBikeWheelAngle(angle: number) {
+  for (const b of liveBikes) for (const w of (b.userData.wheels ?? []) as Wheel[]) {
+    w.angle = angle;
+    w.pivot.rotation.x = angle;
+  }
+}
+
 /** Dev and tests: hide every bike's body so only the wheels (tyres and all) and plate show. */
 export function showBikeBodies(on: boolean) {
   for (const b of liveBikes) b.traverse((o) => {

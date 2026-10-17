@@ -88,6 +88,8 @@ interface Window {
       };
       /** Dev: hide every bike's body so only the wheels and plate show. */
       showBodies: (on: boolean) => void;
+      /** Dev: turn every bike's wheels to an angle (radians). */
+      setWheelAngle: (angle: number) => void;
     };
     /** The racetrack (round 2): your laps, and (dev only) the bike riding itself out to the track or round it. */
     track?: {

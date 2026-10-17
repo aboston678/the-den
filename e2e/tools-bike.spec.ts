@@ -50,6 +50,19 @@ test("rider views", async ({ page }) => {
   }, parked);
   await page.waitForTimeout(1500);
   await page.screenshot({ path: "review/bike/bike-plate.png" });
+  // Both sides, the wheels turned part-way round: the tyres must be whole at every angle (round 4 fix).
+  for (const [side, turn] of [["left", Math.PI / 2], ["right", -Math.PI / 2]] as const) {
+    for (const deg of [0, 60, 120, 180]) {
+      await page.evaluate(([b, turn, deg]) => {
+        window.__den!.bike!.setWheelAngle((deg! * Math.PI) / 180);
+        const a = b!.yaw + turn!, cx = b!.x + Math.sin(a) * 2.2, cz = b!.z + Math.cos(a) * 2.2;
+        window.__den!.camera.override = { from: { x: cx, y: b!.y + 0.55, z: cz }, look: { x: b!.x, y: b!.y + 0.45, z: b!.z } } as never;
+      }, [parked, turn, deg] as const);
+      await page.waitForTimeout(deg === 0 ? 1500 : 400);
+      await page.screenshot({ path: `review/bike/tyres-${side}-${deg}.png` });
+    }
+  }
+  await page.evaluate(() => window.__den!.bike!.setWheelAngle(0));
   // Only the wheels (the body hidden): each tyre must be whole, so it spins with its rim (round 4 fix).
   await page.evaluate((b) => {
     window.__den!.bike!.showBodies(false);

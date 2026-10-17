@@ -5,7 +5,7 @@ import { create } from "zustand";
 import { bikeSend, useFishStore } from "../../net/party.ts";
 import { consumePress } from "../input/keyboard.ts";
 import { playerState } from "../state.ts";
-import { showBikeBodies } from "./rider.ts";
+import { setBikeWheelAngle, showBikeBodies } from "./rider.ts";
 import { useBikes } from "./store.ts";
 
 // Getting on and off the motorcycle (Andrew, 2026-10-16). E by the garage bike takes one (there's
@@ -24,6 +24,7 @@ export function BikeControls() {
       window.__den.bike = {
         state: () => ({ riding: playerState.riding, speed: playerState.speed, wheelTurns: playerState.bike.wheelTurns, prompt: useBikePrompt.getState().text, ...useBikes.getState() }),
         showBodies: showBikeBodies,
+        setWheelAngle: setBikeWheelAngle,
       };
     }
     return () => {
