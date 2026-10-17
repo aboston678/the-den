@@ -43,6 +43,22 @@ test("rider views", async ({ page }) => {
     await page.waitForTimeout(1500);
     await page.screenshot({ path: `review/bike/${name}.png` });
   }
+  // The licence plate, from behind and a little above.
+  await page.evaluate((b) => {
+    const a = b.yaw + Math.PI, cx = b.x + Math.sin(a) * 1.6, cz = b.z + Math.cos(a) * 1.6;
+    window.__den!.camera.override = { from: { x: cx, y: b.y + 1.15, z: cz }, look: { x: b.x - Math.sin(b.yaw) * 1.0, y: b.y + 0.9, z: b.z - Math.cos(b.yaw) * 1.0 } } as never;
+  }, parked);
+  await page.waitForTimeout(1500);
+  await page.screenshot({ path: "review/bike/bike-plate.png" });
+  // Only the wheels (the body hidden): each tyre must be whole, so it spins with its rim (round 4 fix).
+  await page.evaluate((b) => {
+    window.__den!.bike!.showBodies(false);
+    const a = b.yaw + Math.PI / 2, cx = b.x + Math.sin(a) * 3, cz = b.z + Math.cos(a) * 3;
+    window.__den!.camera.override = { from: { x: cx, y: b.y + 0.7, z: cz }, look: { x: b.x, y: b.y + 0.45, z: b.z } } as never;
+  }, parked);
+  await page.waitForTimeout(1500);
+  await page.screenshot({ path: "review/bike/bike-wheels-only.png" });
+  await page.evaluate(() => window.__den!.bike!.showBodies(true));
   await page.evaluate(() => { window.__den!.camera.override = null; window.__den!.player.hidden = false; });
   await page.keyboard.press("KeyE");
   await expect.poll(async () => (await bike(page)).riding).toBe(true);

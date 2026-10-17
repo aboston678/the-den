@@ -1,6 +1,6 @@
 import { useGLTF } from "@react-three/drei";
 import { useEffect, useMemo } from "react";
-import { Box3, Group, type Object3D, PositionalAudio, Quaternion, Vector3 } from "three";
+import { Box3, BoxGeometry, CanvasTexture, Group, Mesh, MeshStandardMaterial, type Object3D, PositionalAudio, Quaternion, SRGBColorSpace, Vector3 } from "three";
 import { asset } from "../../asset.ts";
 import { autoGear, bikeRevs } from "@den/shared";
 import { getListener, loadSound, toBus } from "../audio/audio.ts";
@@ -49,7 +49,7 @@ export interface Rider {
 /** The bike model, a fresh copy for each use. */
 export function useBikeCopy() {
   const { scene } = useGLTF(BIKE_URL);
-  return useMemo(() => {
+  const bike = useMemo(() => {
     const src = scene.getObjectByName("motorcycle") ?? scene;
     // The GLB stores compressed (quantized) positions with a scale + offset on the node: keep it, inside a plain group we can move.
     scene.updateMatrixWorld(true);
@@ -61,9 +61,69 @@ export function useBikeCopy() {
     const bike = new Group();
     bike.name = "motorcycle";
     bike.add(inner);
+    bike.add(licencePlate());
     bike.userData.wheels = wheelPivots(bike);
     return bike;
   }, [scene]);
+  useEffect(() => {
+    liveBikes.add(bike);
+    return () => void liveBikes.delete(bike);
+  }, [bike]);
+  return bike;
+}
+
+/** Every bike in the scene, for the dev/test switch below. */
+const liveBikes = new Set<Group>();
+
+/** Dev and tests: hide every bike's body so only the wheels (tyres and all) and plate show. */
+export function showBikeBodies(on: boolean) {
+  for (const b of liveBikes) b.traverse((o) => {
+    if (o.name === "motorcycle_body") o.visible = on;
+  });
+}
+
+/** The plate holder under the tail (bike metres): the plate's centre and its tilt back from upright. */
+const PLATE = { y: 0.94, z: -1.047, w: 0.3, h: 0.15, tilt: 0.06 } as const;
+
+let plateParts: { geometry: BoxGeometry; materials: MeshStandardMaterial[] } | null = null;
+
+/** Andrew's licence plate on the holder under the tail: "BEAR" (round 4). One shared look for every bike. */
+function licencePlate() {
+  if (!plateParts) {
+    const c = document.createElement("canvas");
+    c.width = 512;
+    c.height = 256;
+    const g = c.getContext("2d")!;
+    g.fillStyle = "#f3f1ea";
+    g.fillRect(0, 0, 512, 256);
+    g.strokeStyle = "#1c2f5e";
+    g.lineWidth = 14;
+    g.strokeRect(14, 14, 484, 228);
+    g.fillStyle = "#9a9da3"; // the two bolts along the top
+    for (const x of [128, 384]) {
+      g.beginPath();
+      g.arc(x, 38, 9, 0, Math.PI * 2);
+      g.fill();
+    }
+    g.fillStyle = "#1c2f5e";
+    g.font = "bold 150px Impact, 'Arial Black', sans-serif";
+    g.textAlign = "center";
+    g.textBaseline = "middle";
+    g.fillText("BEAR", 256, 146, 440);
+    const face = new CanvasTexture(c);
+    face.colorSpace = SRGBColorSpace;
+    face.anisotropy = 8;
+    const edge = new MeshStandardMaterial({ color: "#3a3d42", roughness: 0.5, metalness: 0.4 });
+    const front = new MeshStandardMaterial({ map: face, roughness: 0.45, metalness: 0.15 });
+    // Box faces: +x, −x, +y, −y, +z (toward the front of the bike, hidden), −z (facing back: the plate).
+    plateParts = { geometry: new BoxGeometry(PLATE.w, PLATE.h, 0.006), materials: [edge, edge, edge, edge, edge, front] };
+  }
+  const mesh = new Mesh(plateParts.geometry, plateParts.materials);
+  mesh.name = "licence-plate";
+  mesh.position.set(0, PLATE.y, PLATE.z);
+  mesh.rotation.x = -PLATE.tilt; // its top leans back toward the tail, like the holder
+  mesh.castShadow = true;
+  return mesh;
 }
 
 /** A wheel that spins (round 4): a pivot at its axle holding the wheel, and the tyre's radius. */

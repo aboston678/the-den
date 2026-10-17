@@ -111,7 +111,7 @@ declare global {
       c4?: import("./connect4/dev.ts").C4Dev;
       /** The racetrack (round 2): your laps, and (dev only) the bike riding itself out to the track or round it. */
       track?: { laps: () => { current: number | null; last: number | null; best: number | null; news: { name: string; s: number; best: boolean; record: boolean; mine: boolean }[] }; autopilot: (route: "out" | "lap" | null) => void };
-      bike?: { state: () => { riding: boolean; speed: number; prompt: string | null; me: import("./bike/store.ts").BikeView; others: Record<string, import("./bike/store.ts").BikeView> } };
+      bike?: { state: () => { riding: boolean; speed: number; wheelTurns: number; prompt: string | null; me: import("./bike/store.ts").BikeView; others: Record<string, import("./bike/store.ts").BikeView> }; showBodies: (on: boolean) => void };
       /** Other bears as this client sees them. */
       remotes: () => { id: string; name: string; x: number; z: number; action: string; flashlight: boolean; wheelie: number; tagVisible: boolean; connected: boolean; fish: { rod: boolean; state: string; species: string } }[];
     };

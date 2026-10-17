@@ -19,7 +19,8 @@ interface Window {
       /** The motorcycle's dials (and how far the front wheel is up). */
       bike: { speed: number; gear: number; revs: number; manual: boolean; wheelie: number };
     };
-    camera: { yaw: number; pitch: number; distance: number; current: number; shake: number };
+    /** `override`: a fixed shot (bowling; the picture tools) instead of following the bear. */
+    camera: { yaw: number; pitch: number; distance: number; current: number; shake: number; override: { from: { x: number; y: number; z: number }; look: { x: number; y: number; z: number } } | null };
     teleport: (x: number, z: number, y?: number) => void;
     ground: (x: number, z: number) => number;
     doors: () => Record<string, boolean>;
@@ -79,10 +80,14 @@ interface Window {
       state: () => {
         riding: boolean;
         speed: number;
+        /** Turns the front wheel has rolled (round 4). */
+        wheelTurns: number;
         prompt: string | null;
         me: { state: string; x: number; y: number; z: number; yaw: number };
         others: Record<string, { state: string; x: number; y: number; z: number; yaw: number }>;
       };
+      /** Dev: hide every bike's body so only the wheels and plate show. */
+      showBodies: (on: boolean) => void;
     };
     /** The racetrack (round 2): your laps, and (dev only) the bike riding itself out to the track or round it. */
     track?: {

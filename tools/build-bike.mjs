@@ -22,9 +22,18 @@ const OUT = process.env.OUT ?? "client/public/models/bike.glb";
 const L = Number(process.env.BIKE_L ?? 2.45);
 const YAW = Number(process.env.BIKE_YAW ?? -90); // the multiview model faces +x
 const TRIS = { body: 90000, wheel: 9000 };
-/** Tyre outer radius as a share of the bike's length (17" sport wheels on a ~2.05 m bike), and each tyre's half-width (metres, at this length). */
-const WHEEL_R = Number(process.env.WHEEL_R ?? 0.152);
-const HALF_W = { front: Number(process.env.FRONT_HW ?? 0.075), rear: Number(process.env.REAR_HW ?? 0.105) };
+/**
+ * Each wheel's cut (metres, at this length): the tyre band (outside the rim) takes the whole tyre,
+ * sidewall bulge and all; inside the rim only the spokes and hub, so the brake discs, calipers,
+ * swingarm, chain and sprocket (all ≥ 0.1 m out from the middle) stay on the body. Measured on the
+ * model (round 4 fix: the old guess left the tread and sidewalls behind, so only the rims turned).
+ */
+const CUT = {
+  front: { tyre: Number(process.env.FRONT_TYRE_HW ?? 0.105), hub: Number(process.env.FRONT_HW ?? 0.075) },
+  rear: { tyre: Number(process.env.REAR_TYRE_HW ?? 0.155), hub: Number(process.env.REAR_HW ?? 0.1) },
+};
+/** Where the rim ends and the tyre begins, as a share of the tyre's radius. */
+const RIM = 0.62;
 
 await MeshoptEncoder.ready;
 await MeshoptDecoder.ready;
@@ -50,30 +59,36 @@ transformMesh(mesh, [k, 0, 0, 0, 0, k, 0, 0, 0, 0, k, 0, -k * (min[0] + max[0]) 
 ({ min, max } = getBounds(node));
 console.log(`bike ${(max[0] - min[0]).toFixed(2)} w x ${(max[1] - min[1]).toFixed(2)} h x ${(max[2] - min[2]).toFixed(2)} l m`);
 
-// --- find the wheels: each tyre's lowest, front-most / rear-most point near the ground ---
-const R = WHEEL_R * L;
-let front = -Infinity, rear = Infinity;
+// --- find the wheels: a tyre sticks out furthest at its axle's height, and sits on the ground,
+// so that height is its radius, and the axle is one radius in from the tyre's outermost point ---
+const allPoints = [];
 for (const prim of mesh.listPrimitives()) {
-  const pos = prim.getAttribute("POSITION");
-  const p = [0, 0, 0];
+  const pos = prim.getAttribute("POSITION"), p = [0, 0, 0];
   for (let i = 0; i < pos.getCount(); i++) {
     pos.getElement(i, p);
-    if (p[1] > R * 0.6 || Math.abs(p[0]) > 0.12) continue;
-    front = Math.max(front, p[2]);
-    rear = Math.min(rear, p[2]);
+    if (Math.abs(p[0]) < 0.05 && p[1] > 0.2 && p[1] < 0.6) allPoints.push(p[1], p[2]);
   }
 }
-const axles = {
-  front: { y: R, z: Number(process.env.FRONT_Z ?? front - R) },
-  rear: { y: R, z: Number(process.env.REAR_Z ?? rear + R) },
-};
-console.log(`wheels: radius ${R.toFixed(3)} m, front axle z ${axles.front.z.toFixed(3)}, rear axle z ${axles.rear.z.toFixed(3)}`);
+function measureWheel(sign) {
+  let best = { h: 0, out: 0 };
+  for (let h = 0.25; h <= 0.55; h += 0.005) {
+    let out = 0;
+    for (let i = 0; i < allPoints.length; i += 2) if (Math.abs(allPoints[i] - h) < 0.006) out = Math.max(out, allPoints[i + 1] * sign);
+    if (out > best.out) best = { h, out };
+  }
+  return { y: best.h, z: sign * (best.out - best.h), r: best.h };
+}
+const axles = { front: measureWheel(1), rear: measureWheel(-1) };
+if (process.env.FRONT_Z) axles.front.z = Number(process.env.FRONT_Z);
+if (process.env.REAR_Z) axles.rear.z = Number(process.env.REAR_Z);
+for (const [name, ax] of Object.entries(axles)) console.log(`${name} wheel: radius ${ax.r.toFixed(3)} m, axle y ${ax.y.toFixed(3)} z ${ax.z.toFixed(3)}`);
 
 /** Which wheel a triangle belongs to (by its centre), or null for the body. */
 function wheelOf(cx, cy, cz) {
   for (const [name, ax] of Object.entries(axles)) {
-    if (Math.abs(cx) > HALF_W[name]) continue;
-    if (Math.hypot(cy - ax.y, cz - ax.z) < R * 0.985) return name;
+    const r = Math.hypot(cy - ax.y, cz - ax.z);
+    if (r > ax.r * 1.03) continue;
+    if (Math.abs(cx) < (r >= ax.r * RIM ? CUT[name].tyre : CUT[name].hub)) return name;
   }
   return null;
 }
@@ -125,7 +140,9 @@ for (const [name, prims] of Object.entries(parts)) {
   const n = doc.createNode(m.getName()).setMesh(m);
   if (name !== "body") n.setTranslation([0, axles[name].y, axles[name].z]);
   group.addChild(n);
-  console.log(`${m.getName().padEnd(16)} ${m.listPrimitives().reduce((t, p) => t + p.getIndices().getCount() / 3, 0)} tris`);
+  const b = getBounds(n);
+  console.log(`${m.getName().padEnd(16)} ${m.listPrimitives().reduce((t, p) => t + p.getIndices().getCount() / 3, 0)} tris, ` +
+    `${(b.max[0] - b.min[0]).toFixed(2)} w x ${(b.max[1] - b.min[1]).toFixed(2)} h x ${(b.max[2] - b.min[2]).toFixed(2)} l m`);
 }
 for (const child of scene.listChildren()) scene.removeChild(child);
 scene.addChild(group);
