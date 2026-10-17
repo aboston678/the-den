@@ -15,7 +15,7 @@ const side = new Vector3();
 /** Eased 0…1: how far over the shoulder we are (bear hunt aiming). */
 let shoulder = 0;
 /** Over the shoulder: this far to the right, this close behind, this much narrower a view. */
-const SHOULDER = { right: 0.55, distance: 1.7, height: 1.55, narrow: 1.35 } as const;
+const SHOULDER = { right: 0.75, distance: 2.3, height: 1.6, narrow: 1.3 } as const;
 /** Through a scope: the eye's height above the feet. */
 const EYE_HEIGHT = 1.62;
 /** Where the camera is looking, eased toward a shot's look-at point. */

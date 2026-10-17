@@ -26,6 +26,9 @@ import { myRole, roleOf } from "../hunt/store.ts";
 /** Rapier collider handle → the player it belongs to (the bear hunt's bullets find their target with it). */
 export const colliderOwners = new Map<number, string>();
 
+/** Every remote hunter's glow copies (tests check the bear sees them). */
+export const allGlows = new Set<Mesh[]>();
+
 /** The bear's view of hunters through walls and trees (bear hunt): flat glowing orange, drawn on top. */
 const GLOW = new MeshBasicMaterial({ color: "#ff6a1a", transparent: true, opacity: 0.55, depthTest: false, depthWrite: false });
 
@@ -68,6 +71,10 @@ function RemoteBearView({ id }: { id: string }) {
   const rider = useRider(visual);
   const hunter = useHunterRig(visual);
   const glows = useMemo(() => makeGlow(hunter, GLOW), [hunter]);
+  useEffect(() => {
+    allGlows.add(glows);
+    return () => void allGlows.delete(glows);
+  }, [glows]);
   const owned = useRef<number | null>(null);
   useEffect(() => () => {
     if (owned.current !== null) colliderOwners.delete(owned.current);

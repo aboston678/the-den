@@ -7,12 +7,15 @@ export { type Friendship, type Row, sortFriendships } from "./socialRules.ts";
 // sign-in: the database's row rules decide what each player may see and change. Stats are
 // written only by the game server.
 
-export type Board = "fish" | "bowling" | "catan" | "c4";
+export type Board = "fish" | "bowling" | "catan" | "c4" | "hunt" | "takedowns";
 export const BOARDS: { id: Board; label: string; column: string; unit: string; soon?: string }[] = [
   { id: "fish", label: "Fish caught", column: "fish_caught", unit: "fish" },
   { id: "bowling", label: "Bowling", column: "bowling_high_score", unit: "best game" },
   { id: "catan", label: "Catan", column: "catan_wins", unit: "wins" },
   { id: "c4", label: "Connect Four", column: "c4_wins", unit: "wins" },
+  // The bear hunt (Andrew, 2026-10-17): points earned as the bear, and bears taken down as a hunter.
+  { id: "hunt", label: "Bear hunt", column: "hunt_points", unit: "points" },
+  { id: "takedowns", label: "Takedowns", column: "hunt_takedowns", unit: "bears" },
 ];
 
 // --- development preview (?mocksocial in a dev build): made-up bears, so the panels can be looked at without signing in ---
@@ -38,6 +41,13 @@ const MOCK_C4 = [
   { userId: "m1", username: "RaptorFan", value: 11 }, { userId: "m5", username: "Hemlock", value: 7 }, { userId: "me", username: "DevBear", value: 2 },
 ];
 
+const MOCK_HUNT = [
+  { userId: "m2", username: "LunaLover", value: 519 }, { userId: "me", username: "DevBear", value: 36 }, { userId: "m1", username: "RaptorFan", value: 4 },
+];
+const MOCK_TAKEDOWNS = [
+  { userId: "me", username: "DevBear", value: 5 }, { userId: "m3", username: "BassMaster", value: 2 },
+];
+
 const myId = () => (mockSocial ? "me" : useAuth.getState().userId);
 
 /** The leaderboard for one board, all players or just you and your friends. */
@@ -45,7 +55,7 @@ export async function leaderboard(board: Board, scope: "all" | "friends"): Promi
   const me = myId();
   if (mockSocial) {
     const friendIds = new Set(["me", ...MOCK_FRIENDS.filter((f) => f.status === "accepted").map((f) => f.otherId)]);
-    const stats = board === "fish" ? MOCK_STATS : board === "bowling" ? MOCK_BOWLING : board === "catan" ? MOCK_CATAN : MOCK_C4;
+    const stats = board === "fish" ? MOCK_STATS : board === "bowling" ? MOCK_BOWLING : board === "catan" ? MOCK_CATAN : board === "hunt" ? MOCK_HUNT : board === "takedowns" ? MOCK_TAKEDOWNS : MOCK_C4;
     return rankRows(stats.filter((r) => scope === "all" || friendIds.has(r.userId)), me);
   }
   if (!supabase || !me) return [];

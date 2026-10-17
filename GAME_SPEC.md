@@ -26,9 +26,10 @@ The Den is a private, browser-based, multiplayer 3D game for Andrew and his frie
 | House | Built from `docs/floorplan.json` and the listing photos, at **1.25× real scale** (doors, rooms, stairs, bowling alley, everything). |
 | Day/night | 30 min day → 4 min dusk → 30 min night → 4 min dawn (68 min loop), synced for the party. House lights always on inside. Flashlight at night. |
 | Accounts | Phase 2: **Sign in with Google** (Supabase). Everyone signs in; no guest mode (the server refuses players who aren't signed in). Development builds keep a name box for testing. |
-| Leaderboard | Fish caught (total), bowling high score (best game), Catan wins (total), Connect Four wins (total, 2026-10-16). Tabs: All / Friends. |
+| Leaderboard | Fish caught (total), bowling high score (best game), Catan wins (total), Connect Four wins (total, 2026-10-16), bear hunt points (total) and bears taken down (total) (2026-10-17). Tabs: All / Friends. |
 | Board game | **Catan**, full base-game rules, 2–4 players, in the formal dining room. Private game, so the name stays. Our own art, not the official board art. |
 | Connect Four | Two bears at a games table in the basement stair landing, next to the bowling alley (Andrew, 2026-10-16; §16b). |
+| Bear hunt | A hide-and-hunt party game (Andrew, 2026-10-17; §16c): ready up in a blue circle by the dock, one random player is the bear, the rest are human hunters with guns from a basement locker. |
 | Bowling | Basement, 2 lanes, ball return, real physics with spin, Wii-Bowling-style scoring and feel. |
 | Dogs | None (dropped by Andrew, 2026-10-12; see §12). |
 | Fishing | From the dock or anywhere on the stream bank. Bite after 10–45 s. Spam R to reel against a tension meter. |
@@ -163,7 +164,8 @@ Base + 14 extra clips ≈ 47.5 + 112 = **~160 credits**.
 | Shift (hold) | Sprint |
 | Space | Jump |
 | C | Crouch / stand up |
-| E | Interact: open/close doors, take/return fishing rod, sit at the Catan or Connect Four table, join a bowling lane, get on / off the motorcycle |
+| E | Interact: open/close doors, take/return fishing rod, sit at the Catan or Connect Four table, join a bowling lane, get on / off the motorcycle, ready up for a bear hunt, open the gun locker |
+| Bear hunt | Hunter: left mouse fire (hold for the AR) · right mouse aim (through the scope if fitted) · R reload · 1–4 sniper, pistol, AR, shotgun. Bear: left mouse swipe · Y roar |
 | On the motorcycle | W throttle · S brake / back up · A/D steer · Shift tuck · Q/Z gear up/down (manual) · M automatic/manual · E get off (when slow) |
 | Y | Roar |
 | B | Dance |
@@ -289,7 +291,7 @@ Fish models: one per species via Higgsfield image→3D (9 credits each; the catf
 
 - **Supabase Auth with Google.** First sign-in: pick a unique username (3–16 characters, letters/numbers/underscore). It's the name tag above your bear. Setting up Google sign-in takes Andrew ~15 minutes of clicking in Google Cloud and Supabase; walk him through it.
 - **Friends:** search by username → send request → accept/decline. Friends list on the home screen.
-- **Leaderboard** (home screen): Fish caught · Bowling high score · Catan wins · Connect Four wins. Tabs: All players / Friends.
+- **Leaderboard** (home screen): Fish caught · Bowling high score · Catan wins · Connect Four wins · Bear hunt (points as the bear) · Takedowns (bears taken down as a hunter). Tabs: All players / Friends.
 - **Tables (suggested):** `profiles` (id, username), `friendships` (requester, addressee, status), `stats` (user_id, fish_caught, bowling_high_score, catan_wins), `catches` (user_id, species, weight_lb, caught_at), `bowling_games`, `catan_games`. Row-level security on everything.
 - **Only the game server writes stats** (service-role key). The browser never writes stats directly.
 
@@ -343,6 +345,26 @@ Fish models: one per species via Higgsfield image→3D (9 credits each; the catf
 - **Play:** when both chairs are taken either player presses Start; a random bear goes first as red, then yellow. On your turn a see-through disc follows the column you point at; click to drop. Discs fall with a bounce and a clack. Four in a row across, up or diagonally wins (the four pulse, fanfare, the winner jumps up and cheers); a full grid is a draw. Rematch from the same panel.
 - **Leaving:** E mid-game asks first; leaving ends the game with no winner. A dropped player gets 60 s to reconnect while the game waits.
 - **Server-authoritative** (`shared/src/connect4/`, `server/src/rooms/connect4.ts`); nothing is secret, so the whole game is synced. A win → **Connect Four wins** +1 on the leaderboard.
+
+---
+
+## 16c. Bear hunt (Andrew, 2026-10-17)
+
+- **Getting in:** a glowing blue circle on the trail just west of the rod bucket at the dock. Standing in it, E readies up (E again stands down; stepping out unreadies you). When everyone standing in the circle (2–6) is ready, a 5 s countdown, then one of them at random is **the bear** and the rest are **hunters**. Bears not in the hunt carry on as normal; players in the hunt don't see them (or bump into them), and they hear every gunshot.
+- **The bear** (the normal bear) is moved to a random hiding spot anywhere on the map (26 spots: rooms of the house, the lawns, the woods, the road and the racetrack; never the same twice running, never near the circle); only the bear's screen says where. It sees every hunter as a red dot on a mini-map and as a glowing orange outline through walls and trees. Its name tag is hidden from hunters. It can swipe (left mouse): a hunter within ~2.5 m in front is knocked flat for 3 s (5 s between swipes). It can roar, but every hunter hears where.
+- **Hunters** are Andrew's own hunter (orange camo vest, camo jacket, cargo pants; Higgsfield model from his character sheet). They start at the circle with the scoped sniper; a gun locker in the basement den (north wall) has the rest. They carry every gun they take and switch with 1–4; at the locker any gun can have a scope put on or taken off. Their mini-map shows only each other, never the bear. Right mouse aims over the shoulder (through the scope if one's fitted: sniper 6×, AR 3×, pistol/shotgun 2×). No shooting from a motorcycle (both paws are on the grips); everyone may ride.
+
+| Gun | Hits to take the bear down | Magazine | Fire | Reload |
+|---|---|---|---|---|
+| Sniper rifle | 1 | 1 | bolt (1.2 s) | 2.5 s |
+| Pistol | 3 | 12 | semi-automatic | 1.5 s |
+| AR | 2 | 30 | automatic (~10 a second) | 2 s |
+| Shotgun | 1 (within ~30 m) | 6 | pump, 8 pellets | 3 s |
+
+- Ammo in reserve is unlimited. The bear has a health bar everyone in the hunt sees.
+- **Points:** the bear banks points for every full minute it survives: 1, 2, 4, 8, 16 … (2^(minutes−1)). At 10 minutes the bear wins with **512**. Taken down, the bear keeps what it had banked; the hunter who landed the final hit gets a takedown. If the bear leaves it keeps its points; if every hunter leaves the bear keeps its points.
+- **Gunshots** are loud and different for each gun (made in code), heard by everyone in the party anywhere on the map; tracers and muzzle flashes are seen by everyone.
+- **Server-checked** (`shared/src/hunt/`, `server/src/rooms/hunt.ts`): the hunter's browser casts each shot (walls, trees and the ground stop it) and says where it hit the bear; the server checks the shooter, gun, ammo, fire rate, range and that the hit lies on the ray inside the bear, and owns health, the clock, roles and the end. Results go to the leaderboard (`record_hunt`).
 
 ---
 
@@ -413,7 +435,7 @@ Fish models: one per species via Higgsfield image→3D (9 credits each; the catf
 
 ## 21. Not in v1
 
-Voice or text chat · mobile/touch · controllers · other bear species or skins · swimming · vehicles other than the motorcycle (§5.4, added 2026-10-16) · public matchmaking · monetization · weather.
+Voice or text chat · mobile/touch · controllers · other bear species or skins (the bear hunt's human hunter, §16c, is the one other character) · swimming · vehicles other than the motorcycle (§5.4, added 2026-10-16) · weapons outside the bear hunt · public matchmaking · monetization · weather.
 
 ---
 

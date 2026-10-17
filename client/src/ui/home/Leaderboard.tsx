@@ -45,7 +45,7 @@ export function LeaderboardPanel({ onClose }: { onClose: () => void }) {
         {rows === null ? (
           <p className="note">Loading…</p>
         ) : rows.length === 0 ? (
-          <p className="note" data-testid="board-empty">{info.soon ?? `No scores ${scope === "friends" ? "from you or your friends " : ""}yet. ${board === "bowling" ? "Go bowl a game in the basement!" : board === "catan" ? "Go win a game of Catan in the dining room!" : board === "c4" ? "Go win a game of Connect Four by the bowling alley!" : "Go catch a fish!"}`}</p>
+          <p className="note" data-testid="board-empty">{info.soon ?? `No scores ${scope === "friends" ? "from you or your friends " : ""}yet. ${board === "bowling" ? "Go bowl a game in the basement!" : board === "catan" ? "Go win a game of Catan in the dining room!" : board === "c4" ? "Go win a game of Connect Four by the bowling alley!" : board === "hunt" ? "Ready up in the blue circle by the dock and survive as the bear!" : board === "takedowns" ? "Ready up in the blue circle by the dock and take the bear down!" : "Go catch a fish!"}`}</p>
         ) : (
           <ol className="board-rows" data-testid="board-rows">
             {rows.map((r) => (

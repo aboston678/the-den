@@ -7,7 +7,7 @@ import { create } from "zustand";
 import { huntSend, usePartyStore } from "../../net/party.ts";
 import { playAt } from "../audio/audio.ts";
 import { consumePress } from "../input/keyboard.ts";
-import { colliderOwners } from "../remote/RemoteBears.tsx";
+import { allGlows, colliderOwners } from "../remote/RemoteBears.tsx";
 import { cameraState, playerState } from "../state.ts";
 import { invisibleColliders } from "../world/invisible.ts";
 import { huntAim } from "./aim.ts";
@@ -198,6 +198,11 @@ export function HuntControls() {
       fireAt: (x: number, y: number, z: number) => fireNow?.(new Vector3(x, y, z)) ?? false,
       spot: (name: string) => huntSend.devSpot(name),
       lastRay: () => lastRay,
+      glows: () => [...allGlows].map((gs) => gs.map((g) => {
+        let shown = g.visible;
+        for (let o = g.parent; o; o = o.parent) shown &&= o.visible;
+        return { shown, own: g.visible, name: g.name, type: g.type };
+      })),
       dots: () => mapDots(myRole(usePartyStore.getState().sessionId)),
       aim: (on: boolean) => {
         huntAim.aiming = on;

@@ -76,7 +76,10 @@ export function useHunterRig(visual: RefObject<Group | null>): HunterRig {
       guns[g] = holder;
       mount.add(holder);
     }
-    const scope = gunsGltf.scene.getObjectByName("scope")?.clone() ?? new ThreeGroup();
+    // In a group of its own, so sizing it doesn't undo the file's compression scale on the node.
+    const scope = new ThreeGroup();
+    const scopeNode = gunsGltf.scene.getObjectByName("scope")?.clone();
+    if (scopeNode) scope.add(scopeNode);
     scope.visible = false;
     const arms = (["Right", "Left"] as const).map((s) => ({
       upper: model.getObjectByName(`${s}Arm`)!, fore: model.getObjectByName(`${s}ForeArm`)!, hand: model.getObjectByName(`${s}Hand`)!,
@@ -130,10 +133,11 @@ export function poseHunter(rig: HunterRig, p: HunterPose) {
   const gun = p.gun as GunId;
   const fit = GUN_FIT[gun];
   for (const g of GUNS) rig.guns[g].visible = g === gun;
-  // The scope rides on the gun in hand.
+  // The scope rides on the gun in hand. (The holder is in the gun's own metres; the model node inside
+  // it carries the file's compression scale, so nothing is measured in the node's space.)
   const holder = rig.guns[gun];
   if (p.scoped) {
-    if (rig.scope.parent !== holder.children[0]) holder.children[0]!.add(rig.scope);
+    if (rig.scope.parent !== holder) holder.add(rig.scope);
     rig.scope.position.set(0, fit.scope[0], fit.scope[1]);
     rig.scope.scale.setScalar(fit.scope[2]);
   }
@@ -149,7 +153,7 @@ export function poseHunter(rig: HunterRig, p: HunterPose) {
   // Hands on the gun: right on the grip, left on the fore-end (both on the grip for the pistol).
   rig.model.updateWorldMatrix(true, true);
   rig.mount.updateWorldMatrix(true, true);
-  const local = holder.children[0]!;
+  const local = holder;
   const bones = rig.arms.flatMap((a) => [a.upper, a.fore, a.hand]);
   restore(bones);
   rig.model.updateWorldMatrix(true, true);
