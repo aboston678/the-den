@@ -1,4 +1,4 @@
-import { HOOK_WINDOW_S, rodBucket, streamCenter } from "@den/shared";
+import { HOOK_WINDOW_S, JENNA, rodBucket, streamCenter } from "@den/shared";
 import { describe, expect, it } from "vitest";
 import { Player } from "./PartyState.ts";
 import { Fishing } from "./fishing.ts";
@@ -11,6 +11,82 @@ function bearAt(x: number, z: number) {
   return p;
 }
 const water = () => ({ x: streamCenter(0) - 4, z: 0 });
+
+/** A repeatable random source. */
+function seeded(seed: number) {
+  let t = seed;
+  return () => {
+    t = (t + 0x6d2b79f5) | 0;
+    let r = Math.imul(t ^ (t >>> 15), 1 | t);
+    r = (r + Math.imul(r ^ (r >>> 7), 61 | r)) ^ r;
+    return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/**
+ * One cast to the end: wait for the bite, strike, then either reel carefully (presses only while the
+ * tension is low) until it's landed, or `give` up ("snap" = mash R, "reel-in", "miss" the bite).
+ */
+function fishOnce(f: Fishing, p: Player, players: Map<string, Player>, clock: { t: number }, give?: "snap" | "reel-in" | "miss") {
+  let species = "";
+  f.cast("a", p, water().x, 0, clock.t);
+  while (p.fishing === "cast") f.tick(players, (clock.t += 250), 0.25);
+  if (give === "miss") {
+    while (p.fishing === "bite") f.tick(players, (clock.t += 250), 0.25);
+  } else {
+    f.reel("a", p, (clock.t += 50)); // strike
+    species = p.catchSpecies;
+    if (give === "reel-in") f.reelIn("a", p);
+    while (p.fishing === "fight" && clock.t < 10_000_000) {
+      clock.t += 50;
+      if (give === "snap" || (p.tension < 0.5 && clock.t % 150 === 0)) f.reel("a", p, clock.t);
+      if (give === "snap") for (let i = 0; i < 3; i++) f.reel("a", p, clock.t);
+      f.tick(players, clock.t, 0.05);
+    }
+  }
+  const result = p.fishing;
+  f.tick(players, (clock.t += 61_000), 0.05); // let the result go by (a landed fish goes back after a minute)
+  return { species, result };
+}
+
+describe("the Jenna Catfish (round 3)", () => {
+  const setup = (seed: number) => {
+    const f = new Fishing(seeded(seed));
+    const b = rodBucket();
+    const p = bearAt(b.x, b.z);
+    const players = new Map([["a", p]]);
+    f.rod("a", p, true);
+    return { f, p, players, clock: { t: 0 } };
+  };
+
+  it("bites on exactly one cast in every four, and gets landed by careful reeling", () => {
+    for (const seed of [1, 2, 3]) {
+      const { f, p, players, clock } = setup(seed);
+      const runs: number[] = [];
+      for (let run = 0; run < 10; run++) {
+        let cats = 0;
+        for (let i = 0; i < 4; i++) {
+          const r = fishOnce(f, p, players, clock);
+          expect(r.result).toBe("landed");
+          if (r.species === JENNA) cats++;
+        }
+        runs.push(cats);
+      }
+      expect(runs).toEqual(Array(10).fill(1));
+    }
+  });
+
+  it("comes straight back on the next cast if she snaps the line, the bite is missed or the line comes in", () => {
+    for (const give of ["snap", "miss", "reel-in"] as const) {
+      const { f, p, players, clock } = setup(7);
+      let r = fishOnce(f, p, players, clock);
+      while (r.species !== JENNA) r = fishOnce(f, p, players, clock);
+      // Lose eight casts in a row (a whole run of four is among them, so one was hers): she's next.
+      for (let i = 0; i < 8; i++) fishOnce(f, p, players, clock, give);
+      expect(fishOnce(f, p, players, clock).species).toBe(JENNA);
+    }
+  });
+});
 
 describe("fishing on the server", () => {
   it("only hands out a rod at the bucket", () => {

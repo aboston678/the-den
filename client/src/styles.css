@@ -735,3 +735,4 @@ body.catan-seated .controls-hint { display: none; }
 @keyframes redline { 50% { opacity: 0.55; } }
 .bike-keys { grid-column: 1 / -1; font: 12px system-ui, sans-serif; color: rgb(239 230 210 / 0.7); text-align: center; }
 .bike-keys b { color: var(--ember); }
+.fish-big { margin-top: 6px; font-size: 13px; font-weight: 600; color: #ffd36a; text-align: center; }

@@ -131,6 +131,7 @@ test("the Jenna Catfish: she leaps clear of the water for everyone, and lands at
   await expect(a.getByTestId("fish-on")).toBeVisible({ timeout: 10_000 });
   await a.keyboard.press("KeyR");
   await expect.poll(async () => (await fish(a)).state).toBe("fight");
+  await expect(a.getByTestId("fish-big")).toBeVisible(); // "Reel slowly" (round 3: mashing snaps her)
   // The other bear knows what's on the line, and both see her in the air.
   await expect.poll(() => b.evaluate(() => window.__den!.remotes()[0]?.fish.species)).toBe("jenna_catfish");
   await expect.poll(() => a.evaluate(() => window.__den!.fish.leaping().includes("me")), { timeout: 8000, intervals: [50] }).toBe(true);

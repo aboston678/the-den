@@ -1,5 +1,5 @@
 import {
-  BUCKET_REACH, CAST_MAX, type Fight, HOOK_WINDOW_S, MAX_REELS_PER_S, isStreamWater, rodBucket, rollBiteDelay, rollSpecies, rollWeight,
+  BUCKET_REACH, CAST_MAX, type Fight, HOOK_WINDOW_S, JENNA, JENNA_EVERY, MAX_REELS_PER_S, isStreamWater, rodBucket, rollBiteDelay, rollSpecies, rollWeight,
   speciesById, startFight, stepFight,
 } from "@den/shared";
 import type { Player } from "./PartyState.ts";
@@ -29,6 +29,12 @@ interface Angler {
   pressesInWindow: number;
   /** Heaviest of each species this session (personal bests; saved for good in milestone 2.6). */
   best: Map<string, number>;
+  /**
+   * The Jenna Catfish's turn (round 3): every run of JENNA_EVERY casts has one random cast that's hers
+   * (`slot`). Her turn stays owed until she's landed, so if she snaps the line, gets away or the line
+   * comes in, she's back on the next cast.
+   */
+  jenna: { castsInRun: number; slot: number; owed: boolean; thisCast: boolean };
   /** Dev and tests: the next bite's delay, species and weight. */
   forced?: { biteIn: number; species?: string; weight?: number };
 }
@@ -49,7 +55,8 @@ export class Fishing {
   private angler(id: string) {
     let a = this.anglers.get(id);
     if (!a) {
-      a = { biteAt: 0, hookBy: 0, resultUntil: 0, landedAt: 0, fight: null, presses: 0, pressWindowStart: 0, pressesInWindow: 0, best: new Map() };
+      a = { biteAt: 0, hookBy: 0, resultUntil: 0, landedAt: 0, fight: null, presses: 0, pressWindowStart: 0, pressesInWindow: 0, best: new Map(),
+        jenna: { castsInRun: 0, slot: Math.floor(this.rand() * JENNA_EVERY), owed: false, thisCast: false } };
       this.anglers.set(id, a);
     }
     return a;
@@ -84,6 +91,14 @@ export class Fishing {
     const a = this.angler(id);
     a.fight = null;
     a.biteAt = now + (a.forced ? a.forced.biteIn : rollBiteDelay(this.rand())) * 1000;
+    // Is this cast the catfish's? (One random cast in every run of four; still owed from an earlier one counts.)
+    const j = a.jenna;
+    if (j.castsInRun === j.slot) j.owed = true;
+    j.thisCast = j.owed;
+    if (++j.castsInRun >= JENNA_EVERY) {
+      j.castsInRun = 0;
+      j.slot = Math.floor(this.rand() * JENNA_EVERY);
+    }
     p.fishing = "cast";
     p.lureX = x;
     p.lureZ = z;
@@ -107,7 +122,7 @@ export class Fishing {
     if (p.fishing === "bite") {
       // Strike: the fish is hooked.
       const forced = a.forced;
-      const species = (forced?.species && speciesById(forced.species)) || rollSpecies(this.rand());
+      const species = (forced?.species && speciesById(forced.species)) || (a.jenna.thisCast ? speciesById(JENNA)! : rollSpecies(this.rand()));
       const weight = forced?.weight ?? rollWeight(species, this.rand());
       a.forced = undefined;
       a.fight = startFight(species, weight, Math.max(4, Math.hypot(p.lureX - p.x, p.lureZ - p.z)), this.rand());
@@ -167,6 +182,7 @@ export class Fishing {
             const prev = a.best.get(f.species) ?? 0;
             const best = f.weight > prev;
             if (best) a.best.set(f.species, f.weight);
+            if (f.species === JENNA) a.jenna.owed = false; // landed her: her turn is used
             p.catchSpecies = f.species;
             p.catchWeight = f.weight;
             this.result(p, a, "landed", now);

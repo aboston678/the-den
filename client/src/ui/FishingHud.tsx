@@ -1,9 +1,9 @@
-import { formatWeight, speciesById } from "@den/shared";
+import { JENNA, formatWeight, speciesById } from "@den/shared";
 import { useEffect, useState } from "react";
 import { useCastUi } from "../game/fishing/FishingControls.tsx";
 import { useFishStore } from "../net/party.ts";
 
-// The fishing HUD (GAME_SPEC §11.5, §13): the cast power bar, "FISH ON! Spam R", the tension
+// The fishing HUD (GAME_SPEC §11.5, §13): the cast power bar, "FISH ON! Press R", the tension
 // meter while you fight, "Snapped!" / "It got away", the catch card (species, weight, personal
 // best), and a note when someone else in the party lands one.
 
@@ -36,10 +36,11 @@ export function FishingHud() {
         </div>
       )}
       {hint && now - hintAt < 2500 && <div className="fish-hint">{hint}</div>}
-      {me.state === "bite" && <div className="fish-on" data-testid="fish-on">FISH ON! <b>Spam R</b></div>}
+      {me.state === "bite" && <div className="fish-on" data-testid="fish-on">FISH ON! Press <b>R</b></div>}
       {me.state === "fight" && (
         <div className="tension" data-testid="tension">
           <div className="tension-label"><span>Tension</span><span>{Math.max(0, me.line).toFixed(0)} m of line · <b>R</b> reel</span></div>
+          {me.species === JENNA && <div className="fish-big" data-testid="fish-big">It's the Jenna Catfish! Reel slowly, keep the tension out of the red</div>}
           <div className="bar"><div style={{ width: `${Math.round(Math.min(1, me.tension) * 100)}%`, background: tensionColor }} /></div>
         </div>
       )}

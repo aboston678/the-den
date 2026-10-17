@@ -37,7 +37,7 @@ describe("fishing", () => {
       const s = rollSpecies((i + 0.5) / 10000);
       counts[s.id] = (counts[s.id] ?? 0) + 1;
     }
-    for (const s of SPECIES) expect(counts[s.id]! / 100).toBeCloseTo(s.chance, 0);
+    for (const s of SPECIES) expect((counts[s.id] ?? 0) / 100).toBeCloseTo(s.chance, 0);
   });
 
   it("weights stay in range and big ones are rare", () => {
@@ -47,9 +47,10 @@ describe("fishing", () => {
     expect(rollWeight(bass, 0.5)).toBeLessThan(2.2); // median well under the middle of the range
   });
 
-  it("the Jenna Catfish is 1 hooked fish in 4 and always weighs 200 to 400 lb", () => {
+  it("the Jenna Catfish never comes by chance (the server gives her 1 cast in 4) and always weighs 200 to 400 lb", () => {
     const cat = speciesById("jenna_catfish")!;
-    expect(cat.chance).toBe(25);
+    expect(cat.chance).toBe(0);
+    for (let i = 0; i < 1000; i++) expect(rollSpecies(i / 1000).id).not.toBe("jenna_catfish");
     for (let i = 0; i <= 100; i++) {
       const w = rollWeight(cat, i / 100);
       expect(w).toBeGreaterThanOrEqual(200);

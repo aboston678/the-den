@@ -23,15 +23,20 @@ export interface Species {
 }
 
 // Every species jumps clear of the water while you reel it in (Andrew, 2026-10-16), so you can see what's on.
-// The Jenna Catfish (Andrew's own monster) is 1 hooked fish in 4, always 200–400 lb.
+// The Jenna Catfish (Andrew's own monster, always 200–400 lb) isn't left to chance: she's 1 cast in
+// every 4 (round 3; the server's cast counter, JENNA_EVERY), so her chance in the random table is 0
+// and the other fish share the rest.
 export const SPECIES: Species[] = [
-  { id: "sunfish", name: "Pumpkinseed sunfish", chance: 21, minLb: 0.1, maxLb: 1.0, fight: 0.6, jumps: true },
-  { id: "perch", name: "Yellow perch", chance: 18, minLb: 0.1, maxLb: 1.5, fight: 0.6, jumps: true },
-  { id: "crappie", name: "Crappie", chance: 12, minLb: 0.25, maxLb: 2.5, fight: 1.0, jumps: true },
-  { id: "smallmouth", name: "Smallmouth bass", chance: 12.75, minLb: 0.5, maxLb: 8.0, fight: 1.5, jumps: true },
-  { id: "largemouth", name: "Largemouth bass", chance: 11.25, minLb: 0.5, maxLb: 8.0, fight: 1.5, jumps: true },
-  { id: "jenna_catfish", name: "Jenna Catfish", chance: 25, minLb: 200, maxLb: 400, fight: 3.0, jumps: true, curve: 1, pullPerLb: 0.02 },
+  { id: "sunfish", name: "Pumpkinseed sunfish", chance: 28, minLb: 0.1, maxLb: 1.0, fight: 0.6, jumps: true },
+  { id: "perch", name: "Yellow perch", chance: 24, minLb: 0.1, maxLb: 1.5, fight: 0.6, jumps: true },
+  { id: "crappie", name: "Crappie", chance: 16, minLb: 0.25, maxLb: 2.5, fight: 1.0, jumps: true },
+  { id: "smallmouth", name: "Smallmouth bass", chance: 17, minLb: 0.5, maxLb: 8.0, fight: 1.5, jumps: true },
+  { id: "largemouth", name: "Largemouth bass", chance: 15, minLb: 0.5, maxLb: 8.0, fight: 1.5, jumps: true },
+  { id: "jenna_catfish", name: "Jenna Catfish", chance: 0, minLb: 200, maxLb: 400, fight: 3.0, jumps: true, curve: 1, pullPerLb: 0.02 },
 ];
+export const JENNA = "jenna_catfish";
+/** The Jenna Catfish bites on one cast in every this many (a random one in each run of casts). */
+export const JENNA_EVERY = 4;
 export const speciesById = (id: string) => SPECIES.find((s) => s.id === id);
 
 /** The longest cast, metres. */
@@ -48,14 +53,15 @@ export const BUCKET_REACH = 2.6;
 /** Most reel presses the server counts per second (spamming faster doesn't help). */
 export const MAX_REELS_PER_S = 14;
 
-/** Pick a species from a random number 0…1 using the chances. */
+/** Pick a species from a random number 0…1 using the chances (never the Jenna Catfish: she comes by the cast counter). */
 export function rollSpecies(r: number): Species {
+  const pool = SPECIES.filter((s) => s.chance > 0);
   let t = r * 100;
-  for (const s of SPECIES) {
+  for (const s of pool) {
     if (t < s.chance) return s;
     t -= s.chance;
   }
-  return SPECIES[SPECIES.length - 1]!;
+  return pool[pool.length - 1]!;
 }
 
 /** Weight in pounds: min + (max − min) × r^2.2, so big fish are rare (the species' own curve if it has one). */
