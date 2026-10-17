@@ -90,6 +90,13 @@
       "job": "7d419a5b-e377-45cb-9e0c-ebe7dffeaf4d",
       "file": "crouch-walk.glb",
       "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3KSfYE82xmSZSyzEC1rV4Jsxvlh/hf_20261016_013334_7d419a5b-e377-45cb-9e0c-ebe7dffeaf4d.glb"
+    },
+    "Swipe": {
+      "action": "Right_Hand_Sword_Slash (219), rigged on the hunter (bear hunt, 2026-10-17); moved onto the bear with transfer-clips.mjs",
+      "job": "f25310c4-dae4-4e49-b7a8-e03b0504044c",
+      "file": "swipe.glb",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3KSfYE82xmSZSyzEC1rV4Jsxvlh/hf_20261017_231032_f25310c4-dae4-4e49-b7a8-e03b0504044c.glb",
+      "transfer": true
     }
   },
   "unused": {

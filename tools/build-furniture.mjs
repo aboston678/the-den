@@ -5,6 +5,7 @@
 //
 // Usage: npm run build:furniture  ->  client/public/models/furniture.glb
 //        npm run build:fish       ->  client/public/models/fish.glb (the 6 species, each 1 m long; the game scales by weight)
+//        npm run build:guns      ->  client/public/models/guns.glb (the bear hunt's guns + scope, muzzle toward +z, real lengths)
 //        node tools/build-furniture.mjs --bike  ->  round 2's motorcycle (replaced in round 4 by tools/build-bike.mjs, `npm run build:bike`)
 
 import { statSync } from "node:fs";
@@ -17,10 +18,11 @@ import {
 import { MeshoptDecoder, MeshoptEncoder, MeshoptSimplifier } from "meshoptimizer";
 import sharp from "sharp";
 
-const SRC = "assets/models/phase2";
 const FISH = process.argv.includes("--fish");
 const BIKE = process.argv.includes("--bike");
-const OUT = process.env.OUT ?? (FISH ? "client/public/models/fish.glb" : BIKE ? "client/public/models/bike.glb" : "client/public/models/furniture.glb");
+const GUNS = process.argv.includes("--guns");
+const SRC = GUNS ? "assets/models/hunt" : "assets/models/phase2";
+const OUT = process.env.OUT ?? (FISH ? "client/public/models/fish.glb" : BIKE ? "client/public/models/bike.glb" : GUNS ? "client/public/models/guns.glb" : "client/public/models/furniture.glb");
 
 /**
  * name -> real-world size (metres, before the house's 1.25× scale) along one measure:
@@ -54,6 +56,15 @@ const FISH_PIECES = {
 /** The motorcycle (round 2): a sport bike sized for the chunky 2.1 m bear (a real one is ~2.05 m long), front toward +z. */
 const BIKE_PIECES = { motorcycle: { l: 2.45, yaw: Number(process.env.BIKE_YAW ?? 0), tris: 16000, texture: 1024 } };
 
+/** The bear hunt's guns (2026-10-17): real lengths, muzzle toward +z (the models came muzzle toward −z), scope objective toward +z. */
+const GUN_PIECES = {
+  sniper: { l: 1.15, yaw: 180, tris: 9000, texture: 1024 },
+  pistol: { l: 0.21, yaw: 180, tris: 4000, texture: 512 },
+  ar: { l: 0.88, yaw: 180, tris: 9000, texture: 1024 },
+  shotgun: { l: 1.1, yaw: 180, tris: 8000, texture: 1024 },
+  scope: { l: 0.36, yaw: 0, tris: 3000, texture: 512 },
+};
+
 await MeshoptEncoder.ready;
 await MeshoptDecoder.ready;
 await MeshoptSimplifier.ready;
@@ -66,7 +77,7 @@ const only = process.argv.slice(2).filter((a) => !a.startsWith("--"));
 
 const out = new Document();
 const report = [];
-for (const [name, spec] of Object.entries(FISH ? FISH_PIECES : BIKE ? BIKE_PIECES : PIECES)) {
+for (const [name, spec] of Object.entries(FISH ? FISH_PIECES : BIKE ? BIKE_PIECES : GUNS ? GUN_PIECES : PIECES)) {
   if (only.length && !only.includes(name)) continue;
   const doc = await io.read(`${SRC}/${name}.glb`);
   const scene = doc.getRoot().listScenes()[0];

@@ -25,6 +25,8 @@
     "build:furniture": "node tools/build-furniture.mjs",
     "build:fish": "node tools/build-furniture.mjs --fish",
     "build:bike": "node tools/build-bike.mjs",
+    "build:guns": "node tools/build-furniture.mjs --guns",
+    "build:hunter": "node tools/build-hunter.mjs",
     "build:toon": "node tools/build-toon-textures.mjs && node tools/build-toon-scenery.mjs"
   },
   "devDependencies": {

@@ -18,3 +18,9 @@ assets/video/
 client/public/video/
 # Videos and pictures made for Andrew to look at (not kept in git)
 review/
+# Bear hunt raw gun models (30–45 MB each; URLs in assets/models/hunt-jobs.json)
+assets/models/hunt/sniper.glb
+assets/models/hunt/pistol.glb
+assets/models/hunt/ar.glb
+assets/models/hunt/shotgun.glb
+assets/models/hunt/scope.glb

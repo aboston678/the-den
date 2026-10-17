@@ -1,11 +1,52 @@
 {
-  "_readme": "Bear hunt (2026-10-17) Higgsfield jobs. Raw downloads in assets/models/hunt/; built into client/public/models by tools/build-hunt.mjs.",
-  "hunter": { "job": "aaa75d8f-caa0-474f-8ca9-c781b21c5c9b", "model": "meshy_v7_image_to_3d", "source": "assets/concepts/hunter/hunter-front.png (Andrew's character sheet)", "file": "hunt/hunter-base-original.glb" },
-  "sniper": { "job": "c8d3c374-4b80-49cd-83b4-6816c68c5162", "picture": "57ada2c2-7309-4f21-bfec-7ed18c11cf4a", "file": "hunt/sniper.glb" },
-  "pistol": { "job": "a1f6d83e-3411-46e7-b6bd-d57235590b3d", "picture": "c0275ba8-72b1-4ef4-90e5-c4dabf075ebc", "file": "hunt/pistol.glb" },
-  "ar": { "job": "2e1d9a82-1e84-45db-a3ef-e3622f1cbc28", "picture": "6f8ac421-4ebc-466e-a179-2a76a13f3ba6", "file": "hunt/ar.glb" },
-  "shotgun": { "job": "83cbf383-a5fe-43cf-9fd3-a95ed0c5814d", "picture": "36bc3d11-720d-4dc8-94d3-96fa318b106a", "file": "hunt/shotgun.glb" },
-  "scope": { "job": "c00d1d89-59ab-4cb4-9e0a-ea659a0b56b9", "picture": "facf603e-1bb1-4340-8d21-3e1bbcd67864", "file": "hunt/scope.glb" },
-  "swipe": { "job": "f25310c4-dae4-4e49-b7a8-e03b0504044c", "action": "Right_Hand_Sword_Slash (219)", "rigged_on": "hunter" },
-  "knockdown": { "job": "2aaaae59-9147-4abc-9eb5-511677949bd8", "action": "Knock_Down (187)", "rigged_on": "hunter" }
+  "_readme": "Bear hunt (2026-10-17) Higgsfield jobs. The raw gun models (~30\u201345 MB each) are not in git: download them from these URLs into assets/models/hunt/ before `npm run build:guns`. The hunter and the two clips (stripped) are in git. Built by tools/build-hunter.mjs and tools/build-furniture.mjs --guns.",
+  "hunter": {
+    "job": "aaa75d8f-caa0-474f-8ca9-c781b21c5c9b",
+    "model": "meshy_v7_image_to_3d",
+    "source": "assets/concepts/hunter/hunter-front.png (Andrew's character sheet)",
+    "file": "hunt/hunter-base-original.glb",
+    "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3KSfYE82xmSZSyzEC1rV4Jsxvlh/hf_20261017_230451_aaa75d8f-caa0-474f-8ca9-c781b21c5c9b.glb"
+  },
+  "sniper": {
+    "job": "c8d3c374-4b80-49cd-83b4-6816c68c5162",
+    "picture": "57ada2c2-7309-4f21-bfec-7ed18c11cf4a",
+    "file": "hunt/sniper.glb",
+    "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3KSfYE82xmSZSyzEC1rV4Jsxvlh/hf_20261017_230605_c8d3c374-4b80-49cd-83b4-6816c68c5162.glb"
+  },
+  "pistol": {
+    "job": "a1f6d83e-3411-46e7-b6bd-d57235590b3d",
+    "picture": "c0275ba8-72b1-4ef4-90e5-c4dabf075ebc",
+    "file": "hunt/pistol.glb",
+    "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3KSfYE82xmSZSyzEC1rV4Jsxvlh/hf_20261017_230608_a1f6d83e-3411-46e7-b6bd-d57235590b3d.glb"
+  },
+  "ar": {
+    "job": "2e1d9a82-1e84-45db-a3ef-e3622f1cbc28",
+    "picture": "6f8ac421-4ebc-466e-a179-2a76a13f3ba6",
+    "file": "hunt/ar.glb",
+    "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3KSfYE82xmSZSyzEC1rV4Jsxvlh/hf_20261017_230610_2e1d9a82-1e84-45db-a3ef-e3622f1cbc28.glb"
+  },
+  "shotgun": {
+    "job": "83cbf383-a5fe-43cf-9fd3-a95ed0c5814d",
+    "picture": "36bc3d11-720d-4dc8-94d3-96fa318b106a",
+    "file": "hunt/shotgun.glb",
+    "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3KSfYE82xmSZSyzEC1rV4Jsxvlh/hf_20261017_230612_83cbf383-a5fe-43cf-9fd3-a95ed0c5814d.glb"
+  },
+  "scope": {
+    "job": "c00d1d89-59ab-4cb4-9e0a-ea659a0b56b9",
+    "picture": "facf603e-1bb1-4340-8d21-3e1bbcd67864",
+    "file": "hunt/scope.glb",
+    "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3KSfYE82xmSZSyzEC1rV4Jsxvlh/hf_20261017_230614_c00d1d89-59ab-4cb4-9e0a-ea659a0b56b9.glb"
+  },
+  "swipe": {
+    "job": "f25310c4-dae4-4e49-b7a8-e03b0504044c",
+    "action": "Right_Hand_Sword_Slash (219)",
+    "rigged_on": "hunter",
+    "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3KSfYE82xmSZSyzEC1rV4Jsxvlh/hf_20261017_231032_f25310c4-dae4-4e49-b7a8-e03b0504044c.glb"
+  },
+  "knockdown": {
+    "job": "2aaaae59-9147-4abc-9eb5-511677949bd8",
+    "action": "Knock_Down (187)",
+    "rigged_on": "hunter",
+    "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3KSfYE82xmSZSyzEC1rV4Jsxvlh/hf_20261017_231033_2aaaae59-9147-4abc-9eb5-511677949bd8.glb"
+  }
 }

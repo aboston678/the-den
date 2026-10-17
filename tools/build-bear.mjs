@@ -35,8 +35,13 @@ const run = (...args) => execFileSync("node", args, { stdio: "inherit" });
 if (!TOON) run("tools/fatten-bear.mjs", "0.22", "0.15", ORIGINAL, fat);
 
 const { clips } = JSON.parse(readFileSync(join(CLIPS, "manifest.json"), "utf8"));
-const clipArgs = Object.entries(clips).filter(([name]) => !TOON || name !== "Pet").map(([name, c]) => `${name}=${join(CLIPS, c.file)}`); // Pet: dogs dropped
-run(TOON ? "tools/transfer-clips.mjs" : "tools/retarget-clip.mjs", TOON ? ORIGINAL : fat, animated, ...clipArgs);
+const clipArg = ([name, c]) => `${name}=${join(CLIPS, c.file)}`;
+const own = Object.entries(clips).filter(([name, c]) => !c.transfer && (!TOON || name !== "Pet")); // Pet: dogs dropped
+// Clips rigged on another model (the bear hunt's swipe was rigged on the hunter) always move across with transfer-clips.mjs.
+const moved = Object.entries(clips).filter(([, c]) => c.transfer);
+const ownOut = moved.length ? join(tmpdir(), "den-bear-own.glb") : animated;
+run(TOON ? "tools/transfer-clips.mjs" : "tools/retarget-clip.mjs", TOON ? ORIGINAL : fat, ownOut, ...own.map(clipArg));
+if (moved.length) run("tools/transfer-clips.mjs", ownOut, animated, ...moved.map(clipArg));
 
 await MeshoptEncoder.ready;
 await MeshoptDecoder.ready;
