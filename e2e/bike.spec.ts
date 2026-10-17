@@ -78,10 +78,8 @@ test("ride the garage motorcycle out onto the driveway; another bear sees it; pa
   expect(Math.abs(turned.yaw - out.yaw)).toBeGreaterThan(0.3);
   await shot(ann, "3-leaning");
 
-  // Can't get off at speed; stop, then park.
-  await ann.keyboard.down("KeyW");
+  // Can't get off at speed (still rolling out of the turn; round 4's quicker bike would reach the trees with more throttle); stop, then park.
   await expect.poll(async () => (await bike(ann)).prompt).toBe("Slow down to get off");
-  await ann.keyboard.up("KeyW");
   await hold(ann, ["KeyS"], 1500);
   await expect.poll(async () => (await bike(ann)).prompt, { timeout: 10_000 }).toBe("Get off");
   // Manual gears: M switches, Q up, Z down; back to automatic for the rest.
@@ -116,7 +114,7 @@ test("ride the garage motorcycle out onto the driveway; another bear sees it; pa
 });
 
 test("ride from the garage out along the driveway to the racetrack and time a lap", async ({ page: ann, browser }) => {
-  test.setTimeout(360_000);
+  test.setTimeout(480_000);
   failOnErrors(ann);
   const code = await hostGame(ann, "Ann");
   const bob = await newPlayer(browser);
@@ -150,13 +148,25 @@ test("ride from the garage out along the driveway to the racetrack and time a la
   await expect.poll(async () => (await ann.evaluate(() => window.__den!.track!.laps())).current, { timeout: 30_000 }).not.toBeNull();
   await ann.waitForTimeout(6000);
   await shot(ann, "7-racing");
-  await expect.poll(async () => (await ann.evaluate(() => window.__den!.track!.laps())).last, { timeout: 200_000, intervals: [1000] }).not.toBeNull();
+  await expect.poll(async () => (await ann.evaluate(() => window.__den!.track!.laps())).last, { timeout: 260_000, intervals: [1000] }).not.toBeNull();
   const laps = await ann.evaluate(() => window.__den!.track!.laps());
   expect(laps.last!).toBeGreaterThan(30);
   await expect(ann.getByTestId("lap-best")).not.toHaveText("–");
   await expect(bob.getByTestId("lap-toast")).toContainText("Ann set the party's best lap");
   await shot(ann, "8-lap-done");
   await ann.evaluate(() => window.__den!.track!.autopilot(null));
+
+  // Flat out down the rest of the start/finish straight (round 4): the bike tops 150 mph, the dial shows it.
+  await ann.keyboard.down("KeyW");
+  let top = 0;
+  for (let t = 0; t < 13_000; t += 250) {
+    top = Math.max(top, Math.abs((await bike(ann)).speed));
+    await ann.waitForTimeout(250);
+  }
+  await shot(ann, "9-flat-out");
+  await ann.keyboard.up("KeyW");
+  expect(top * 2.23694).toBeGreaterThan(150);
+  expect(top * 2.23694).toBeLessThan(156);
 });
 
 test("pop a wheelie (Space with the throttle): the front comes up, a friend sees it, it drops back down; the engine runs (made in code, on Andrew's idle)", async ({ page: ann, browser }) => {

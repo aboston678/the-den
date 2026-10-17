@@ -228,7 +228,7 @@ export function DayNightSky() {
       scene.fog.color.copy(look.fog);
       // Out of the woods at the racetrack, the haze opens up so you can see across the circuit.
       scene.fog.near = q.fog[0] + (160 - q.fog[0]) * trackHaze.open;
-      scene.fog.far = q.fog[1] + (700 - q.fog[1]) * trackHaze.open;
+      scene.fog.far = q.fog[1] + (1100 - q.fog[1]) * trackHaze.open;
     }
     if (scene.background instanceof Color) scene.background.copy(look.fog);
     scene.environmentIntensity = look.envIntensity;

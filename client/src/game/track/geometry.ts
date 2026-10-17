@@ -2,7 +2,7 @@ import {
   CORRIDOR_HALF, DRIVEWAY, KERB_WIDTH, PADDOCK, RUNOFF_WIDTH, SCENERY, START_S, TRACK, TRACK_AREA, TRACK_ROAD, TRACK_WIDTH, TRACK_Y, fbm, heightAt, lerp,
   smoothstep, type Path,
 } from "@den/shared";
-import { BoxGeometry, BufferAttribute, BufferGeometry, Color } from "three";
+import { BoxGeometry, BufferAttribute, BufferGeometry, Color, CylinderGeometry } from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
 // The racetrack's shapes (Andrew, 2026-10-16), built once in code: the farmland it sits in, its
@@ -28,15 +28,31 @@ export function farmHeight(x: number, z: number) {
   return lerp(h, TRACK_Y - 0.03, flat);
 }
 
-/** Patchwork fields round the track, mown grass inside it and along the road. */
-const FIELD = ["#7fbf4a", "#a9c94e", "#d9c45a", "#8fb35a", "#c9a95c", "#6fae46"].map((c) => new Color(c));
-const MOWN = new Color("#5eae3c");
-function groundColour(x: number, z: number, out: Color) {
+/**
+ * The ground's look, painted with the property's own ground textures (terrainMaterial.ts, round 4:
+ * the flat green looked fake): mown lawn with mowing stripes inside the track grounds and along
+ * the road, and round them a patchwork of pasture, hay and ploughed fields. `tint` multiplies the
+ * texture; `splat` is the layer weights (lawn, forest, forest edge, mud).
+ */
+const FIELDS = [
+  { tint: new Color(1, 1, 1), mud: 0 }, // pasture
+  { tint: new Color(1.5, 1.22, 0.55), mud: 0 }, // hay
+  { tint: new Color(0.9, 1.08, 0.85), mud: 0 }, // young crop
+  { tint: new Color(1, 1, 1), mud: 1 }, // ploughed
+  { tint: new Color(1.22, 1.1, 0.72), mud: 0 }, // dry grass
+  { tint: new Color(0.95, 1.02, 0.9), mud: 0.25 }, // rough pasture
+];
+function groundSurface(x: number, z: number, tint: Color) {
   const inside = rectDist(TRACK_AREA, x, z) < 1 || !!TRACK_ROAD.closest(x, z, CORRIDOR_HALF + 4);
-  if (inside) return out.copy(MOWN).offsetHSL(0, 0, fbm(x, z, 30, 9) * 0.03);
+  if (inside) {
+    const stripe = Math.floor(x / 12) % 2 ? 1 : 0.86; // mowing stripes, like a real circuit's infield
+    tint.setScalar(stripe);
+    return 0;
+  }
   const fx = Math.floor((x + fbm(x, z, 90, 4) * 12) / 70), fz = Math.floor((z + fbm(x, z, 90, 5) * 12) / 52);
-  const k = Math.abs((fx * 73856093) ^ (fz * 19349663)) % FIELD.length;
-  return out.copy(FIELD[k]!).offsetHSL(0, 0, fbm(x, z, 12, 6) * 0.04);
+  const f = FIELDS[Math.abs((fx * 73856093) ^ (fz * 19349663)) % FIELDS.length]!;
+  tint.copy(f.tint);
+  return f.mud;
 }
 
 /**
@@ -44,9 +60,10 @@ function groundColour(x: number, z: number, out: Color) {
  * property's own terrain, those vertices fold onto the terrain's edge (and below it), so the two
  * meet without a gap.
  */
-export function farmGeometry(r = { minX: -1150, maxX: 60, minZ: -1050, maxZ: 60 }, step = 5) {
+export function farmGeometry(r = { minX: -1300, maxX: 60, minZ: -1100, maxZ: 60 }, step = 5) {
   const nx = Math.round((r.maxX - r.minX) / step) + 1, nz = Math.round((r.maxZ - r.minZ) / step) + 1;
   const pos = new Float32Array(nx * nz * 3), col = new Float32Array(nx * nz * 3);
+  const splatA = new Float32Array(nx * nz * 4), splatB = new Float32Array(nx * nz * 2);
   const c = new Color();
   for (let iz = 0; iz < nz; iz++) {
     for (let ix = 0; ix < nx; ix++) {
@@ -58,14 +75,16 @@ export function farmGeometry(r = { minX: -1150, maxX: 60, minZ: -1050, maxZ: 60 
         else z = SCENERY.minZ;
         y = heightAt(x, z) - 0.3;
       } else y = farmHeight(x, z);
-      const i = (iz * nx + ix) * 3;
+      const v = iz * nx + ix, i = v * 3;
       pos[i] = x;
       pos[i + 1] = y;
       pos[i + 2] = z;
-      groundColour(x, z, c);
+      const mud = groundSurface(x, z, c);
       col[i] = c.r;
       col[i + 1] = c.g;
       col[i + 2] = c.b;
+      splatA.set([1 - mud, 0, 0, mud], v * 4);
+      splatB.set([0, 0.88 + 0.24 * fbm(x, z, 24, 3)], v * 2);
     }
   }
   const idx: number[] = [];
@@ -78,6 +97,8 @@ export function farmGeometry(r = { minX: -1150, maxX: 60, minZ: -1050, maxZ: 60 
   const g = new BufferGeometry();
   g.setAttribute("position", new BufferAttribute(pos, 3));
   g.setAttribute("color", new BufferAttribute(col, 3));
+  g.setAttribute("splatA", new BufferAttribute(splatA, 4));
+  g.setAttribute("splatB", new BufferAttribute(splatB, 2));
   g.setIndex(idx);
   g.computeVertexNormals();
   return g;
@@ -247,20 +268,115 @@ export function trackBuildings(gate: { from: number; to: number }) {
     const off = -TRACK_WIDTH / 2 + 1 + i * 1.45;
     parts.push(box(s.x + s.dz * off - s.dx * 0.32, y0 + 7.2, s.z - s.dx * off - s.dz * 0.32, 0.72, 0.7, 0.05, i % 2 ? "#1c1c1c" : "#f4f1ea", yaw));
   }
-  // The fence: a low concrete wall round the grounds, red and white along the top.
-  const f = fenceLine();
-  for (const [x0, z0, x1, z1] of f) {
-    const len = Math.hypot(x1 - x0, z1 - z0), wy = Math.atan2(x1 - x0, z1 - z0);
-    // Leave the gate open.
-    if (x0 === x1 && x0 === TRACK_AREA.maxX - 2 && Math.max(z0, z1) > gate.from && Math.min(z0, z1) < gate.to) {
-      const lo = Math.min(z0, z1), hi = Math.max(z0, z1);
-      if (gate.from > lo) parts.push(box(x0, y0 + 0.55, (lo + gate.from) / 2, 0.5, 1.1, gate.from - lo, "#d9d9d4"));
-      if (gate.to < hi) parts.push(box(x0, y0 + 0.55, (gate.to + hi) / 2, 0.5, 1.1, hi - gate.to, "#d9d9d4"));
-      continue;
+  // The fences (round 4, like a real circuit): a concrete wall with a tall chain-link catch fence on
+  // posts round the grounds and in front of the grandstand (the mesh itself is chainLinkGeometry()).
+  for (const [x0, z0, x1, z1] of fenceRuns(gate)) {
+    const len = Math.hypot(x1 - x0, z1 - z0), wy = Math.atan2(x1 - x0, z1 - z0), dx = (x1 - x0) / len, dz = (z1 - z0) / len;
+    parts.push(box((x0 + x1) / 2, y0 + 0.5, (z0 + z1) / 2, 0.45, 1.0, len, "#d9d9d4", wy)); // the wall
+    parts.push(box((x0 + x1) / 2, y0 + 1.03, (z0 + z1) / 2, 0.47, 0.06, len, "#d7342b", wy)); // red coping
+    parts.push(box((x0 + x1) / 2, y0 + FENCE_TOP, (z0 + z1) / 2, 0.07, 0.07, len, "#6d7378", wy)); // top rail
+    const posts = Math.max(1, Math.round(len / 4));
+    for (let i = 0; i <= posts; i++) {
+      const t = (i / posts) * len;
+      parts.push(box(x0 + dx * t, y0 + (1 + FENCE_TOP) / 2, z0 + dz * t, 0.1, FENCE_TOP - 1, 0.1, "#6d7378", wy));
     }
-    parts.push(box((x0 + x1) / 2, y0 + 0.55, (z0 + z1) / 2, 0.5, 1.1, len, "#d9d9d4", wy));
   }
+  // Air-fence cushions outside the run-off of the corners: blue with a red one every few, a white band round each.
+  const cushion = { blue: cushionGeometry("#2a5fc0"), red: cushionGeometry("#c8312a") };
+  for (const b of cornerBarriers()) parts.push((b.red ? cushion.red : cushion.blue).clone().rotateY(b.yaw).translate(b.x, y0, b.z));
   return mergeGeometries(parts)!;
+}
+
+/** Top of the catch fence (metres above the ground); the chain-link starts on the wall at 1 m. */
+const FENCE_TOP = 4.2;
+/** The catch fence in front of the grandstand, between it and the start/finish straight's run-off. */
+const GRANDSTAND_FENCE: [number, number, number, number] = [-592, -249, -373, -249];
+
+/** Every straight run of fence (x0, z0, x1, z1): the grounds' four sides (the gate left open) and the grandstand's. */
+export function fenceRuns(gate: { from: number; to: number }): [number, number, number, number][] {
+  const out: [number, number, number, number][] = [];
+  for (const [x0, z0, x1, z1] of fenceLine()) {
+    if (x0 === x1 && x0 === TRACK_AREA.maxX - 2) {
+      const lo = Math.min(z0, z1), hi = Math.max(z0, z1);
+      if (gate.from > lo) out.push([x0, lo, x0, gate.from]);
+      if (gate.to < hi) out.push([x0, gate.to, x0, hi]);
+    } else out.push([x0, z0, x1, z1]);
+  }
+  out.push(GRANDSTAND_FENCE);
+  return out;
+}
+
+/** The chain-link mesh of the catch fences (uv in half-metre tiles, for the chain-link texture). */
+export function chainLinkGeometry(gate: { from: number; to: number }) {
+  const pos: number[] = [], uv: number[] = [];
+  const y0 = TRACK_Y + 1, y1 = TRACK_Y + FENCE_TOP, TILE = 0.5;
+  for (const [x0, z0, x1, z1] of fenceRuns(gate)) {
+    const len = Math.hypot(x1 - x0, z1 - z0);
+    const corners = [[x0, y0, z0, 0, 0], [x1, y0, z1, len / TILE, 0], [x0, y1, z0, 0, (y1 - y0) / TILE], [x1, y1, z1, len / TILE, (y1 - y0) / TILE]];
+    for (const k of [0, 1, 2, 2, 1, 3]) {
+      const c = corners[k]!;
+      pos.push(c[0]!, c[1]!, c[2]!);
+      uv.push(c[3]!, c[4]!);
+    }
+  }
+  const g = new BufferGeometry();
+  g.setAttribute("position", new BufferAttribute(new Float32Array(pos), 3));
+  g.setAttribute("uv", new BufferAttribute(new Float32Array(uv), 2));
+  g.computeVertexNormals();
+  return g;
+}
+
+/** Length of one air-fence cushion (metres). */
+const BARRIER_STEP = 2.5;
+/** Air-fence cushions stand this far from the centre line, just past the painted run-off. */
+const BARRIER_OFF = TRACK_WIDTH / 2 + KERB_WIDTH + RUNOFF_WIDTH + 2.5;
+
+/**
+ * Where the air-fence cushions go: outside every corner with kerbs, except where they'd be close to
+ * another bit of the track, by the paddock (you ride on there) or outside the fence.
+ */
+export function cornerBarriers() {
+  const all: { x: number; z: number; yaw: number; s: number; side: number }[] = [];
+  let last = -Infinity;
+  for (const p of samples(TRACK)) {
+    if (Math.abs(p.k) <= KERB_K || p.s - last < BARRIER_STEP) continue;
+    const side = p.k > 0 ? -1 : 1;
+    const x = p.x + p.dz * BARRIER_OFF * side, z = p.z - p.dx * BARRIER_OFF * side;
+    if (rectDist(PADDOCK, x, z) < 25 || x < TRACK_AREA.minX + 6 || x > TRACK_AREA.maxX - 6 || z < TRACK_AREA.minZ + 6 || z > TRACK_AREA.maxZ - 6) continue;
+    if (TRACK.closest(x, z, BARRIER_OFF - 1.5)) continue; // another part of the track runs close by
+    last = p.s;
+    all.push({ x, z, yaw: Math.atan2(p.dx, p.dz), s: p.s, side });
+  }
+  // Only proper runs along a corner: a cushion or two left on its own (where a bend flips sides) is dropped.
+  const out: { x: number; z: number; yaw: number; red: boolean }[] = [];
+  let run: typeof all = [];
+  const flush = () => {
+    if (run.length >= 8) run.forEach((b, i) => out.push({ x: b.x, z: b.z, yaw: b.yaw, red: i % 6 === 5 }));
+    run = [];
+  };
+  for (const b of all) {
+    const prev = run[run.length - 1];
+    if (prev && (b.s - prev.s > BARRIER_STEP * 1.6 || b.side !== prev.side)) flush();
+    run.push(b);
+  }
+  flush();
+  return out;
+}
+
+/** One air-fence cushion (centred on the ground, along +z): a padded block with a rounded top. */
+export function cushionGeometry(colour: string) {
+  const c = new Color(colour), w = new Color("#f4f1ea");
+  const body = new BoxGeometry(1.05, 0.95, BARRIER_STEP - 0.04).translate(0, 0.475, 0).toNonIndexed();
+  const top = new CylinderGeometry(0.525, 0.525, BARRIER_STEP - 0.04, 12, 1).rotateX(Math.PI / 2).translate(0, 0.95, 0).toNonIndexed();
+  const band = new BoxGeometry(1.07, 0.16, BARRIER_STEP - 0.03).translate(0, 0.72, 0).toNonIndexed();
+  const tint = (g: BufferGeometry, col: Color) => {
+    const n = g.getAttribute("position").count, a = new Float32Array(n * 3);
+    for (let i = 0; i < n; i++) a.set([col.r, col.g, col.b], i * 3);
+    g.setAttribute("color", new BufferAttribute(a, 3));
+    g.deleteAttribute("uv");
+    return g;
+  };
+  return mergeGeometries([tint(body, c), tint(top, c), tint(band, w)])!;
 }
 
 /** The fence's four sides (x0, z0, x1, z1), 2 m inside the grounds' edge. */

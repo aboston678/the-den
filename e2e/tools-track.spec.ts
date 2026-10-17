@@ -32,7 +32,14 @@ test("track tour", async ({ page }) => {
   await shot("3-start-line", { x: s.x + 30, z: s.z }, { x: s.x + 40, y: 10, z: s.z + 4 }, { x: s.x - 60, y: 6.5, z: s.z - 4 });
   const c = TRACK.pointAt(START_S + 680);
   await shot("4-corner", c, { x: c.x + 25, y: 12, z: c.z + 25 }, { x: c.x, y: 6.5, z: c.z });
-  await shot("5-overview", s, { x: -180, y: 120, z: -180 }, { x: -470, y: 0, z: -390 });
+  await shot("5-overview", s, { x: -300, y: 300, z: -150 }, { x: -640, y: 0, z: -480 });
+  // Round 4: the back straight, the middle straight, trees and the catch fence, an air fence.
+  const b = TRACK.pointAt(START_S + 1180);
+  await shot("9-back-straight", b, { x: b.x - 60, y: 10, z: b.z + 3 }, { x: b.x + 200, y: 8, z: b.z });
+  const m = TRACK.pointAt(START_S + 2080);
+  await shot("10-middle-straight", m, { x: m.x + 50, y: 10, z: m.z - 3 }, { x: m.x - 200, y: 8, z: m.z });
+  await shot("11-fence-and-trees", { x: -700, z: -740 }, { x: -700, y: 9, z: -728 }, { x: -740, y: 11, z: -770 });
+  await shot("12-air-fence", c, { x: c.x + 30, y: 10, z: c.z - 10 }, { x: c.x - 25, y: 7, z: c.z + 5 });
   await shot("7-junction", { x: -156, z: -152 }, { x: -150, y: 60, z: -146 }, { x: -158, y: 6, z: -156 });
   await shot("8-gate", { x: -230, z: -238 }, { x: -200, y: 40, z: -215 }, { x: -235, y: 6, z: -238 });
   await shot("6-grandstand", { x: -480, z: -255 }, { x: -470, y: 9, z: -300 }, { x: -480, y: 8, z: -235 });

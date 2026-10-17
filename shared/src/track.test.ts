@@ -7,9 +7,9 @@ import { DRIVEWAY } from "./world/layout.ts";
 import { drivewayY, isInBounds } from "./world/terrain.ts";
 
 describe("the racetrack", () => {
-  it("is a proper circuit: about 2 km, and it never runs into itself", () => {
-    expect(TRACK.length).toBeGreaterThan(1500);
-    expect(TRACK.length).toBeLessThan(2600);
+  it("is a proper circuit: about 3.5 km, and it never runs into itself", () => {
+    expect(TRACK.length).toBeGreaterThan(3000);
+    expect(TRACK.length).toBeLessThan(4200);
     // Any two stretches more than 150 m apart along the track are at least 45 m apart on the ground.
     const pts = TRACK.points.filter((_, i) => i % 4 === 0), at = TRACK.at.filter((_, i) => i % 4 === 0);
     let closest = Infinity;

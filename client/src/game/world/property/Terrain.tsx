@@ -3,7 +3,7 @@ import { HeightfieldCollider, RigidBody, TrimeshCollider } from "@react-three/ra
 import { useMemo } from "react";
 import { BufferAttribute, BufferGeometry } from "three";
 import { TERRAIN_LAYERS, createTerrainMaterial } from "./terrainMaterial.ts";
-import { buildLayerArrays, useLayerImages } from "./textures.ts";
+import { terrainLayerArrays, useLayerImages } from "./textures.ts";
 
 /** The visible ground reaches past the walkable area so the map's edge is lost in the trees and fog. */
 const VIEW = SCENERY;
@@ -138,7 +138,7 @@ export function Terrain() {
   const field = useMemo(heightfield, []);
   const patch = useMemo(housePatch, []);
   const material = useMemo(() => {
-    const arrays = buildLayerArrays(images);
+    const arrays = terrainLayerArrays(images);
     return createTerrainMaterial(arrays.colour, arrays.normal);
   }, [images]);
 

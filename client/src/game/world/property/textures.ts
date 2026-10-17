@@ -65,6 +65,13 @@ export function buildLayerArrays(layers: { diff: Texture; nor: Texture; rough: T
   return { colour: make(colour, true), normal: make(normal, false) };
 }
 
+let shared: { key: Texture; arrays: ReturnType<typeof buildLayerArrays> } | null = null;
+/** The terrain's texture arrays, built once and shared by the property's ground and the farmland round the racetrack. */
+export function terrainLayerArrays(layers: { diff: Texture; nor: Texture; rough: Texture }[]) {
+  if (shared?.key !== layers[0]!.diff) shared = { key: layers[0]!.diff, arrays: buildLayerArrays(layers) };
+  return shared.arrays;
+}
+
 /** The raw (non-tiled) image textures for the terrain layers, loaded together. */
 export function useLayerImages(names: OutdoorTexture[]) {
   const urls = names.flatMap((n) => [diffUrl(n), mapUrl(n, "nor"), mapUrl(n, "rough")]);

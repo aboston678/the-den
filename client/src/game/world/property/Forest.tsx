@@ -24,7 +24,7 @@ const PROPS_URL = asset("/models/outdoor-props.glb");
 const PROP_FAR = 110;
 
 /** Every mesh under the named node, with its transform inside the file. */
-function partsOf(scene: Group, name: string): LodPart[] {
+export function partsOf(scene: Group, name: string): LodPart[] {
   const node = scene.getObjectByName(name);
   if (!node) throw new Error(`missing ${name} in model file`);
   scene.updateMatrixWorld(true);
@@ -90,7 +90,7 @@ function trunkRadius(parts: LodPart[]) {
 }
 
 /** Leaves and fern fronds: cut-out edges, both sides, smooth at a distance. Nothing in the forest takes lamplight. */
-function prepareFoliage(scene: Group) {
+export function prepareFoliage(scene: Group) {
   scene.traverse((o) => {
     const m = (o as Mesh).material as MeshStandardMaterial | undefined;
     if (m && m.alphaTest > 0) ignoreLampsAndFlashlights(m);

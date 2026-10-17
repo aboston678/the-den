@@ -11,7 +11,7 @@ import { Path } from "./world/path.ts";
 export const TRACK_Y = 6.5;
 
 /** The fenced circuit grounds (world metres). */
-export const TRACK_AREA = { minX: -760, maxX: -215, minZ: -560, maxZ: -205 } as const;
+export const TRACK_AREA = { minX: -1060, maxX: -215, minZ: -760, maxZ: -205 } as const;
 
 /** The road from the driveway's far end (off the old map edge) to the gate in the east fence: the driveway carried on. */
 export const TRACK_ROAD_WIDTH = 4;
@@ -32,27 +32,42 @@ export const TRACK_WIDTH = 12;
 export const KERB_WIDTH = 1.2;
 export const RUNOFF_WIDTH = 8;
 
-/** The circuit's centre line, a closed loop starting at the east end of the start/finish straight, heading west. */
+/**
+ * The circuit's centre line, a closed loop starting at the east end of the start/finish straight,
+ * heading west (clockwise from above). Round 4 (Andrew): three long straights to reach 155 mph (the
+ * ~670 m start/finish straight, the ~500 m back straight along the north, a ~380 m middle straight
+ * heading west) plus a shorter one up the west side, between a fast sweeper, a hairpin and the esses.
+ */
 export const TRACK = new Path([
   { x: -265, z: -268 }, // the start/finish straight (west along the south side)
-  { x: -460, z: -268 },
-  { x: -650, z: -268 },
-  { x: -712, z: -300 }, // turn 1: sweeping right, north
-  { x: -718, z: -370 },
-  { x: -680, z: -418 },
-  { x: -612, z: -404 }, // back east…
-  { x: -566, z: -352 },
-  { x: -500, z: -362 }, // …round the hairpin
-  { x: -520, z: -442 },
-  { x: -600, z: -488 },
-  { x: -665, z: -515 }, // far north-west
-  { x: -570, z: -532 },
-  { x: -420, z: -522 }, // the back straight, east along the north
-  { x: -330, z: -486 },
-  { x: -302, z: -420 }, // the esses
-  { x: -360, z: -372 },
-  { x: -292, z: -326 },
-  { x: -244, z: -302 }, // the last corner, back onto the straight
+  { x: -600, z: -268 },
+  { x: -930, z: -268 },
+  { x: -975, z: -275 }, // turn 1: sweeping right, north
+  { x: -1003, z: -305 },
+  { x: -1010, z: -350 },
+  { x: -1010, z: -560 }, // up the west side
+  { x: -995, z: -640 },
+  { x: -950, z: -690 }, // turn 2: right, east
+  { x: -880, z: -705 },
+  { x: -600, z: -705 }, // the back straight, east along the north
+  { x: -420, z: -705 },
+  { x: -355, z: -690 }, // turn 3: right, south
+  { x: -330, z: -640 },
+  { x: -352, z: -592 }, // the esses
+  { x: -300, z: -552 },
+  { x: -322, z: -504 },
+  { x: -385, z: -480 }, // right onto the middle straight, west
+  { x: -560, z: -480 },
+  { x: -760, z: -480 },
+  { x: -822, z: -458 }, // the hairpin
+  { x: -834, z: -410 },
+  { x: -792, z: -384 },
+  { x: -700, z: -392 }, // back east, a kink…
+  { x: -600, z: -410 },
+  { x: -500, z: -378 },
+  { x: -420, z: -356 },
+  { x: -330, z: -330 }, // …and the last corner, back onto the straight
+  { x: -252, z: -300 },
 ], 1, true);
 
 /** Metres along the circuit to the start/finish line (on the straight, past the pits). */
@@ -94,7 +109,7 @@ export const WORLD_LIMITS = { minX: TRACK_AREA.minX - 20, maxX: 180, minZ: TRACK
 /** A lap only counts if you pass these points along the way (no cutting across the infield). */
 export const SECTORS = [TRACK.length / 3, (2 * TRACK.length) / 3] as const;
 /** The fastest a lap could possibly be (a bike flat out all the way, with slack): quicker is refused. */
-export const MIN_LAP_S = TRACK.length / 60;
+export const MIN_LAP_S = TRACK.length / 75;
 
 /** Metres along the circuit measured from the start/finish line (0…length), or null when off the circuit. */
 export function lapDistance(x: number, z: number) {

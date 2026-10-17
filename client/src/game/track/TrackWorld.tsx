@@ -2,13 +2,15 @@ import { PADDOCK, SCENERY, TRACK, TRACK_AREA, TRACK_ROAD, TRACK_ROAD_WIDTH, TRAC
 import { useFrame, useThree } from "@react-three/fiber";
 import { useRapier } from "@react-three/rapier";
 import { useEffect, useMemo, useRef } from "react";
-import { type Fog, type Group, MeshStandardMaterial, Vector2 } from "three";
+import { CanvasTexture, DoubleSide, type Fog, type Group, MeshStandardMaterial, RepeatWrapping, SRGBColorSpace, Vector2 } from "three";
 import { TOON } from "../artStyle.ts";
 import { invisibleColliders } from "../world/invisible.ts";
 import { removeBody } from "../world/physics.ts";
-import { useOutdoorMaps } from "../world/property/textures.ts";
-import { ASPHALT_Y, circuitPaint, farmGeometry, fenceLine, roadGeometry, trackBuildings } from "./geometry.ts";
-import { FENCE, GATE, corridorWalls } from "./walls.ts";
+import { TERRAIN_LAYERS, createTerrainMaterial } from "../world/property/terrainMaterial.ts";
+import { terrainLayerArrays, useLayerImages, useOutdoorMaps } from "../world/property/textures.ts";
+import { ASPHALT_Y, chainLinkGeometry, circuitPaint, cornerBarriers, farmGeometry, fenceRuns, roadGeometry, trackBuildings } from "./geometry.ts";
+import { TrackTrees } from "./TrackTrees.tsx";
+import { GATE, corridorWalls } from "./walls.ts";
 import { trackHaze } from "./haze.ts";
 
 // The racetrack and the way out to it (Andrew, 2026-10-16): the farmland past the woods, the road,
@@ -28,7 +30,32 @@ const shapes = once(() => ({
   circuit: roadGeometry(TRACK, TRACK_WIDTH + 0.1, ASPHALT_Y),
   paint: circuitPaint(),
   buildings: trackBuildings(GATE),
+  chainLink: chainLinkGeometry(GATE),
+  barriers: cornerBarriers(),
 }));
+
+/** A chain-link diamond pattern (one half-metre tile), drawn in code: galvanised wire, see-through between. */
+function chainLinkTexture() {
+  const c = document.createElement("canvas");
+  c.width = c.height = 128;
+  const g = c.getContext("2d")!;
+  g.strokeStyle = "#b9bec2";
+  g.lineWidth = 3;
+  const n = 6, step = 128 / n;
+  for (let i = -n; i <= 2 * n; i++) {
+    g.beginPath();
+    g.moveTo(i * step, 0);
+    g.lineTo(i * step + 128, 128);
+    g.moveTo(i * step, 128);
+    g.lineTo(i * step + 128, 0);
+    g.stroke();
+  }
+  const t = new CanvasTexture(c);
+  t.wrapS = t.wrapT = RepeatWrapping;
+  t.colorSpace = SRGBColorSpace;
+  t.anisotropy = 8;
+  return t;
+}
 
 export function TrackWorld() {
   const group = useRef<Group>(null);
@@ -36,15 +63,23 @@ export function TrackWorld() {
   const camera = useThree((s) => s.camera);
   const scene = useThree((s) => s.scene);
   const maps = useOutdoorMaps("asphalt");
+  const ground = useLayerImages([...TERRAIN_LAYERS]);
   const geo = useMemo(shapes, []);
   const mats = useMemo(() => ({
     asphalt: new MeshStandardMaterial({ ...maps, color: TOON ? "#a9a49c" : "#7d7b78", normalScale: new Vector2(0.15, 0.15), polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }),
     // The road out is the driveway carried on: the same paving.
     road: new MeshStandardMaterial({ ...maps, color: TOON ? "#cfc8bc" : "#9a9894", normalScale: TOON ? new Vector2(0.15, 0.15) : new Vector2(1, 1), polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }),
     painted: new MeshStandardMaterial({ vertexColors: true, roughness: 0.8, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 }),
-    farm: new MeshStandardMaterial({ vertexColors: true, roughness: 1 }),
+    // The property's own ground textures (round 4), tinted per field by the vertex colours.
+    farm: (() => {
+      const arrays = terrainLayerArrays(ground);
+      const m = createTerrainMaterial(arrays.colour, arrays.normal);
+      m.vertexColors = true;
+      return m;
+    })(),
     buildings: new MeshStandardMaterial({ vertexColors: true, roughness: 0.7 }),
-  }), [maps]);
+    chainLink: new MeshStandardMaterial({ map: chainLinkTexture(), color: "#ffffff", metalness: 0.6, roughness: 0.45, alphaTest: 0.4, alphaToCoverage: true, side: DoubleSide, transparent: false }),
+  }), [maps, ground]);
 
   // Ground to drive on and the walls, out here beyond the property's own collision.
   useEffect(() => {
@@ -64,17 +99,21 @@ export function TrackWorld() {
       handles.push(c.handle);
     };
     for (const w of corridorWalls()) wall(...w);
-    for (const [x0, z0, x1, z1] of fenceLine()) {
-      if (x0 === x1 && x0 === FENCE.maxX) {
-        wall(x0, FENCE.minZ, x0, GATE.from);
-        wall(x0, GATE.to, x0, FENCE.maxZ);
-      } else wall(x0, z0, x1, z1);
+    for (const w of fenceRuns(GATE)) wall(...w);
+    // The corners' air fences stop a bike that runs wide (one short block per cushion).
+    for (const b of geo.barriers) {
+      const c = world.createCollider(
+        rapier.ColliderDesc.cuboid(0.6, 0.7, 1.3).setTranslation(b.x, TRACK_Y + 0.65, b.z).setRotation({ x: 0, y: Math.sin(b.yaw / 2), z: 0, w: Math.cos(b.yaw / 2) }),
+        body,
+      );
+      invisibleColliders.add(c.handle);
+      handles.push(c.handle);
     }
     return () => {
       for (const h of handles) invisibleColliders.delete(h);
       removeBody(world, body);
     };
-  }, [world, rapier]);
+  }, [world, rapier, geo]);
 
   // Only drawn when it could be seen; out here the haze opens up so you can see across the track.
   useFrame(() => {
@@ -96,6 +135,8 @@ export function TrackWorld() {
       <mesh geometry={geo.circuit} material={mats.asphalt} receiveShadow name="circuit" />
       <mesh geometry={geo.paint} material={mats.painted} receiveShadow name="circuit-paint" />
       <mesh geometry={geo.buildings} material={mats.buildings} castShadow receiveShadow name="track-buildings" />
+      <mesh geometry={geo.chainLink} material={mats.chainLink} name="catch-fence" />
+      <TrackTrees />
     </group>
   );
 }
