@@ -38,6 +38,7 @@ interface NetPlayer {
   flashlight: boolean;
   aimYaw: number;
   aimPitch: number;
+  wheelie: number;
   rod: boolean;
   fishing: FishState;
   lureX: number;
@@ -422,7 +423,7 @@ function bind(r: Room) {
         name: p.name,
         connected: p.connected,
         snapshots: [],
-        current: { x: p.x, y: p.y, z: p.z, speed: 0, action: "locomotion" as BearAction, flashlight: false, aimYaw: 0, aimPitch: 0 },
+        current: { x: p.x, y: p.y, z: p.z, speed: 0, action: "locomotion" as BearAction, flashlight: false, aimYaw: 0, aimPitch: 0, wheelie: 0 },
         tagVisible: false,
         fish: fishOf(p),
       };
@@ -430,7 +431,7 @@ function bind(r: Room) {
       const snap = () => {
         bear.connected = p.connected;
         addSnapshot(bear, {
-          x: p.x, y: p.y, z: p.z, yaw: p.yaw, speed: p.speed, action: p.action, flashlight: p.flashlight, aimYaw: p.aimYaw, aimPitch: p.aimPitch,
+          x: p.x, y: p.y, z: p.z, yaw: p.yaw, speed: p.speed, action: p.action, flashlight: p.flashlight, aimYaw: p.aimYaw, aimPitch: p.aimPitch, wheelie: p.wheelie ?? 0,
         });
       };
       snap();

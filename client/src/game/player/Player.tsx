@@ -3,7 +3,7 @@ import { CapsuleCollider, RigidBody, type RapierCollider, type RapierRigidBody, 
 import { useEffect, useMemo, useRef } from "react";
 import type { KinematicCharacterController } from "@dimforge/rapier3d-compat";
 import { type Group, Matrix4, Vector3 } from "three";
-import { BEAR, BIKE, GEARS, NET_TICK_HZ, autoGear, bikeBlocked, bikeRevs, bikeSpeedStep, bikeTopSpeed, bikeTurnRate, canShiftDown, inGarage, onTrackAsphalt } from "@den/shared";
+import { BEAR, BIKE, GEARS, NET_TICK_HZ, autoGear, bikeBlocked, bikeRevs, bikeSpeedStep, bikeTopSpeed, bikeTurnRate, canShiftDown, inGarage, onTrackAsphalt, WHEELIE, wheelieStep } from "@den/shared";
 import { CAMERA, CAPSULE, CAPSULE_CENTER, CONTROLLER_OFFSET, CROUCH_SHRINK, JUMP_AIR_TIME, MOVE } from "../config.ts";
 import { applyRide, useRider } from "../bike/rider.ts";
 import { autopilot } from "../bike/autopilot.ts";
@@ -88,7 +88,7 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
   // Start facing away from the camera (which begins on the +z side looking toward −z).
   const s = useRef({ vy: 0, speed: 0, yaw: Math.PI, dir: { x: 0, z: -1 }, airTime: 0, actionTime: 0, roarReadyAt: 0, atStairFoot: false, short: false, groundY: 0, ready: false,
     pushX: 0, pushZ: 0, staggerUntil: 0, sendTimer: 0, castAt: null as { x: number; z: number } | null, released: false,
-    chair: null as SeatMove | null, riding: false, lean: 0, pitch: 0, crashAt: 0, gear: 1 });
+    chair: null as SeatMove | null, riding: false, lean: 0, pitch: 0, crashAt: 0, gear: 1, wheelie: { angle: 0, fall: 0 } });
 
   useFrame(({ clock }, rawDt) => {
     const controller = controllerRef.current;
@@ -152,6 +152,7 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
       st.riding = riding;
       st.speed = 0;
       st.lean = st.pitch = 0;
+      st.wheelie = { angle: 0, fall: 0 };
       st.vy = 0;
       st.gear = 1;
       cameraState.distance = riding ? 6 : CAMERA.distance; // pulled back to see the bike (scroll still zooms)
@@ -301,16 +302,26 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
         if (canShiftDown(st.speed, st.gear)) st.gear--;
         else if (st.gear > 1) playerState.bike.refusedAt = performance.now(); // would over-rev: the HUD flashes
       }
+      const throttle = auto ? auto.throttle : isHeld("KeyW") || isHeld("ArrowUp");
       st.speed = bikeSpeedStep(st.speed, dt, {
-        throttle: auto ? auto.throttle : isHeld("KeyW") || isHeld("ArrowUp"),
+        throttle,
         brake: auto ? auto.brake : isHeld("KeyS") || isHeld("ArrowDown"),
         tuck: sprint,
       }, top, st.gear);
       if (!manual) st.gear = autoGear(st.speed, st.gear);
-      Object.assign(playerState.bike, { speed: st.speed, gear: st.gear, revs: bikeRevs(st.speed, st.gear), manual });
+      // Wheelies (Andrew, 2026-10-17): hold Space with the throttle in 1st to 3rd; let go and it drops back.
+      const was = st.wheelie.angle;
+      st.wheelie = wheelieStep(st.wheelie, dt, !auto && isHeld("Space"), st.speed, st.gear, throttle);
+      if (was > 0.15 && st.wheelie.angle === 0) {
+        void playAt("land", here.x, here.y + 0.3, here.z, 1.3, 8); // the front wheel thumping down
+        cameraState.shake = Math.max(cameraState.shake, 0.12 + was * 0.3);
+      }
+      Object.assign(playerState.bike, { speed: st.speed, gear: st.gear, revs: bikeRevs(st.speed, st.gear), manual, wheelie: st.wheelie.angle });
       const steer = auto ? auto.steer : (isHeld("KeyA") || isHeld("ArrowLeft") ? 1 : 0) - (isHeld("KeyD") || isHeld("ArrowRight") ? 1 : 0);
       // A bike only turns while it's rolling (backing up steers the other way round).
-      const yawRate = steer * bikeTurnRate(st.speed) * Math.sign(st.speed) * Math.min(1, Math.abs(st.speed) / 1.5);
+      // With the front wheel up it only turns by leaning, so much more gently.
+      const airborne = Math.min(1, st.wheelie.angle / 0.2);
+      const yawRate = steer * bikeTurnRate(st.speed) * Math.sign(st.speed) * Math.min(1, Math.abs(st.speed) / 1.5) * (1 - (1 - WHEELIE.steer) * airborne);
       st.yaw += yawRate * dt;
       st.dir = { x: Math.sin(st.yaw), z: Math.cos(st.yaw) };
       // Lean into the turn (+ = to the right), and tip with the slope under the wheels.
@@ -328,7 +339,7 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
       if (hit || bikeBlocked(here.x + st.dir.x * sgn * ahead, here.z + st.dir.z * sgn * ahead)) {
         if (Math.abs(st.speed) > 8 && now - st.crashAt > 1) {
           st.crashAt = now;
-          void playAt("bike-crash", here.x, here.y + 0.8, here.z, Math.min(1.5, Math.abs(st.speed) / 15), 6);
+          void playAt("bike-crash", here.x, here.y + 0.8, here.z, Math.min(2.2, Math.abs(st.speed) / 10), 9);
           cameraState.shake = Math.max(cameraState.shake, 0.4);
         }
         st.speed = 0;
@@ -449,7 +460,9 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
     }
     animator.update(dt, Math.min(st.speed, groundSpeed));
     applyLipHold("me", model, playerState.yaw, fish.state === "landed", animator.action !== "celebrate" && animator.action !== "cast", dt);
-    if (visual.current) applyRide(rider, model, visual.current, riding && animator.action === "ride", st.speed, st.lean, st.pitch, dt, bikeRevs(st.speed, st.gear));
+    // A wheelie bobs a little as the rider balances it.
+    const wheelie = riding ? st.wheelie.angle + 0.025 * Math.sin(clock.elapsedTime * 6) * Math.min(1, st.wheelie.angle / 0.2) : 0;
+    if (visual.current) applyRide(rider, model, visual.current, riding && animator.action === "ride", st.speed, st.lean, st.pitch, dt, bikeRevs(st.speed, st.gear), st.gear, wheelie);
     bearSounds(animator, playerState.position.x, playerState.position.y, playerState.position.z);
 
     // --- tell the party where we are, 20 times a second ---
@@ -460,7 +473,7 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
       const aim = flashlightAim();
       sendPose({
         x: pos.x, y: pos.y, z: pos.z, yaw: st.yaw, speed: playerState.speed, action: animator.action,
-        flashlight: playerState.flashlight, aimYaw: aim.yaw, aimPitch: aim.pitch,
+        flashlight: playerState.flashlight, aimYaw: aim.yaw, aimPitch: aim.pitch, wheelie: Math.max(0, wheelie),
       });
     }
     if (playerState.trackFeet && visual.current) {

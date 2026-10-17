@@ -365,7 +365,7 @@ export class PartyRoom extends Room<{ state: PartyState }> {
 
 function poseOf(p: Player): Pose {
   return {
-    x: p.x, y: p.y, z: p.z, yaw: p.yaw, speed: p.speed, action: p.action as Pose["action"], flashlight: p.flashlight, aimYaw: p.aimYaw, aimPitch: p.aimPitch,
+    x: p.x, y: p.y, z: p.z, yaw: p.yaw, speed: p.speed, action: p.action as Pose["action"], flashlight: p.flashlight, aimYaw: p.aimYaw, aimPitch: p.aimPitch, wheelie: p.wheelie,
   };
 }
 

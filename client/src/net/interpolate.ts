@@ -14,6 +14,7 @@ export interface Sample {
   flashlight: boolean;
   aimYaw: number;
   aimPitch: number;
+  wheelie: number;
 }
 
 /** Blend between angles the short way round. */
@@ -45,5 +46,6 @@ export function sampleAt(snaps: readonly Snapshot[], t: number): Sample | null {
     flashlight: a.flashlight,
     aimYaw: lerpAngle(a.aimYaw, b.aimYaw, f),
     aimPitch: a.aimPitch + (b.aimPitch - a.aimPitch) * f,
+    wheelie: a.wheelie + (b.wheelie - a.wheelie) * f,
   };
 }

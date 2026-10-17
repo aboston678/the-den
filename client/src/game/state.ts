@@ -37,8 +37,8 @@ export const playerState = {
   seated: false,
   /** On the motorcycle (set by bike/BikeControls once the server agrees): W/S/A/D ride it. */
   riding: false,
-  /** The bike's dials for the speedometer (ui/BikeHud.tsx): speed (m/s, − backing up), gear, revs 0…1, manual box, when a downshift was refused (ms). */
-  bike: { speed: 0, gear: 1, revs: 0, manual: false, refusedAt: 0 },
+  /** The bike's dials for the speedometer (ui/BikeHud.tsx): speed (m/s, − backing up), gear, revs 0…1, manual box, when a downshift was refused (ms), how far the front wheel is up (radians). */
+  bike: { speed: 0, gear: 1, revs: 0, manual: false, refusedAt: 0, wheelie: 0 },
   /** Dev and tests only: the bike rides itself along this route (bike/autopilot.ts). */
   autopilot: null as import("./bike/autopilot.ts").Route | null,
   /** Bowling: play the bowl now (set by the bowling controls; the player clears it). */
@@ -113,7 +113,7 @@ declare global {
       track?: { laps: () => { current: number | null; last: number | null; best: number | null; news: { name: string; s: number; best: boolean; record: boolean; mine: boolean }[] }; autopilot: (route: "out" | "lap" | null) => void };
       bike?: { state: () => { riding: boolean; speed: number; prompt: string | null; me: import("./bike/store.ts").BikeView; others: Record<string, import("./bike/store.ts").BikeView> } };
       /** Other bears as this client sees them. */
-      remotes: () => { id: string; name: string; x: number; z: number; action: string; flashlight: boolean; tagVisible: boolean; connected: boolean; fish: { rod: boolean; state: string; species: string } }[];
+      remotes: () => { id: string; name: string; x: number; z: number; action: string; flashlight: boolean; wheelie: number; tagVisible: boolean; connected: boolean; fish: { rod: boolean; state: string; species: string } }[];
     };
   }
 }
@@ -129,6 +129,7 @@ window.__den = {
       z: r.current.z,
       action: r.current.action,
       flashlight: r.current.flashlight,
+      wheelie: r.current.wheelie,
       tagVisible: r.tagVisible,
       connected: r.connected,
       fish: { rod: r.fish.rod, state: r.fish.state, species: r.fish.species },

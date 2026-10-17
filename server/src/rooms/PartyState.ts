@@ -17,6 +17,7 @@ export const Player = schema(
     flashlight: t.boolean().default(false),
     aimYaw: t.float32(),
     aimPitch: t.float32(),
+    wheelie: t.float32(), // on a bike: the front wheel up (radians)
     // Fishing (GAME_SPEC §13), run by the server so everyone sees the same line, bite and fight.
     rod: t.boolean().default(false),
     fishing: t.string().default(""), // FishState: "" | cast | bite | fight | landed | snapped | missed

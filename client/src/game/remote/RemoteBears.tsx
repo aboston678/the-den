@@ -135,10 +135,10 @@ function RemoteBearView({ id }: { id: string }) {
       const fx = Math.sin(s.yaw) * 1.1, fz = Math.cos(s.yaw) * 1.1;
       const slope = !riding || inGarage(s.x, s.z) ? 0 : Math.atan2(groundY(s.x + fx, s.z + fz) - groundY(s.x - fx, s.z - fz), 2.2);
       r.pitch += (Math.max(-0.35, Math.min(0.35, -slope)) - r.pitch) * Math.min(1, dt * 8);
-      applyRide(rider, model, visual.current, riding, s.speed, r.lean, r.pitch, dt);
+      applyRide(rider, model, visual.current, riding, s.speed, r.lean, r.pitch, dt, undefined, undefined, riding ? s.wheelie : 0);
     }
     bearSounds(animator, s.x, s.y, s.z);
-    b.current = { x: s.x, y: s.y, z: s.z, speed: s.speed, action: s.action, flashlight: s.flashlight, aimYaw: s.aimYaw, aimPitch: s.aimPitch };
+    b.current = { x: s.x, y: s.y, z: s.z, speed: s.speed, action: s.action, flashlight: s.flashlight, aimYaw: s.aimYaw, aimPitch: s.aimPitch, wheelie: s.wheelie };
 
     // Name tag: over the head, fading with distance, hidden behind walls (checked every 4th frame).
     const tag = nameTagEls.get(id);

@@ -117,6 +117,14 @@ Andrew played round 2 and sent 6 fixes with photos and a video. Plan approved 20
 - [x] **R3.7 Speed pass on realistic Medium** (Andrew, 2026-10-17: "do a speed pass first, then show me again"). Measured with interleaved on/off tests at each spot (readings drift as the fanless M1 warms). The big cost was lamp lights: every one costs every lit pixel, even switched off by day. Now one shared pool of 4 follows the nearest lamps that are on, indoors or out (was 4 indoor + 2 outdoor; indoors you still get 4); close trees cast their shadow from the simplified tree on Low/Medium (~7 fps at the forest's edge); indoor doors skip sun shadows (−29 draw calls). Medium @1080p: 60 fps at 12 of 13 perf spots, map-edge forest 56 (was 36–47); flower bed 373 draw calls. Also: the rear roof's side eaves no longer poke into the yellow bedroom.
 - [x] **R3.8 Review + deploy.** **[ANDREW APPROVES]** Full browser suite after the speed pass (2026-10-17): 67 passed, 0 failed (13 dev tools skipped). Before/after lighting pictures `review/speed/before-after-lighting.jpg`: rooms look the same; outside at night the porch and back lawn are a touch dimmer. Andrew approved ("put round 3 live", 2026-10-17). **Deployed:** `round-3-fixes` fast-forwarded into main (7883659); Railway `/health` shows 7883659, Vercel's script carries the new build ("Motorcycle gears" in it, `?v=7883659`); the sign-in test passes against the live site (party tests need the dev-only name box, as before). Next: Andrew + friends play it.
 
+## Andrew's requests: the motorcycle (branch `round-3-fixes`, 2026-10-17)
+Andrew sent two clips of his own bike (idle + upshifting, downshifting) and asked for its real sound, wheelies, sharper turning at speed and louder bike sounds. Answers: wheelies on Space, can't flip, 1st–3rd gear only. No credits.
+- [x] **M1 Engine sound from Andrew's bike.** Audio tracks kept in git (`assets/audio/bike-idle-upshift.m4a`, `bike-downshift.m4a`); `npm run build:audio -- bike` cuts `bike-idle` (loop, 5.0–7.8 s), `bike-high` (loop, 20.0–20.95 s), `bike-upshift` (12.5 s), `bike-downshift` (2.0 s of the second clip). `rider.ts` crossfades the two loops by revs and pitches them; each gear change plays the real shift. The synthesized engine is gone. Cut points chosen from loudness/pitch analysis; Andrew to listen and say if any moment's wrong.
+- [x] **M2 Louder.** Engine 0.8–1.5 volume (was 0.35–0.8), full volume out to 10 m (was 5); crash ~1.5× louder.
+- [x] **M3 Sharper turning at speed.** `bikeTurnRate` divisor 9 → 16: ~45% more turn at speed, same at a crawl (58 mph circle ~48 m → ~33 m).
+- [x] **M4 Wheelies.** `shared/src/bike.ts` `wheelieStep`; Space+W in gears 1–3 lifts the front to ~30°, it never flips, drops back with a thump when you let go; steering ×0.35 with the front up; the pose carries `wheelie` so friends see it. Picture `review/bike-wheelie.png`. Tests: `bike.test.ts`, `e2e/bike.spec.ts` (all 3 bike tests pass).
+- [ ] **M5 Deploy.** **[ANDREW APPROVES]** Waiting on Andrew to try it and OK putting it live.
+
 ---
 
 ## Higgsfield credit ledger
@@ -166,6 +174,7 @@ Starting balance: 1,210 (2026-10-11)
 ## Decision log
 | Date | Decision | Why |
 |---|---|---|
+| 2026-10-17 | Bike engine from recordings of Andrew's own bike (two crossfaded loops + real shift sounds) instead of made in code; wheelies on Space (gears 1–3, can't flip); turn rate at speed ~45% sharper; bike sounds louder (GAME_SPEC §5.4) | Andrew's request with his clips |
 | 2026-10-17 | Lamp lights: one shared pool (Low 3, Medium 4, High 9) following the nearest lamps that are on, instead of separate indoor/outdoor pools; close trees cast simplified shadows on Low/Medium (GAME_SPEC §17) | Speed pass Andrew asked for: realistic Medium was 36–47 fps at the heavy spots on the M1, now 56–60 |
 | 2026-10-16 | **Realistic is the game's only look**; the cartoon look is retired and gone from Settings (code switched off, not yet deleted) (GAME_SPEC §1, §2, §5.1b, §17) | Andrew, round 3: "make realistic mode the default and do not make cartoon an option anymore" |
 | 2026-10-16 | Medium graphics and full screen on by default, applied once to settings saved before (GAME_SPEC §11.4) | Andrew, round 3; full screen needs a click, so it starts on the first "Click to start" |

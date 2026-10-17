@@ -158,3 +158,52 @@ test("ride from the garage out along the driveway to the racetrack and time a la
   await shot(ann, "8-lap-done");
   await ann.evaluate(() => window.__den!.track!.autopilot(null));
 });
+
+test("pop a wheelie (Space with the throttle): the front comes up, a friend sees it, it drops back down; the engine is Andrew's bike", async ({ page: ann, browser }) => {
+  test.setTimeout(180_000);
+  failOnErrors(ann);
+  const sounds = new Set<string>();
+  ann.on("request", (r) => {
+    const m = /audio\/(bike-[a-z]+)\.mp3/.exec(r.url());
+    if (m) sounds.add(m[1]!);
+  });
+  const code = await hostGame(ann, "Ann");
+  const bob = await newPlayer(browser);
+  await joinGame(bob, code, "Bob");
+  await waitForBear(bob);
+  await goTo(ann, -22.6, GARAGE_BIKE.z, Math.PI / 2);
+  await ann.keyboard.press("KeyE");
+  await expect.poll(() => ann.evaluate(() => window.__den!.doors()["main:garage-outside:2"])).toBe(true);
+  // Bob stands off to the side of the driveway, looking across Ann's path (his own bear hidden).
+  await goTo(bob, -33, GARAGE_BIKE.z - 9, 0);
+  await bob.evaluate(() => {
+    window.__den!.player.hidden = true;
+    window.__den!.camera.distance = 2;
+    window.__den!.camera.pitch = 0.05;
+  });
+  await goTo(ann, GARAGE_BIKE.x + 1.4, GARAGE_BIKE.z, undefined, GARAGE_BIKE.y);
+  await expect.poll(async () => (await bike(ann)).prompt).toBe("Ride the motorcycle");
+  await ann.keyboard.press("KeyE");
+  await expect.poll(async () => (await bike(ann)).me.state).toBe("riding");
+  await ann.waitForTimeout(800);
+
+  // Roll out of the garage, then hold Space with the throttle.
+  await hold(ann, ["KeyW"], 700);
+  await ann.keyboard.down("KeyW");
+  await ann.keyboard.down("Space");
+  await expect.poll(() => ann.evaluate(() => window.__den!.player.bike.wheelie), { timeout: 3000 }).toBeGreaterThan(0.35);
+  expect(await ann.evaluate(() => window.__den!.player.bike.gear)).toBeLessThanOrEqual(3);
+  await expect.poll(() => bob.evaluate(() => window.__den!.remotes()[0]?.wheelie ?? 0), { timeout: 3000 }).toBeGreaterThan(0.2);
+  await shot(ann, "9-wheelie");
+  for (let i = 0; i < 4; i++) {
+    await bob.screenshot({ path: `test-results/bike/9-bob-sees-wheelie-${i}.png` });
+    await bob.waitForTimeout(250);
+  }
+  await ann.keyboard.up("Space");
+  await ann.keyboard.up("KeyW");
+  await expect.poll(() => ann.evaluate(() => window.__den!.player.bike.wheelie), { timeout: 2000 }).toBe(0);
+  await expect.poll(() => bob.evaluate(() => window.__den!.remotes()[0]?.wheelie ?? 1), { timeout: 3000 }).toBeLessThan(0.05);
+
+  // The engine and shift sounds are the recordings of Andrew's bike.
+  expect([...sounds].sort()).toEqual(expect.arrayContaining(["bike-high", "bike-idle", "bike-upshift"]));
+});

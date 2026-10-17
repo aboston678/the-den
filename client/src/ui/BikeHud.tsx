@@ -86,7 +86,7 @@ function Dials() {
       <div className="bike-revs" aria-hidden>
         <div ref={revs} />
       </div>
-      <div className="bike-keys"><b>Q</b>/<b>Z</b> shift · <b>M</b> auto/manual</div>
+      <div className="bike-keys"><b>Q</b>/<b>Z</b> shift · <b>M</b> auto/manual<br /><b>Space</b> wheelie</div>
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { BIKE, GARAGE_BIKE, GEARS, GEAR_TOP, MPH, autoGear, bikeBlocked, bikeRevs, bikeSpeedStep, bikeTopSpeed, bikeTurnRate, canShiftDown, inGarage } from "./bike.ts";
+import { BIKE, GARAGE_BIKE, GEARS, GEAR_TOP, MPH, autoGear, bikeBlocked, bikeRevs, bikeSpeedStep, bikeTopSpeed, bikeTurnRate, canShiftDown, inGarage, WHEELIE, wheelieStep } from "./bike.ts";
 import { START_S, TRACK, TRACK_WIDTH } from "./track.ts";
 import { APRON, houseToWorld } from "./world/layout.ts";
 
@@ -82,6 +82,25 @@ describe("the motorcycle", () => {
   });
 
   it("turns tight when slow and wide when fast", () => {
-    expect(bikeTurnRate(2)).toBeGreaterThan(bikeTurnRate(40) * 3);
+    expect(bikeTurnRate(2)).toBeGreaterThan(bikeTurnRate(40) * 2.5);
+    // Sharp enough at speed (Andrew, 2026-10-17): a circle under 35 m across at ~58 mph.
+    expect(26 / bikeTurnRate(26)).toBeLessThan(35);
+  });
+
+  it("pops a wheelie in the low gears, can't flip over, and comes back down", () => {
+    let w = { angle: 0, fall: 0 };
+    for (let t = 0; t < 1; t += 0.02) w = wheelieStep(w, 0.02, true, 10, 2, true);
+    expect(w.angle).toBeGreaterThan(0.4);
+    for (let t = 0; t < 10; t += 0.02) w = wheelieStep(w, 0.02, true, 10, 2, true);
+    expect(w.angle).toBeLessThanOrEqual(WHEELIE.max); // never past the top
+    let down = w;
+    for (let t = 0; t < 0.6; t += 0.02) down = wheelieStep(down, 0.02, false, 10, 2, true);
+    expect(down.angle).toBe(0); // let go: back on two wheels quickly
+    let fourth = { angle: 0, fall: 0 };
+    for (let t = 0; t < 1; t += 0.02) fourth = wheelieStep(fourth, 0.02, true, 30, 4, true);
+    expect(fourth.angle).toBe(0); // not enough pull in 4th
+    let stopped = { angle: 0, fall: 0 };
+    for (let t = 0; t < 1; t += 0.02) stopped = wheelieStep(stopped, 0.02, true, 0, 1, true);
+    expect(stopped.angle).toBe(0);
   });
 });

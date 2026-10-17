@@ -31,7 +31,7 @@ describe("the motorcycle on the server", () => {
   });
 
   it("only a riding bear may move at a bike's speed or look like it's riding", () => {
-    const prev = { x: 0, y: 0, z: 0, yaw: 0, speed: 0, action: "locomotion" as const, flashlight: false, aimYaw: 0, aimPitch: 0 };
+    const prev = { x: 0, y: 0, z: 0, yaw: 0, speed: 0, action: "locomotion" as const, flashlight: false, aimYaw: 0, aimPitch: 0, wheelie: 0 };
     const fast = { ...prev, x: 2, speed: 40, action: "ride" };
     const walking = sanitizePose(fast, prev, 0.05, false);
     expect(walking.x).toBeLessThan(2);

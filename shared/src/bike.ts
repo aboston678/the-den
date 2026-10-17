@@ -37,8 +37,9 @@ export const BIKE = {
 /** The fastest any bike can go: the server's speed check allows this while riding. */
 export const BIKE_MAX_SPEED = BIKE.trackSpeed * BIKE.tuck;
 
-/** Turn rate (rad/s) at a speed: tight at a crawl, wide at full tilt. */
-export const bikeTurnRate = (speed: number) => BIKE.turnRate / (1 + Math.abs(speed) / 9);
+/** Turn rate (rad/s) at a speed: tight at a crawl, wider at full tilt (sharpened at speed, Andrew 2026-10-17:
+ * a ~33 m circle at 58 mph, ~95 m at 112 mph). */
+export const bikeTurnRate = (speed: number) => BIKE.turnRate / (1 + Math.abs(speed) / 16);
 
 const GARAGE = (() => {
   const a = houseToWorld(0, 0), b = houseToWorld(7.5, 8.5);
@@ -115,4 +116,37 @@ export function bikeSpeedStep(speed: number, dt: number, input: { throttle: bool
   if (input.throttle && speed < -0.1) return Math.min(0, speed + BIKE.brake * dt);
   const coast = BIKE.coast + (speed > max ? BIKE.brake * 0.5 : 0);
   return speed > 0 ? Math.max(0, speed - coast * dt) : Math.min(0, speed + coast * dt);
+}
+
+// --- wheelies (Andrew, 2026-10-17): hold Space with the throttle in 1st to 3rd ---
+
+export const WHEELIE = {
+  /** How high the front comes up (radians, ~30°): it never goes further, so you can't flip over. */
+  max: 0.52,
+  /** Lowest speed (m/s) and highest gear it'll lift in. */
+  minSpeed: 2,
+  maxGear: 3,
+  /** How fast it rises toward the top (per second, a share of the gap that's left). */
+  lift: 2.6,
+  /** How fast the front falls (rad/s²) when you let go. */
+  drop: 5,
+  /** Share of the turn rate left with the front wheel in the air. */
+  steer: 0.35,
+} as const;
+
+/** True if the bike has the pull to lift its front: rolling forward, low gear, throttle on. */
+export const canWheelie = (speed: number, gear: number, throttle: boolean) => throttle && speed >= WHEELIE.minSpeed && gear <= WHEELIE.maxGear;
+
+/**
+ * One step of a wheelie: `angle` (radians the front is up) and `fall` (its falling speed, rad/s).
+ * Held with the pull to lift it, it eases up toward the top; otherwise it falls back down with gravity.
+ */
+export function wheelieStep(w: { angle: number; fall: number }, dt: number, hold: boolean, speed: number, gear: number, throttle: boolean) {
+  if (hold && canWheelie(speed, gear, throttle)) {
+    const angle = Math.min(WHEELIE.max, w.angle + (WHEELIE.max - w.angle) * Math.min(1, WHEELIE.lift * dt) + 0.05 * dt);
+    return { angle, fall: 0 };
+  }
+  if (w.angle <= 0) return { angle: 0, fall: 0 };
+  const fall = w.fall + WHEELIE.drop * dt;
+  return { angle: Math.max(0, w.angle - fall * dt), fall };
 }

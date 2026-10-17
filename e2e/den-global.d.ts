@@ -16,6 +16,8 @@ interface Window {
       /** Hide your own bear (screenshots). */
       hidden: boolean;
       feet: [{ x: number; y: number; z: number }, { x: number; y: number; z: number }];
+      /** The motorcycle's dials (and how far the front wheel is up). */
+      bike: { speed: number; gear: number; revs: number; manual: boolean; wheelie: number };
     };
     camera: { yaw: number; pitch: number; distance: number; current: number; shake: number };
     teleport: (x: number, z: number, y?: number) => void;
@@ -30,7 +32,7 @@ interface Window {
     perfBreakdown: () => string[];
     programNames?: () => string[];
     sky: () => { phase: string; daylight: number; exteriorLights: number };
-    remotes: () => { id: string; name: string; x: number; z: number; action: string; flashlight: boolean; tagVisible: boolean; connected: boolean; fish: { rod: boolean; state: string; species: string } }[];
+    remotes: () => { id: string; name: string; x: number; z: number; action: string; flashlight: boolean; wheelie: number; tagVisible: boolean; connected: boolean; fish: { rod: boolean; state: string; species: string } }[];
     /** Fishing (2.4): cast with a power 0…1, our fishing state, catches, and a quick bite (dev only). */
     fish: {
       cast: (power: number) => boolean;

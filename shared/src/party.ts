@@ -1,4 +1,4 @@
-import { BIKE_MAX_SPEED } from "./bike.ts";
+import { BIKE_MAX_SPEED, WHEELIE } from "./bike.ts";
 import { WORLD_LIMITS } from "./track.ts";
 import { BEAR } from "./constants.ts";
 
@@ -78,6 +78,8 @@ export interface Pose {
   flashlight: boolean;
   aimYaw: number;
   aimPitch: number;
+  /** On a bike: how far the front wheel is up (radians, 0 = both wheels down). */
+  wheelie: number;
 }
 
 /** Map bounds the server accepts: the property and, out to the north-west, the road and the racetrack. */
@@ -119,5 +121,6 @@ export function sanitizePose(input: unknown, prev: Pose, seconds: number, riding
     flashlight: typeof raw.flashlight === "boolean" ? raw.flashlight : prev.flashlight,
     aimYaw: num(raw.aimYaw, prev.aimYaw) % (Math.PI * 2),
     aimPitch: clampN(num(raw.aimPitch, prev.aimPitch), -1.4, 1.4),
+    wheelie: riding ? clampN(num(raw.wheelie, 0), 0, WHEELIE.max) : 0,
   };
 }

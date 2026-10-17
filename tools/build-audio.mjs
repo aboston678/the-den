@@ -30,6 +30,13 @@ const SOUNDS = {
   roar: ["../im-shaving-here.mp3", 0, 3.37, "once", -14],
   // The pins crashing (Andrew's pick, 2026-10-13; kept in git as assets/audio/bowling-strike.m4a, see docs/ASSETS.md).
   "pin-strike": ["../bowling-strike.m4a", 0, 2.55, "once", -14],
+  // The motorcycle: Andrew's own ZX-6R (2026-10-17; kept in git as assets/audio/bike-*.m4a, see docs/ASSETS.md).
+  // Two engine loops the game crossfades and pitches with the revs (a steady idle, a steady high-rev
+  // stretch), and one shift each way. Engine loops are short and crossfade over 0.25 s (6th field).
+  "bike-idle": ["../bike-idle-upshift.m4a", 5.0, 2.8, "loop", -14, 0.25],
+  "bike-high": ["../bike-idle-upshift.m4a", 20.0, 0.95, "loop", -14, 0.25],
+  "bike-upshift": ["../bike-idle-upshift.m4a", 12.5, 1.3, "once", -14],
+  "bike-downshift": ["../bike-downshift.m4a", 2.0, 1.7, "once", -14],
 };
 
 // Short effects from Kenney's CC0 packs (Phase 5 sound pass; tools/fetch-audio.mjs, docs/ASSETS.md):
@@ -73,9 +80,9 @@ function decode(file, start, length) {
   return new Float32Array(raw.buffer.slice(raw.byteOffset, raw.byteOffset + raw.length));
 }
 
-/** Last XFADE seconds faded into the first XFADE seconds (equal-power), so the end runs into the start. */
-function makeLoop(s) {
-  const x = Math.round(XFADE * RATE);
+/** Last `fade` seconds faded into the first `fade` seconds (equal-power), so the end runs into the start. */
+function makeLoop(s, fade = XFADE) {
+  const x = Math.round(fade * RATE);
   const out = s.slice(0, s.length - x);
   for (let i = 0; i < x; i++) {
     const k = i / x;
@@ -116,15 +123,17 @@ function level(s, db) {
 
 mkdirSync(OUT, { recursive: true });
 let total = 0;
-for (const [name, [file, start, length, kind, db]] of Object.entries(SOUNDS)) {
-  let s = decode(file, start, kind === "loop" ? length + XFADE : length);
-  s = kind === "loop" ? makeLoop(s) : kind === "sfx" ? fadeEnds(s, 0.002, 0.03) : fadeEnds(s);
+const only = process.argv[2]; // e.g. `npm run build:audio -- bike` rebuilds just the bike sounds
+for (const [name, [file, start, length, kind, db, fade = XFADE]] of Object.entries(SOUNDS)) {
+  if (only && !name.startsWith(only)) continue;
+  let s = decode(file, start, kind === "loop" ? length + fade : length);
+  s = kind === "loop" ? makeLoop(s, fade) : kind === "sfx" ? fadeEnds(s, 0.002, 0.03) : fadeEnds(s);
   if (kind === "sfx") levelPeak(s, db);
   else level(s, db);
   const path = `${OUT}/${name}.mp3`;
   execFileSync(ffmpeg, ["-v", "error", "-y", "-f", "f32le", "-ar", String(RATE), "-ac", "1", "-i", "-", "-c:a", "libmp3lame", "-b:a", kind === "loop" ? "56k" : "64k", path], { input: Buffer.from(s.buffer) });
   const kb = statSync(path).size / 1024;
   total += kb;
-  console.log(`${name.padEnd(12)} ${(s.length / RATE).toFixed(1).padStart(5)} s  ${kb.toFixed(0).padStart(4)} KB`);
+  console.log(`${name.padEnd(14)} ${(s.length / RATE).toFixed(1).padStart(5)} s  ${kb.toFixed(0).padStart(4)} KB`);
 }
 console.log(`total ${(total / 1024).toFixed(2)} MB`);
