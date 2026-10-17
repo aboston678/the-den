@@ -133,19 +133,32 @@ test("Show frame rate puts the frame rate and graphics level in the party badge"
   await page.screenshot({ path: "test-results/menus/fps.png", clip: { x: 0, y: 0, width: 520, height: 60 } });
 });
 
-// Game-night fixes: play without the browser's address bar and tabs.
-test("full screen from the pause menu, and the Play in full screen setting is remembered", async ({ page }) => {
+// Game-night fixes: play without the browser's address bar and tabs. Round 3: on by default, from the first click.
+test("full screen from the first click by default, the pause menu button, and the Play in full screen setting is remembered", async ({ page }) => {
   test.setTimeout(90_000);
   failOnErrors(page);
   await hostGame(page, "Wide");
   const full = () => page.evaluate(() => !!document.fullscreenElement);
+  await expect.poll(full).toBe(true); // "Click to start" already went full screen
   await page.keyboard.press("Escape");
-  await page.getByTestId("pause-fullscreen").click();
-  await expect.poll(full).toBe(true);
   await expect(page.getByTestId("pause-fullscreen")).toHaveText("Leave full screen");
   await page.getByTestId("pause-fullscreen").click();
   await expect.poll(full).toBe(false);
+  await page.getByTestId("pause-fullscreen").click();
+  await expect.poll(full).toBe(true);
 
+  // Turned off, Resume stays in the window; turned back on, it goes full screen again.
+  await page.getByTestId("pause-settings").click();
+  await expect(page.getByTestId("setting-fullscreen")).toBeChecked();
+  await expect(page.getByTestId("setting-graphics")).toHaveValue("medium"); // Medium by default (round 3)
+  await page.getByTestId("setting-fullscreen").uncheck();
+  await expect.poll(full).toBe(false);
+  await page.getByTestId("settings-done").click();
+  await page.getByTestId("resume").click();
+  await page.waitForTimeout(300);
+  expect(await full()).toBe(false);
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem("den.settings")!).fullscreen)).toBe(false);
+  await page.keyboard.press("Escape");
   await page.getByTestId("pause-settings").click();
   await page.getByTestId("setting-fullscreen").check();
   await page.getByTestId("settings-done").click();

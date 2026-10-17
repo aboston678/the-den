@@ -5,7 +5,6 @@ import { closePlayers, failOnErrors, hostGame } from "./helpers.ts";
 // Milestone 1.12: frame rate, draw calls and triangles at full 1080p for each graphics preset, at
 // the heaviest places in the game (GAME_SPEC §17 budgets). Writes test-results/perf.json.
 //   PRESETS=low,medium,high DPR=2 SPOTS=dock BREAKDOWN=1 npx playwright test e2e/perf.spec.ts
-// ART=realistic measures the old realistic look instead of the cartoon one (game/artStyle.ts).
 
 test.afterEach(closePlayers);
 
@@ -55,7 +54,7 @@ for (const preset of (process.env.PRESETS ?? "medium").split(",")) {
     const page = await ctx.newPage();
     failOnErrors(page);
     if (preset !== "current") {
-      await page.addInitScript(([p, art]) => localStorage.setItem("den.settings", JSON.stringify({ graphics: p, artStyle: art })), [preset, process.env.ART ?? "cartoon"]);
+      await page.addInitScript((p) => localStorage.setItem("den.settings", JSON.stringify({ graphics: p, v: 2 })), preset);
     }
     let bytes = 0;
     page.on("requestfinished", async (r) => {
@@ -96,7 +95,7 @@ test("Auto steps down a level when the first seconds of play are too slow", asyn
   await page.addInitScript(() => {
     if (!sessionStorage.getItem("seeded")) {
       localStorage.setItem("den.autoTier", "high");
-      localStorage.setItem("den.settings", JSON.stringify({ graphics: "auto" }));
+      localStorage.setItem("den.settings", JSON.stringify({ graphics: "auto", v: 2 }));
       sessionStorage.setItem("seeded", "1");
     }
   });
