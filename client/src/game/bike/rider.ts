@@ -14,7 +14,7 @@ import { reachTo } from "../player/reach.ts";
 export const BIKE_URL = asset("/models/bike.glb");
 
 /** Where the bear goes on the bike (bike metres: +z forward, y up, centred on its footprint). Tuned by eye. */
-export const SEAT = { lift: 0.36, back: -0.08 } as const;
+export const SEAT = { lift: 0.44, back: 0.26 } as const; // the realistic bear (round 3)
 /** The handlebar grips (bike metres). */
 const GRIP = { x: 0.3, y: 1.12, z: 0.5 } as const;
 /** How far the back and neck bend forward over the tank (radians). */
@@ -72,6 +72,29 @@ export function useRider(visual: React.RefObject<Group | null>): Rider {
 const v = { a: new Vector3(), b: new Vector3(), up: new Vector3(0, 1, 0), left: new Vector3(), fwd: new Vector3() };
 const q = { a: new Quaternion(), w: new Quaternion(), p: new Quaternion() };
 const bones = new WeakMap<Object3D, Record<string, Object3D | undefined>>();
+/** Per bone: its rotation from the animation, and what we last turned it to. */
+const posed = new WeakMap<Object3D, { base: Quaternion; ours: Quaternion }>();
+const RIDE_BONES = ["LeftArm", "LeftForeArm", "LeftHand", "RightArm", "RightForeArm", "RightHand", "Spine01", "Spine02", "neck"];
+
+/**
+ * Put the bones we bend back to the animation's pose. The riding pose is a frozen clip, and three.js
+ * stops rewriting bones whose value hasn't changed, so without this our bend from last frame stays and
+ * the next one is added on top: the bear's upper body spun round and round (Andrew's video, round 3).
+ */
+function restorePose(b: Record<string, Object3D | undefined>) {
+  for (const bone of Object.values(b)) {
+    if (!bone) continue;
+    const p = posed.get(bone);
+    if (!p) posed.set(bone, { base: bone.quaternion.clone(), ours: new Quaternion(2, 2, 2, 2) });
+    else if (bone.quaternion.equals(p.ours)) bone.quaternion.copy(p.base); // the animation left our bend in place
+    else p.base.copy(bone.quaternion); // the animation wrote a fresh pose this frame
+  }
+}
+
+/** Remember what we turned the bones to, so next frame can tell whether the animation rewrote them. */
+function notePose(b: Record<string, Object3D | undefined>) {
+  for (const bone of Object.values(b)) if (bone) posed.get(bone)?.ours.copy(bone.quaternion);
+}
 
 /**
  * Call after the bear's animation has updated this frame. `lean` (radians, + = to the bear's right)
@@ -84,13 +107,14 @@ export function applyRide(r: Rider, model: Object3D, visual: Group, riding: bool
   visual.rotation.x = riding ? pitch : 0;
   visual.rotation.z = riding ? lean : 0;
   engine(r, riding, speed);
-  if (r.k <= 0) return;
-
   let b = bones.get(model);
   if (!b) {
-    b = Object.fromEntries(["LeftArm", "LeftForeArm", "LeftHand", "RightArm", "RightForeArm", "RightHand", "Spine01", "Spine02", "neck"].map((n) => [n, model.getObjectByName(n)]));
+    b = Object.fromEntries(RIDE_BONES.map((n) => [n, model.getObjectByName(n)]));
     bones.set(model, b);
   }
+  restorePose(b);
+  if (r.k <= 0) return notePose(b);
+
   visual.updateWorldMatrix(true, true);
   // Bend forward over the tank, about the bear's own left-right axis.
   visual.getWorldQuaternion(q.p);
@@ -112,6 +136,7 @@ export function applyRide(r: Rider, model: Object3D, visual: Group, riding: bool
     const hint = v.b.set(sx * 0.8, -0.6, -0.2).applyQuaternion(visual.getWorldQuaternion(q.p));
     reachTo(upper, fore, hand, grip, hint, r.k);
   }
+  notePose(b);
 }
 
 /** The engine: idles at a standstill, rising to a scream at top speed. */

@@ -18,6 +18,12 @@ test("rider views", async ({ page }) => {
   // Out on the apron, facing west down the driveway.
   await page.evaluate(() => window.__den!.teleport(-28, 0.75, Number.NaN));
   await page.waitForTimeout(1500);
+  // Standing still: the rider must hold the same pose (round 3: the hunch used to add up every frame and spin the bear).
+  for (const t of [0, 1, 2]) {
+    await page.evaluate(() => { const d = window.__den!; d.camera.yaw = d.player.yaw + Math.PI; d.camera.pitch = 0.15; d.camera.distance = 4; });
+    await page.waitForTimeout(1000);
+    await page.screenshot({ path: `review/bike/still-${t}.png` });
+  }
   for (const [name, turn, pitch, dist] of [["left", -Math.PI / 2, 0.1, 3.2], ["right", Math.PI / 2, 0.1, 3.2], ["front", Math.PI, 0.15, 3.5], ["behind", 0, 0.2, 4]] as const) {
     await page.evaluate(([turn, pitch, dist]) => { const d = window.__den!; d.camera.yaw = d.player.yaw + Math.PI + turn!; d.camera.pitch = pitch!; d.camera.distance = dist!; }, [turn, pitch, dist] as const);
     await page.waitForTimeout(400);
