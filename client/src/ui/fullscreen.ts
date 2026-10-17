@@ -3,8 +3,9 @@ import { settings } from "./settings.ts";
 
 // Full screen (game-night fixes): the whole page, so the HUD stays on screen, without the browser's
 // address bar and tabs. Browsers only allow it from a click or key press, and Esc always leaves it
-// (on a Mac Esc also frees the mouse, which opens the pause menu); with "Play in full screen" on,
-// Resume or the next click on the game goes back to full screen.
+// (on a Mac Esc also frees the mouse, which opens the pause menu). "Play in full screen" is on by
+// default (Andrew, round 3): the first "Click to start" goes full screen, and Create/Join, Play, Resume
+// or the next click on the game go back to it.
 
 type WebkitDoc = Document & { webkitFullscreenElement?: Element | null; webkitExitFullscreen?: () => Promise<void> };
 type WebkitEl = HTMLElement & { webkitRequestFullscreen?: () => Promise<void> | void };

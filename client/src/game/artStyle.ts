@@ -1,28 +1,15 @@
 import { ShaderChunk } from "three";
-import { settings } from "../ui/settings.ts";
 
-// The art style (GAME_SPEC §1). Since 2026-10-13 the game is a bright, chunky cartoon (Andrew
-// approved it from the concept pictures in assets/concepts/style/); the original realistic look
-// can still be picked in Settings (it reloads the page) or with ?realistic in the address (?toon
-// forces cartoon). It changes the look only, never the gameplay:
-//  - lighting in soft bands (lit side / shade side) instead of a smooth photographic falloff
-//  - textures softened toward their own average colours, a little more colour saturation
-//  - Higgsfield cartoon scenery and bear (toonTrees.ts, bear-toon.glb), painted ground, grass
-//    blades, a painted sky with puffy clouds, warmer sun and brighter shade
+// The art style (GAME_SPEC §1). The game is realistic (Andrew, round 3, 2026-10-16: "make realistic
+// mode the default and do not make cartoon an option anymore"). The cartoon look of 2026-10-13 is
+// switched off here and no longer offered in Settings; its code paths (banded lighting, softened
+// textures, the Higgsfield cartoon scenery and bear, grass blades, painted sky) stay behind this flag
+// until they're tidied away.
 
 export type ArtStyle = "realistic" | "cartoon";
 
-/** Decided once at load: shaders and tree models are built for one style. */
-export const TOON: boolean = (() => {
-  try {
-    const q = new URLSearchParams(location.search);
-    if (q.has("toon")) return true;
-    if (q.has("realistic")) return false;
-  } catch {
-    /* no location (tests in node) */
-  }
-  return settings().artStyle === "cartoon";
-})();
+/** Always false now: the cartoon look is retired. */
+export const TOON: boolean = false;
 
 /** Soft two-band lighting: anything facing the light is lit almost evenly, with a narrow soft edge. */
 const BAND = /* glsl */ `

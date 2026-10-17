@@ -6,7 +6,7 @@ import { initAuth } from "./net/auth.ts";
 import { initUiSounds } from "./ui/uiSound.ts";
 import "./styles.css";
 
-applyArtStyle(); // the cartoon-look test, if picked (before anything is drawn)
+applyArtStyle(); // no-op while the cartoon look is retired (game/artStyle.ts)
 initUiSounds(); // a click on every button (GAME_SPEC §10)
 initAuth(); // remembered Google sign-in, or the one we just came back from (GAME_SPEC §14)
 

@@ -82,7 +82,10 @@ export function Home() {
                     <input data-testid="nickname" value={name} maxLength={NICKNAME_MAX_LENGTH} placeholder="Bear" onChange={(e) => setName(e.target.value)} />
                   </label>
                 )}
-                <button data-testid="create" className="primary big" disabled={busy} onClick={() => createParty(myName)}>
+                <button data-testid="create" className="primary big" disabled={busy} onClick={() => {
+                  fullscreenIfWanted();
+                  createParty(myName);
+                }}>
                   Create party
                 </button>
                 <div className="home-join">
@@ -94,7 +97,10 @@ export function Home() {
                     onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
                     onKeyDown={(e) => e.key === "Enter" && joinParty(joinCode, myName)}
                   />
-                  <button data-testid="join" disabled={busy} onClick={() => joinParty(joinCode, myName)}>
+                  <button data-testid="join" disabled={busy} onClick={() => {
+                    fullscreenIfWanted();
+                    joinParty(joinCode, myName);
+                  }}>
                     Join party
                   </button>
                 </div>
