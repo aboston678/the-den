@@ -242,10 +242,10 @@ export function trackBuildings(gate: { from: number; to: number }) {
     const off = side * (TRACK_WIDTH / 2 + 2.2);
     parts.push(box(s.x + s.dz * off, y0 + 3.5, s.z - s.dx * off, 0.6, 7, 0.6, "#c9ccd0", yaw));
   }
-  parts.push(box(s.x, y0 + 7.2, s.z, TRACK_WIDTH + 5.4, 1.4, 0.6, "#d7342b", yaw + Math.PI / 2));
+  parts.push(box(s.x, y0 + 7.2, s.z, TRACK_WIDTH + 5.4, 1.4, 0.6, "#d7342b", yaw)); // spans the track between the posts
   for (let i = 0; i < 8; i++) {
     const off = -TRACK_WIDTH / 2 + 1 + i * 1.45;
-    parts.push(box(s.x + s.dz * off - s.dx * 0.32, y0 + 7.2, s.z - s.dx * off - s.dz * 0.32, 0.72, 0.7, 0.05, i % 2 ? "#1c1c1c" : "#f4f1ea", yaw + Math.PI / 2));
+    parts.push(box(s.x + s.dz * off - s.dx * 0.32, y0 + 7.2, s.z - s.dx * off - s.dz * 0.32, 0.72, 0.7, 0.05, i % 2 ? "#1c1c1c" : "#f4f1ea", yaw));
   }
   // The fence: a low concrete wall round the grounds, red and white along the top.
   const f = fenceLine();
