@@ -165,6 +165,10 @@ Starting balance: 1,210 (2026-10-11)
 ## Decision log
 | Date | Decision | Why |
 |---|---|---|
+| 2026-10-16 | **Realistic is the game's only look**; the cartoon look is retired and gone from Settings (code switched off, not yet deleted) (GAME_SPEC §1, §2, §5.1b, §17) | Andrew, round 3: "make realistic mode the default and do not make cartoon an option anymore" |
+| 2026-10-16 | Medium graphics and full screen on by default, applied once to settings saved before (GAME_SPEC §11.4) | Andrew, round 3; full screen needs a click, so it starts on the first "Click to start" |
+| 2026-10-16 | Jenna Catfish: 1 cast in every 4 (a random cast per run of four, owed until landed), not 25% of hooked fish (GAME_SPEC §13) | Andrew didn't see her in play: missed/wound-in casts never rolled, and mashing snaps her; he chose to keep the snap but bring her back next cast |
+| 2026-10-16 | Motorcycle: grass as fast as the nearby pavement; six gears, automatic or manual (Q up, Z down, M switches); speedometer (GAME_SPEC §5.4) | Andrew, round 3; he picked the keys and the grass rule |
 | 2026-10-16 | Racetrack joined to the map past the driveway's far end (no fade), flat on farmland at the driveway's height, built in code; lap times session-only (GAME_SPEC §4.1) | Andrew's picks; flat + code-built keeps it cheap (no credits) and 60 fps |
 | 2026-10-16 | Motorcycle: one per bear (a bike always waits in the garage), arcade riding on the bear's own capsule, the sit pose + code-posed hunch and grips instead of buying a riding clip (GAME_SPEC §5.4) | Andrew's request and picks; the free pose read well in the pictures, so no clip credits |
 | 2026-10-16 | Bears spawn on the apron in front of the garage, facing the doors (GAME_SPEC §4, §7) | Andrew's request |

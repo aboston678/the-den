@@ -7,9 +7,9 @@ This is the source of truth. Build what is written here. If something here won't
 
 ## 1. The game in one paragraph
 
-The Den is a private, browser-based, multiplayer 3D game for Andrew and his friends (max 6 per party). Everyone plays the same big, goofy cartoon grizzly bear, walking upright. You load in on the driveway in front of the garage of a big white farmhouse in the summer Maine woods, and hang out: open doors, explore every room, roar at each other, dance, fish off the dock in the stream, bowl on the two-lane alley in the basement, and play full-rules Catan around the dining-room table. A 30-minute day and 30-minute night cycle runs the whole time. Stats (fish caught, bowling high score, Catan wins) go on a leaderboard you can filter to friends.
+The Den is a private, browser-based, multiplayer 3D game for Andrew and his friends (max 6 per party). Everyone plays the same big upright grizzly bear. You load in on the driveway in front of the garage of a big white farmhouse in the summer Maine woods, and hang out: open doors, explore every room, roar at each other, dance, fish off the dock in the stream, bowl on the two-lane alley in the basement, and play full-rules Catan around the dining-room table. A 30-minute day and 30-minute night cycle runs the whole time. Stats (fish caught, bowling high score, Catan wins) go on a leaderboard you can filter to friends.
 
-**Visual target (changed 2026-10-13, Andrew):** a bright, chunky, painted cartoon look, like the concept pictures in `assets/concepts/style/` (the driveway one is the north star): saturated summer greens, a deep blue sky with puffy clouds, warm sun and soft coloured shade, chunky stylized trees and bushes, thick swaying grass. It's built from Higgsfield cartoon models (scenery and bear), painted textures, and the cartoon shading in `client/src/game/artStyle.ts`. The original photoreal look (The Long Dark mood) stays selectable in Settings → Art style → Realistic. Keep the real property's layout: no invented landmarks (no fence, lake or mountains). The one exception is Andrew's racetrack (2026-10-16, §4.1), out past the end of the driveway, beyond the property.
+**Visual target (changed back 2026-10-16, Andrew, round 3):** the realistic look (The Long Dark mood): PBR textures, the realistic grizzly, EZ-Tree forest, photographic sky. The cartoon look of 2026-10-13 is retired and no longer offered in Settings (its code is switched off in `client/src/game/artStyle.ts`, to tidy away later). Keep the real property's layout: no invented landmarks (no fence, lake or mountains). The one exception is Andrew's racetrack (2026-10-16, §4.1), out past the end of the driveway, beyond the property.
 
 ---
 
@@ -20,7 +20,7 @@ The Den is a private, browser-based, multiplayer 3D game for Andrew and his frie
 | Name | **The Den** |
 | Platform | Desktop web browser (Chrome, Edge, Safari, Firefox) on laptops. Keyboard + mouse only. No mobile, no controllers. |
 | Players | 1–6 per party. Join a party with a room code. |
-| Character | ONE character: a **cartoon upright (two-legged) grizzly bear**, an original design (big pear-shaped body, almost no neck, goofy grin; `assets/concepts/bear-v2/` #1), made and rigged with Higgsfield. Everyone looks the same; name tags tell bears apart. (The realistic bear is still used by the Realistic art style.) |
+| Character | ONE character: an **upright (two-legged) grizzly bear**, photoreal (§5.1), made and rigged with Higgsfield. Everyone looks the same; name tags tell bears apart. (The cartoon bear of §5.1b is retired with the cartoon look, round 3.) |
 | Camera | Third-person, behind and slightly above the bear. |
 | Map | Real property (see `reference/`): wooded driveway, lawn, house, mixed forest, stream with a dock. Summer. |
 | House | Built from `docs/floorplan.json` and the listing photos, at **1.25× real scale** (doors, rooms, stairs, bowling alley, everything). |
@@ -103,7 +103,7 @@ Joined to the map, no loading or fade: the driveway leaves the woods at its far 
 4. **Remaining clips** (table below). Show Andrew the preview GIF links for any clip marked "preview first" and let him pick.
 5. **Process:** fatten the base mesh (`tools/fatten-bear.mjs`, torso +22%, belly +15%; Andrew's request), retarget every clip onto its skeleton (`tools/retarget-clip.mjs`), merge into one `bear.glb` (mesh + all clips) with gltf-transform; meshopt/Draco + KTX2 textures; target under 25 MB.
 
-### 5.1b The cartoon bear (2026-10-13)
+### 5.1b The cartoon bear (2026-10-13; retired 2026-10-16 with the cartoon look)
 
 The game's bear since the cartoon remake: concept `assets/concepts/bear-v2/bear-1.png` (job 01e1151d; original design, not a copy of any film character), `meshy_v7_image_to_3d` with the same settings as above (47.5 credits). Not fattened. The realistic bear's clips below are reused: `tools/transfer-clips.mjs` turns each joint from the new bear's A-pose by the same world-space amount as the clip's joint, keeping the new bear's bone lengths and scaling the hips' movement by leg length (no clips bought). Build: `node tools/build-bear.mjs --toon` → `client/public/models/bear-toon.glb`. If a clip ever looks wrong on him, buy that one clip with `meshy_rigging` on his mesh (8 credits) and use `retarget-clip.mjs`.
 
@@ -145,8 +145,10 @@ Base + 14 extra clips ≈ 47.5 + 112 = **~160 credits**.
 
 - **The bike:** a red sport bike with a black frame and red-striped wheels in the ZX-6R spirit (no logos or lettering), Higgsfield image→3D from concept #4 (`assets/concepts/motorcycle/`), `npm run build:bike` → `bike.glb`, sized ~2.45 m long for the chunky bear.
 - **One per bear:** a bike always waits in the garage, lined up with the south garage door. E next to it ("Ride the motorcycle") gives you your own; E while riding slowly ("Get off") parks it where you are and steps you off beside it, and everyone sees it parked there; E next to your parked bike gets back on. Taking a new one from the garage replaces your old one; leaving the party removes it. No riding with a fishing rod in your paw. The server checks you're next to the bike, and only a riding bear may move at bike speeds.
-- **Riding** (arcade, on the bear's own collision capsule): W throttle, S brake (held when stopped: back up slowly), A/D steer (tight when slow, wide when fast; it only turns while rolling), Shift tuck (+12% top speed). Top speeds: 26 m/s on the driveway and paving, 13 m/s on grass and in the woods, 6 m/s in the garage, 50 m/s on the racetrack. Anything in front of the wheel (trees, walls, the edge of the map) stops it dead with a crunch; it can't go into the house except the garage. Doors still open with E as you ride up.
-- **Looks:** the bear sits in the held sitting pose, raised onto the seat, hunched over the tank with both paws on the grips (`bike/rider.ts`); bike and bear lean into turns and tip with the slope. Under way, the camera swings behind the bike and pulls back to 6 m, and the view widens with speed. Engine sound made in code, its note rising with speed, heard by everyone nearby.
+- **Riding** (arcade, on the bear's own collision capsule): W throttle, S brake (held when stopped: back up slowly), A/D steer (tight when slow, wide when fast; it only turns while rolling), Shift tuck (+12% top speed). Top speeds: grass is as fast as the nearby pavement (round 3): 26 m/s (~58 mph) anywhere on the property, 50 m/s (~112 mph) anywhere inside the racetrack's fence, 6 m/s in the garage. Anything in front of the wheel (trees, walls, the edge of the map) stops it dead with a crunch; it can't go into the house except the garage. Doors still open with E as you ride up.
+- **Gears (round 3):** six gears topping out at ~20 / 36 / 54 / 72 / 94 / 127 mph; each pulls hardest mid-revs, lugs in too high a gear and holds at its rev limiter. Automatic (default: up near the redline, down as it slows) or manual: Q up, Z down (a downshift that would over-rev is refused and the gear flashes red); M switches while riding, also Settings → Motorcycle gears. The engine note follows the revs, so you hear each shift.
+- **Speedometer (round 3):** while riding, bottom right: an mph dial with a needle, the speed in big numbers, the gear (R when backing up), a rev bar with a red zone, Auto/Manual and the keys.
+- **Looks:** the bear sits in the held sitting pose, raised onto the seat, hunched over the tank with both paws on the grips (`bike/rider.ts`); bike and bear lean into turns and tip with the slope. Under way, the camera swings behind the bike and pulls back to 6 m, and the view widens with speed. Engine sound made in code, its note following the revs, heard by everyone nearby.
 
 ---
 
@@ -160,7 +162,7 @@ Base + 14 extra clips ≈ 47.5 + 112 = **~160 credits**.
 | Space | Jump |
 | C | Crouch / stand up |
 | E | Interact: open/close doors, take/return fishing rod, sit at the Catan or Connect Four table, join a bowling lane, get on / off the motorcycle |
-| On the motorcycle | W throttle · S brake / back up · A/D steer · Shift tuck · E get off (when slow) |
+| On the motorcycle | W throttle · S brake / back up · A/D steer · Shift tuck · Q/Z gear up/down (manual) · M automatic/manual · E get off (when slow) |
 | Y | Roar |
 | B | Dance |
 | F | Flashlight on/off |
@@ -203,6 +205,7 @@ White clapboard siding, black shutters, dark gray architectural shingle roof, **
 - **Bowling alley:** basement, see §15. It extends past the house footprint underground.
 
 ### 8.3 Greenhouse (bear prepping for winter)
+It stands on a concrete foundation down to the back lawn (the ground drops ~2.7 m under its east end), with concrete steps from its east door down to the lawn by the den (round 3).
 Shelves and benches of plants (tomatoes, herbs, ferns, hanging baskets) plus the winter stockpile:
 - Tall stacks of **donut-hole boxes in the Munchkins spirit** (generic box, no real logo or wordmark)
 - Stacks of **canned pasta rings in the SpaghettiOs spirit** (generic red label, no real logo)
@@ -244,7 +247,7 @@ TVs in the basement den and the common area. Both loop **Andrew's three home vid
 2. **Intro (lyric video, Andrew 2026-10-12):** the 19-second song clip plays while the camera glides slowly over the 3D property at dusk. The lyrics come on screen one line at a time as they're sung ("There is a bear in [town], Maine" / "and he does not have a coat" / "on purpose"); the THE DEN logo (Higgsfield art, Andrew's pick #2) fades in when the music starts (~14 s); at the end you land in the home screen and the full song carries on from that point and loops. **Skip intro** button bottom right. Plays from the start on every page load; a refreshed player still rejoins their party afterwards.
    **Loading screen** (Play → spawn): the logo, a real progress bar and rotating tips ("Press Y to roar", "Press F for your flashlight"), fading into the game. The AI loading video is dropped: Andrew chose the 3D property for the intro instead (saves ~20+ credits).
 3. **Home screen (Fortnite-style):** your bear on a slowly rotating round pedestal (drag to spin it) in a moody lit scene; party members' bears stand beside yours with name tags (up to 6). Buttons: PLAY (host), CREATE PARTY, JOIN PARTY, SETTINGS, plus LEADERBOARD, FRIENDS and SIGN OUT from Phase 2. Party code shown big with a copy button.
-4. **Settings:** graphics preset (Auto/Low/Medium/High), music/effects/ambience volume, mouse sensitivity, invert Y, show frame rate (a small "60 fps · Medium" in the party badge, so friends can say how smooth it runs; Phase 5), play in full screen (game-night fixes: goes full screen on Play, Resume or a click on the game; a Full screen button is also on the home screen and pause menu; Esc always leaves full screen, a browser rule).
+4. **Settings:** graphics preset (Auto/Low/Medium/High; **Medium by default**, round 3), music/effects/ambience volume, mouse sensitivity, invert Y, show frame rate (a small "60 fps · Medium" in the party badge, so friends can say how smooth it runs; Phase 5), motorcycle gears (Automatic/Manual, round 3), play in full screen (**on by default**, round 3: goes full screen on the first "Click to start", Create/Join, Play, Resume or a click on the game; a Full screen button is also on the home screen and pause menu; Esc always leaves full screen, a browser rule). Settings saved before round 3 were moved onto Medium and full screen once. No art style choice (realistic only).
 5. **HUD (minimal):** interaction prompt, fishing UI, bowling UI, small time-of-day icon, party list on Tab.
 6. **Pause (Esc):** Resume, Settings, Leave to home screen.
 
@@ -267,12 +270,12 @@ The house dogs (Merlin, Raptor, Luna) are out of the game. No free realistic ani
 
 | Species | Chance | Weight (lb) | Fight |
 |---|---|---|---|
-| Sunfish (pumpkinseed) | 21% | 0.1 – 1.0 | weak |
-| Yellow perch | 18% | 0.1 – 1.5 | weak |
-| Crappie | 12% | 0.25 – 2.5 | medium |
-| Smallmouth bass | 12.75% | 0.5 – 8.0 | strong |
-| Largemouth bass | 11.25% | 0.5 – 8.0 | strong |
-| **Jenna Catfish** (Andrew, 2026-10-16) | 25% (1 hooked fish in 4, random) | 200 – 400, evenly spread | a long fight (~14 s at 200 lb, ~28 s at 400 lb for a careful reeler); mashing snaps her |
+| Sunfish (pumpkinseed) | 28% | 0.1 – 1.0 | weak |
+| Yellow perch | 24% | 0.1 – 1.5 | weak |
+| Crappie | 16% | 0.25 – 2.5 | medium |
+| Smallmouth bass | 17% | 0.5 – 8.0 | strong |
+| Largemouth bass | 15% | 0.5 – 8.0 | strong |
+| **Jenna Catfish** (Andrew, 2026-10-16) | **1 cast in every 4** (round 3): a random cast in each run of four is hers, kept owed until she's landed, so a snap, a missed bite or winding in brings her back on the next cast; the other chances are for the other three casts | 200 – 400, evenly spread | a long fight (~14 s at 200 lb, ~28 s at 400 lb for a careful reeler); mashing snaps her |
 
 Weight = min + (max − min) × r^2.2 (r random 0–1), so big fish are rare (the catfish is an even spread). The catfish's line tension counts her as 2% of her weight, and a surge's yank tops out at a bass's, so she runs further instead of snapping the line on the first press.
 **Jumps (2026-10-16):** every hooked fish leaps clear of the water while you reel it in (on every surge, plus every few seconds), across the line at the lure, so everyone can see what's on; the server shares the species and weight from the strike. Small fish hop ~1–1.6 m (drawn a little bigger in the air), the catfish breaches ~2.4–3.2 m with a big splash. She is held up by the lip like the rest, leaning out with her tail on the ground.
@@ -351,7 +354,7 @@ Fish models: one per species via Higgsfield image→3D (9 credits each; the catf
 - Budgets (Medium): under ~400 draw calls, under ~1.5M triangles on screen (the deep forest goes a little over), texture memory under ~1 GB (measured ~320 MB). Initial download to spawn under ~120 MB (measured ~25–35 MB); stream the rest after spawning.
 - Use: meshopt GLBs (gltf-transform), instancing for trees/rocks/ferns, LODs plus **impostor cards** for far trees (copies **dissolve** between detail levels over a short band instead of swapping, so nothing pops; the sun's shadow box sits ahead of where you look; furniture shows through the windows from 12/15/30 m by preset, its shaders prepared at load) (each tree kind photographed once at load; ~2 triangles per far tree), interior vs exterior culling (inside the house the forest drops to its cheap levels), merged meshes, pixel-ratio cap, shadows and screen effects scaled by preset. Textures stay WebP: KTX2 isn't needed for the memory budget (revisit if a friend's laptop runs short of GPU memory).
 - Trees: a good procedural tree generator for three.js (e.g., EZ-Tree) or CC0 tree models. Grass: instanced blades with wind on Medium/High, a textured ground on Low.
-- **Cartoon look (default since 2026-10-13):** the forest keeps the realistic layout and LOD system, but each tree, bush, fern and rock is drawn with a Higgsfield cartoon model (pine, birch, maple, bush, fern, 2 rocks; `npm run build:toon` → `toon-scenery.glb`, ~6k / ~1.4k / ~250 triangles per tree level; the far levels carry the texture's colours on their corners so the sloppy simplifier can't smear them), and trees cast shadows from their simplest level. Grass blades on the lawn and driveway edges (draw distance 16/26/38 m by preset). Measured on the M1 at 1080p, Medium: 60 fps at every perf spot.
+- **Cartoon look (2026-10-13 to 2026-10-16, retired; code switched off):** the forest keeps the realistic layout and LOD system, but each tree, bush, fern and rock is drawn with a Higgsfield cartoon model (pine, birch, maple, bush, fern, 2 rocks; `npm run build:toon` → `toon-scenery.glb`, ~6k / ~1.4k / ~250 triangles per tree level; the far levels carry the texture's colours on their corners so the sloppy simplifier can't smear them), and trees cast shadows from their simplest level. Grass blades on the lawn and driveway edges (draw distance 16/26/38 m by preset). Measured on the M1 at 1080p, Medium: 60 fps at every perf spot.
 
 ---
 
