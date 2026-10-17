@@ -29,6 +29,8 @@ const SPOTS: Spot[] = [
   // Round 2: out of the woods on the road to the racetrack, and on the start/finish straight.
   ["track road", "noon", -165, -161, -200, -205],
   ["track straight", "noon", -280, -268, -500, -268],
+  // The bear hunt (2026-10-17): the glowing circle by the dock at dusk.
+  ["hunt circle", "dusk", 92, 9, 104, 6.5],
 ];
 
 async function measure(page: Page, [, time, x, z, lx, lz, y]: Spot) {
