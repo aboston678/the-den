@@ -6,7 +6,7 @@ import { playerState } from "../game/state.ts";
 // and whether the box is automatic or manual. Shown only while riding. The needle and numbers are
 // written straight to the page every frame (they change 60 times a second).
 
-const MAX_MPH = 140;
+const MAX_MPH = 160;
 /** The dial's sweep: from 225° (bottom left) clockwise round to −45° (bottom right). */
 const A0 = 225, SWEEP = 270;
 const R = 74, C = 90;

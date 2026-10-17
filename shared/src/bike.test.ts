@@ -54,14 +54,24 @@ describe("the motorcycle", () => {
     expect(ride(20, { throttle: false, brake: false, tuck: false }, BIKE.roadSpeed, 10)).toBe(0);
   });
 
-  it("has six gears up to ~125 mph, each held at its rev limiter", () => {
+  it("has six gears up to 155 mph, each held at its rev limiter", () => {
     expect(GEARS).toBe(6);
-    expect(GEAR_TOP[5] * MPH).toBeGreaterThan(120);
-    expect(GEAR_TOP[5]).toBeGreaterThanOrEqual(BIKE.trackSpeed * BIKE.tuck);
+    expect(GEAR_TOP[5] * MPH).toBeCloseTo(155, 0);
+    expect(GEAR_TOP[5]).toBeGreaterThanOrEqual(BIKE.trackSpeed);
     expect(ride(10, GAS, BIKE.trackSpeed, 0, 1)).toBeCloseTo(GEAR_TOP[0], 0); // first gear tops out
     expect(bikeRevs(0, 1)).toBeGreaterThan(0.1); // idling
     expect(bikeRevs(GEAR_TOP[2], 3)).toBe(1);
-    expect(ride(60, { ...GAS, tuck: true }, BIKE.trackSpeed)).toBeCloseTo(BIKE.trackSpeed * BIKE.tuck, 0); // the automatic gets to the top
+    expect(ride(60, { ...GAS, tuck: true }, BIKE.trackSpeed)).toBeCloseTo(BIKE.trackSpeed, 0); // the automatic gets to the top
+  });
+
+  it("reaches 155 mph flat out from a standstill within ~550 m (Andrew, round 4)", () => {
+    let v = 0, g = 1, d = 0;
+    while (v * MPH < 154 && d < 2000) {
+      v = bikeSpeedStep(v, 0.02, GAS, BIKE.trackSpeed, g);
+      g = autoGear(v, g);
+      d += v * 0.02;
+    }
+    expect(d).toBeLessThan(550);
   });
 
   it("pulls hardest in the right gear: lugging in sixth from a standstill is slow", () => {
@@ -76,8 +86,8 @@ describe("the motorcycle", () => {
   });
 
   it("won't shift down into an over-rev", () => {
-    expect(canShiftDown(30, 4)).toBe(false); // third tops out at 24
-    expect(canShiftDown(20, 4)).toBe(true);
+    expect(canShiftDown(30, 4)).toBe(false); // third tops out at 28
+    expect(canShiftDown(25, 4)).toBe(true);
     expect(canShiftDown(5, 1)).toBe(false);
   });
 

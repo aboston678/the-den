@@ -19,8 +19,8 @@ export const BIKE = {
   /** Top speeds (m/s): out on the property (road or grass alike, Andrew round 3), under a roof. */
   roadSpeed: 26,
   indoorSpeed: 6,
-  /** At the racetrack (R2.6), asphalt, grass and run-off alike: ~112 mph. */
-  trackSpeed: 50,
+  /** At the racetrack (R2.6), asphalt, grass and run-off alike: 155 mph flat out in sixth (Andrew, round 4). */
+  trackSpeed: 69.3,
   /** Holding Shift (tucked in): a little more top speed. */
   tuck: 1.12,
   reverseSpeed: 2.5,
@@ -34,8 +34,8 @@ export const BIKE = {
   stopSpeed: 3,
 } as const;
 
-/** The fastest any bike can go: the server's speed check allows this while riding. */
-export const BIKE_MAX_SPEED = BIKE.trackSpeed * BIKE.tuck;
+/** The fastest any bike can go: the server's speed check allows this while riding (sixth gear tops out at the track speed, so tucking adds nothing there). */
+export const BIKE_MAX_SPEED = Math.max(BIKE.trackSpeed, BIKE.roadSpeed * BIKE.tuck);
 
 /** Turn rate (rad/s) at a speed: tight at a crawl, wider at full tilt (sharpened at speed, Andrew 2026-10-17:
  * a ~33 m circle at 58 mph, ~95 m at 112 mph). */
@@ -67,11 +67,11 @@ export function bikeTopSpeed(x: number, z: number, onTrack = false) {
 
 // --- the gearbox (Andrew, round 3): six gears, automatic or manual (Q up, Z down) ---
 
-/** Each gear's top speed (m/s) at the rev limiter: ~20 / 36 / 54 / 72 / 94 / 127 mph. */
-export const GEAR_TOP = [9, 16, 24, 32, 42, 57] as const;
+/** Each gear's top speed (m/s) at the rev limiter: ~22 / 40 / 63 / 87 / 116 / 155 mph (round 4). */
+export const GEAR_TOP = [10, 18, 28, 39, 52, 69.3] as const;
 export const GEARS = GEAR_TOP.length;
-/** How hard each gear pulls (× BIKE.accel): strong in first, gentle in top. */
-const GEAR_PULL = [1.25, 1.0, 0.8, 0.62, 0.48, 0.38] as const;
+/** How hard each gear pulls (× BIKE.accel): strong in first, gentler in top, still enough to reach 155 mph in ~500 m. */
+const GEAR_PULL = [1.3, 1.05, 0.85, 0.7, 0.58, 0.5] as const;
 /** Revs at a standstill (idle), as a share of the redline. */
 export const IDLE_REVS = 0.15;
 export const MPH = 2.23694;
@@ -92,8 +92,8 @@ export function autoGear(speed: number, gear: number) {
 /** A downshift is only allowed if it won't send the engine past the redline. */
 export const canShiftDown = (speed: number, gear: number) => gear > 1 && Math.abs(speed) <= gearTop(gear - 1);
 
-/** Pull from the engine at these revs: best in the middle, weak when lugging or at the limiter. */
-const torque = (revs: number) => 0.55 + 0.45 * Math.sin(Math.PI * Math.min(1, revs));
+/** Pull from the engine at these revs: best in the middle, weak at the limiter and weaker still when lugging below ~35%. */
+const torque = (revs: number) => (0.55 + 0.45 * Math.sin(Math.PI * Math.min(1, revs))) * Math.min(1, 0.4 + revs * 1.7);
 
 /**
  * One step of the bike's speed (m/s, negative = backing up) from the throttle (W), brake (S) and
