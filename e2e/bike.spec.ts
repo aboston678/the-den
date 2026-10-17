@@ -159,13 +159,13 @@ test("ride from the garage out along the driveway to the racetrack and time a la
   await ann.evaluate(() => window.__den!.track!.autopilot(null));
 });
 
-test("pop a wheelie (Space with the throttle): the front comes up, a friend sees it, it drops back down; the engine is Andrew's bike", async ({ page: ann, browser }) => {
+test("pop a wheelie (Space with the throttle): the front comes up, a friend sees it, it drops back down; the engine runs (made in code, on Andrew's idle)", async ({ page: ann, browser }) => {
   test.setTimeout(180_000);
   failOnErrors(ann);
-  const sounds = new Set<string>();
+  const loaded = new Set<string>();
   ann.on("request", (r) => {
-    const m = /audio\/(bike-[a-z]+)\.mp3/.exec(r.url());
-    if (m) sounds.add(m[1]!);
+    const m = /audio\/(bike-[a-z]+)\.mp3|(engineWorklet)/.exec(r.url());
+    if (m) loaded.add(m[1] ?? m[2]!);
   });
   const code = await hostGame(ann, "Ann");
   const bob = await newPlayer(browser);
@@ -204,6 +204,9 @@ test("pop a wheelie (Space with the throttle): the front comes up, a friend sees
   await expect.poll(() => ann.evaluate(() => window.__den!.player.bike.wheelie), { timeout: 2000 }).toBe(0);
   await expect.poll(() => bob.evaluate(() => window.__den!.remotes()[0]?.wheelie ?? 1), { timeout: 3000 }).toBeLessThan(0.05);
 
-  // The engine and shift sounds are the recordings of Andrew's bike.
-  expect([...sounds].sort()).toEqual(expect.arrayContaining(["bike-high", "bike-idle", "bike-upshift"]));
+  // The engine: the module on the audio thread, with Andrew's idle, and it's making a noise.
+  expect([...loaded].sort()).toEqual(["bike-idle", "engineWorklet"]);
+  await ann.keyboard.down("KeyW");
+  await expect.poll(() => ann.evaluate(() => window.__den!.audioLevel().rms), { timeout: 5000 }).toBeGreaterThan(-40);
+  await ann.keyboard.up("KeyW");
 });

@@ -88,7 +88,7 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
   // Start facing away from the camera (which begins on the +z side looking toward −z).
   const s = useRef({ vy: 0, speed: 0, yaw: Math.PI, dir: { x: 0, z: -1 }, airTime: 0, actionTime: 0, roarReadyAt: 0, atStairFoot: false, short: false, groundY: 0, ready: false,
     pushX: 0, pushZ: 0, staggerUntil: 0, sendTimer: 0, castAt: null as { x: number; z: number } | null, released: false,
-    chair: null as SeatMove | null, riding: false, lean: 0, pitch: 0, crashAt: 0, gear: 1, wheelie: { angle: 0, fall: 0 } });
+    chair: null as SeatMove | null, riding: false, lean: 0, pitch: 0, crashAt: 0, gear: 1, throttle: 0, wheelie: { angle: 0, fall: 0 } });
 
   useFrame(({ clock }, rawDt) => {
     const controller = controllerRef.current;
@@ -303,6 +303,7 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
         else if (st.gear > 1) playerState.bike.refusedAt = performance.now(); // would over-rev: the HUD flashes
       }
       const throttle = auto ? auto.throttle : isHeld("KeyW") || isHeld("ArrowUp");
+      st.throttle = throttle && st.speed >= -0.1 ? 1 : 0; // for the engine note
       st.speed = bikeSpeedStep(st.speed, dt, {
         throttle,
         brake: auto ? auto.brake : isHeld("KeyS") || isHeld("ArrowDown"),
@@ -462,7 +463,7 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
     applyLipHold("me", model, playerState.yaw, fish.state === "landed", animator.action !== "celebrate" && animator.action !== "cast", dt);
     // A wheelie bobs a little as the rider balances it.
     const wheelie = riding ? st.wheelie.angle + 0.025 * Math.sin(clock.elapsedTime * 6) * Math.min(1, st.wheelie.angle / 0.2) : 0;
-    if (visual.current) applyRide(rider, model, visual.current, riding && animator.action === "ride", st.speed, st.lean, st.pitch, dt, bikeRevs(st.speed, st.gear), st.gear, wheelie);
+    if (visual.current) applyRide(rider, model, visual.current, riding && animator.action === "ride", st.speed, st.lean, st.pitch, dt, { revs: bikeRevs(st.speed, st.gear), gear: st.gear, throttle: st.throttle, wheelie });
     bearSounds(animator, playerState.position.x, playerState.position.y, playerState.position.z);
 
     // --- tell the party where we are, 20 times a second ---

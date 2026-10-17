@@ -3,7 +3,9 @@ import { useEffect, useMemo } from "react";
 import { Group, type Object3D, PositionalAudio, Quaternion, Vector3 } from "three";
 import { asset } from "../../asset.ts";
 import { autoGear, bikeRevs } from "@den/shared";
-import { getListener, loadSound, playAt, toBus } from "../audio/audio.ts";
+import { getListener, loadSound, toBus } from "../audio/audio.ts";
+import { revsToRpm } from "./engineSynth.ts";
+import engineWorkletUrl from "./engineWorklet.ts?worker&url";
 import { reachTo } from "../player/reach.ts";
 
 // A bear riding the motorcycle (Andrew, 2026-10-16), ours or anyone else's: the bike under the bear,
@@ -24,11 +26,14 @@ const HUNCH = { Spine01: 0.22, Spine02: 0.12, neck: -0.18 } as const;
 
 export interface Rider {
   bike: Object3D;
-  /** The engine: Andrew's bike at idle and at high revs, crossfaded and pitched with the revs. */
-  sounds: { idle: PositionalAudio; high: PositionalAudio } | null;
+  /** The engine (engineSynth.ts on the audio thread), heard from the bike. */
+  engine: { audio: PositionalAudio; node: AudioWorkletNode } | null;
   loading: boolean;
   /** The gear last frame, to hear each shift. */
   heardGear: number;
+  /** Other bears' bikes: speed last frame and a guess at their throttle (speeding up = on it). */
+  lastSpeed: number;
+  throttle: number;
   /** 0…1: on the bike (eases in and out for the arms). */
   k: number;
   /** Other bears' bikes: the gear an automatic box would be in, for the engine note. */
@@ -57,7 +62,7 @@ export function useBikeCopy() {
 /** Set up a bear's ride: the bike (hidden until they're riding) in its turning group. */
 export function useRider(visual: React.RefObject<Group | null>): Rider {
   const bike = useBikeCopy();
-  const rider = useMemo<Rider>(() => ({ bike, sounds: null, loading: false, heardGear: 1, k: 0, gear: 1 }), [bike]);
+  const rider = useMemo<Rider>(() => ({ bike, engine: null, loading: false, heardGear: 1, lastSpeed: 0, throttle: 0, k: 0, gear: 1 }), [bike]);
   useEffect(() => {
     const g = visual.current;
     if (!g) return;
@@ -66,10 +71,10 @@ export function useRider(visual: React.RefObject<Group | null>): Rider {
     g.add(bike);
     return () => {
       g.remove(bike);
-      for (const s of Object.values(rider.sounds ?? {})) {
-        if (s.isPlaying) s.stop();
-        s.parent?.remove(s);
-        s.disconnect();
+      if (rider.engine) {
+        rider.engine.audio.parent?.remove(rider.engine.audio);
+        rider.engine.audio.disconnect();
+        rider.engine.node.port.close();
       }
     };
   }, [bike, visual, rider]);
@@ -105,11 +110,12 @@ function notePose(b: Record<string, Object3D | undefined>) {
 
 /**
  * Call after the bear's animation has updated this frame. `lean` (radians, + = to the bear's right)
- * and `pitch` (+ = nose down) tip the bear and bike together; `revs` (0…1) and `gear` set the engine
- * note, or for other bears' bikes it follows `speed` through an automatic box. `wheelie` (radians)
- * lifts the front, bear and bike together, pivoting on the rear tyre.
+ * and `pitch` (+ = nose down) tip the bear and bike together. For our own bike, `revs` (0…1), `gear`
+ * and `throttle` (0…1) drive the engine; other bears' bikes follow `speed` through an automatic box.
+ * `wheelie` (radians) lifts the front, bear and bike together, pivoting on the rear tyre.
  */
-export function applyRide(r: Rider, model: Object3D, visual: Group, riding: boolean, speed: number, lean: number, pitch: number, dt: number, revs?: number, gear?: number, wheelie = 0) {
+export function applyRide(r: Rider, model: Object3D, visual: Group, riding: boolean, speed: number, lean: number, pitch: number, dt: number,
+  { revs, gear, throttle, wheelie = 0 }: { revs?: number; gear?: number; throttle?: number; wheelie?: number } = {}) {
   r.k = Math.max(0, Math.min(1, r.k + (riding ? dt : -dt) * 5));
   r.bike.visible = riding;
   model.position.set(0, riding ? SEAT.lift : 0, riding ? SEAT.back : 0);
@@ -127,7 +133,13 @@ export function applyRide(r: Rider, model: Object3D, visual: Group, riding: bool
   if (!riding) r.gear = 1;
   else if (gear !== undefined) r.gear = gear;
   else r.gear = autoGear(speed, r.gear);
-  engine(r, riding, revs ?? bikeRevs(speed, r.gear));
+  if (throttle === undefined) {
+    // Someone else's bike: on the throttle while it's speeding up.
+    const accel = (speed - r.lastSpeed) / Math.max(dt, 1e-3);
+    r.throttle += ((accel > 0.6 ? 1 : 0) - r.throttle) * Math.min(1, dt * 8);
+  }
+  r.lastSpeed = speed;
+  engine(r, riding, revs ?? bikeRevs(speed, r.gear), throttle ?? r.throttle);
   let b = bones.get(model);
   if (!b) {
     b = Object.fromEntries(RIDE_BONES.map((n) => [n, model.getObjectByName(n)]));
@@ -161,54 +173,47 @@ export function applyRide(r: Rider, model: Object3D, visual: Group, riding: bool
 }
 
 /** How the engine is heard: loud (Andrew, 2026-10-17), carrying across the property. */
-const ENGINE = { refDistance: 10, rolloff: 0.9, quiet: 0.8, loud: 1.5 } as const;
-/** Revs (0…1) at which each recording was made, so it plays at its own pitch there. */
-const RECORDED = { idle: 0.15, high: 0.5 } as const;
+const ENGINE = { refDistance: 10, rolloff: 0.9, volume: 1.5 } as const;
 
-function engineLoop(r: Rider, buffer: AudioBuffer) {
-  const s = new PositionalAudio(getListener());
-  toBus(s, "effects");
-  s.setBuffer(buffer);
-  s.setLoop(true);
-  s.setRefDistance(ENGINE.refDistance);
-  s.setRolloffFactor(ENGINE.rolloff);
-  r.bike.add(s);
-  return s;
+let worklet: Promise<void> | null = null;
+let engineSeed = 1;
+
+/** Start a bike's engine: the engine module on the audio thread, fed Andrew's idle recording. */
+async function startEngine(r: Rider) {
+  const ctx = getListener().context;
+  worklet ??= ctx.audioWorklet.addModule(engineWorkletUrl);
+  const [, idle] = await Promise.all([worklet, loadSound("bike-idle")]);
+  const node = new AudioWorkletNode(ctx, "den-engine", { numberOfInputs: 0, outputChannelCount: [1], processorOptions: { seed: engineSeed++ } });
+  node.port.postMessage({ idle: idle.getChannelData(0).slice(), rate: idle.sampleRate });
+  const audio = new PositionalAudio(getListener());
+  audio.setNodeSource(node as unknown as AudioScheduledSourceNode);
+  toBus(audio, "effects");
+  audio.setRefDistance(ENGINE.refDistance);
+  audio.setRolloffFactor(ENGINE.rolloff);
+  audio.setVolume(ENGINE.volume);
+  r.bike.add(audio);
+  r.engine = { audio, node };
 }
 
 /**
- * The engine, from recordings of Andrew's own bike: the idle loop at low revs fading into the high-rev
- * loop as the revs climb, each sped up (higher pitched) with the revs, so it rises to a scream at the
- * redline in every gear. Each shift plays the real upshift or downshift.
+ * The engine (engineSynth.ts): one continuous note gliding with the revs, louder and brighter on the
+ * throttle, with a cut and pop on each upshift and a blip and crackle on each downshift.
  */
-function engine(r: Rider, riding: boolean, revs: number) {
-  if (riding && !r.sounds && !r.loading && getListener().context.state === "running") {
+function engine(r: Rider, riding: boolean, revs: number, throttle: number) {
+  if (riding && !r.engine && !r.loading && getListener().context.state === "running") {
     r.loading = true;
-    void Promise.all([loadSound("bike-idle"), loadSound("bike-high")]).then(([idle, high]) => {
-      r.sounds = { idle: engineLoop(r, idle), high: engineLoop(r, high) };
-    }).catch(() => {}).finally(() => {
+    void startEngine(r).catch(() => {}).finally(() => {
       r.loading = false;
     });
   }
-  if (riding && r.gear !== r.heardGear && r.sounds) {
-    const at = r.bike.getWorldPosition(v.a);
-    void playAt(r.gear > r.heardGear ? "bike-upshift" : "bike-downshift", at.x, at.y + 0.6, at.z, 1.1, ENGINE.refDistance);
-  }
+  const e = r.engine;
+  if (e && riding && r.gear !== r.heardGear) e.node.port.postMessage({ shift: Math.sign(r.gear - r.heardGear) });
   r.heardGear = riding ? r.gear : 1;
-  const s = r.sounds;
-  if (!s) return;
-  for (const loop of [s.idle, s.high]) {
-    if (riding && !loop.isPlaying) loop.play();
-    if (!riding && loop.isPlaying) loop.stop();
-  }
-  if (!riding) return;
-  // Equal-power crossfade from the idle recording to the high one between 25% and 60% revs.
-  const t = Math.max(0, Math.min(1, (revs - 0.25) / 0.35)), mix = t * t * (3 - 2 * t);
-  const volume = ENGINE.quiet + (ENGINE.loud - ENGINE.quiet) * revs;
-  s.idle.setVolume(volume * Math.cos((mix * Math.PI) / 2));
-  s.high.setVolume(volume * Math.sin((mix * Math.PI) / 2));
-  s.idle.setPlaybackRate(Math.min(2.2, Math.pow(revs / RECORDED.idle, 0.6)));
-  s.high.setPlaybackRate(Math.max(0.6, Math.min(1.9, revs / RECORDED.high)));
+  if (!e) return;
+  const p = e.node.parameters;
+  p.get("on")!.value = riding ? 1 : 0;
+  p.get("rpm")!.value = revsToRpm(revs);
+  p.get("throttle")!.value = throttle;
 }
 
 useGLTF.preload(BIKE_URL);

@@ -30,13 +30,11 @@ const SOUNDS = {
   roar: ["../im-shaving-here.mp3", 0, 3.37, "once", -14],
   // The pins crashing (Andrew's pick, 2026-10-13; kept in git as assets/audio/bowling-strike.m4a, see docs/ASSETS.md).
   "pin-strike": ["../bowling-strike.m4a", 0, 2.55, "once", -14],
-  // The motorcycle: Andrew's own ZX-6R (2026-10-17; kept in git as assets/audio/bike-*.m4a, see docs/ASSETS.md).
-  // Two engine loops the game crossfades and pitches with the revs (a steady idle, a steady high-rev
-  // stretch), and one shift each way. Engine loops are short and crossfade over 0.25 s (6th field).
+  // The motorcycle's idle: Andrew's own bike (2026-10-17; kept in git as assets/audio/bike-*.m4a with his
+  // revving and shifting, the reference the engine made in code was tuned against, see docs/ASSETS.md).
+  // The engine (client/src/game/bike/engineSynth.ts) blends into it at the bottom of the revs.
+  // A short loop, crossfaded over 0.25 s (6th field).
   "bike-idle": ["../bike-idle-upshift.m4a", 5.0, 2.8, "loop", -14, 0.25],
-  "bike-high": ["../bike-idle-upshift.m4a", 20.0, 0.95, "loop", -14, 0.25],
-  "bike-upshift": ["../bike-idle-upshift.m4a", 12.5, 1.3, "once", -14],
-  "bike-downshift": ["../bike-downshift.m4a", 2.0, 1.7, "once", -14],
 };
 
 // Short effects from Kenney's CC0 packs (Phase 5 sound pass; tools/fetch-audio.mjs, docs/ASSETS.md):
