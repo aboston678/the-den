@@ -5,7 +5,7 @@
 //
 // Usage: npm run build:furniture  ->  client/public/models/furniture.glb
 //        npm run build:fish       ->  client/public/models/fish.glb (the 6 species, each 1 m long; the game scales by weight)
-//        npm run build:bike       ->  client/public/models/bike.glb (the garage motorcycle, round 2)
+//        node tools/build-furniture.mjs --bike  ->  round 2's motorcycle (replaced in round 4 by tools/build-bike.mjs, `npm run build:bike`)
 
 import { statSync } from "node:fs";
 import { Document, NodeIO } from "@gltf-transform/core";

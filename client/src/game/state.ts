@@ -38,7 +38,7 @@ export const playerState = {
   /** On the motorcycle (set by bike/BikeControls once the server agrees): W/S/A/D ride it. */
   riding: false,
   /** The bike's dials for the speedometer (ui/BikeHud.tsx): speed (m/s, − backing up), gear, revs 0…1, manual box, when a downshift was refused (ms), how far the front wheel is up (radians). */
-  bike: { speed: 0, gear: 1, revs: 0, manual: false, refusedAt: 0, wheelie: 0 },
+  bike: { speed: 0, gear: 1, revs: 0, manual: false, refusedAt: 0, wheelie: 0, /** Turns the front wheel has rolled (tests: the wheels spin). */ wheelTurns: 0 },
   /** Dev and tests only: the bike rides itself along this route (bike/autopilot.ts). */
   autopilot: null as import("./bike/autopilot.ts").Route | null,
   /** Bowling: play the bowl now (set by the bowling controls; the player clears it). */

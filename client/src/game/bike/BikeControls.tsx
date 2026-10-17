@@ -21,7 +21,7 @@ export function BikeControls() {
     // Dev and tests: what the bikes look like from here.
     if (window.__den) {
       window.__den.bike = {
-        state: () => ({ riding: playerState.riding, speed: playerState.speed, prompt: useBikePrompt.getState().text, ...useBikes.getState() }),
+        state: () => ({ riding: playerState.riding, speed: playerState.speed, wheelTurns: playerState.bike.wheelTurns, prompt: useBikePrompt.getState().text, ...useBikes.getState() }),
       };
     }
     return () => {

@@ -464,6 +464,7 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
     // A wheelie bobs a little as the rider balances it.
     const wheelie = riding ? st.wheelie.angle + 0.025 * Math.sin(clock.elapsedTime * 6) * Math.min(1, st.wheelie.angle / 0.2) : 0;
     if (visual.current) applyRide(rider, model, visual.current, riding && animator.action === "ride", st.speed, st.lean, st.pitch, dt, { revs: bikeRevs(st.speed, st.gear), gear: st.gear, throttle: st.throttle, wheelie });
+    playerState.bike.wheelTurns = rider.wheelTurns;
     bearSounds(animator, playerState.position.x, playerState.position.y, playerState.position.z);
 
     // --- tell the party where we are, 20 times a second ---

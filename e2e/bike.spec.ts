@@ -71,6 +71,8 @@ test("ride the garage motorcycle out onto the driveway; another bear sees it; pa
   const out = await me(ann);
   expect(out.x).toBeLessThan(start.x - 8); // out through the door onto the apron
   expect((await bike(ann)).speed).toBeGreaterThan(5);
+  // The wheels roll with the bike (round 4): several turns of the front wheel by now.
+  expect((await bike(ann)).wheelTurns).toBeGreaterThan(3);
   await shot(ann, "2-riding-out");
   await bob.screenshot({ path: "test-results/bike/2-bob-watching.png" });
   await hold(ann, ["KeyW", "KeyA"], 900);

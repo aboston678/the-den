@@ -30,11 +30,29 @@ test("rider views", async ({ page }) => {
     await page.screenshot({ path: `review/bike/rider-${name}.png` });
   }
   await page.keyboard.down("KeyW");
-  await page.waitForTimeout(2500);
+  await page.waitForTimeout(1300); // round 4's bike is quicker: any longer and it's in the trees
   await page.screenshot({ path: "review/bike/speed.png" });
   await page.keyboard.down("KeyA");
-  await page.waitForTimeout(500);
+  await page.waitForTimeout(350);
   await page.screenshot({ path: "review/bike/lean.png" });
   await page.keyboard.up("KeyA");
   await page.keyboard.up("KeyW");
+  // Round 4: stop, park, and photograph the bike on its own (the bear hidden) next to Andrew's photos.
+  await page.keyboard.down("KeyS");
+  await expect.poll(async () => (await bike(page)).prompt, { timeout: 10_000 }).toBe("Get off");
+  await page.keyboard.up("KeyS");
+  await page.keyboard.press("KeyE");
+  await expect.poll(async () => (await bike(page)).me.state).toBe("parked");
+  const parked = (await bike(page)).me as { x: number; y: number; z: number; yaw: number };
+  console.log("parked", JSON.stringify(parked));
+  await page.evaluate(() => { window.__den!.player.hidden = true; });
+  for (const [name, side, up, dist] of [["bike-side", Math.PI / 2, 0.6, 3.4], ["bike-front34", Math.PI / 4, 0.8, 3.6], ["bike-rear34", (3 * Math.PI) / 4, 0.9, 3.6], ["bike-close", Math.PI / 2, 0.45, 1.9]] as const) {
+    await page.evaluate(([b, side, up, dist]) => {
+      const a = b!.yaw + side!, cx = b!.x + Math.sin(a) * dist!, cz = b!.z + Math.cos(a) * dist!;
+      window.__den!.camera.override = { from: { x: cx, y: b!.y + up!, z: cz }, look: { x: b!.x, y: b!.y + 0.6, z: b!.z } } as never;
+    }, [parked, side, up, dist] as const);
+    await page.waitForTimeout(1500);
+    await page.screenshot({ path: `review/bike/${name}.png` });
+  }
+  await page.evaluate(() => { window.__den!.camera.override = null; window.__den!.player.hidden = false; });
 });
