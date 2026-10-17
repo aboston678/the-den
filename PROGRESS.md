@@ -123,7 +123,7 @@ Andrew sent two clips of his own bike (idle + upshifting, downshifting) and aske
 - [x] **M2 Louder.** Engine 0.8–1.5 volume (was 0.35–0.8), full volume out to 10 m (was 5); crash ~1.5× louder.
 - [x] **M3 Sharper turning at speed.** `bikeTurnRate` divisor 9 → 16: ~45% more turn at speed, same at a crawl (58 mph circle ~48 m → ~33 m).
 - [x] **M4 Wheelies.** `shared/src/bike.ts` `wheelieStep`; Space+W in gears 1–3 lifts the front to ~30°, it never flips, drops back with a thump when you let go; steering ×0.35 with the front up; the pose carries `wheelie` so friends see it. Picture `review/bike-wheelie.png`. Tests: `bike.test.ts`, `e2e/bike.spec.ts` (all 3 bike tests pass).
-- [ ] **M5 Deploy.** **[ANDREW APPROVES]** Waiting on Andrew to try it and OK putting it live.
+- [x] **M5 Deploy.** **[ANDREW APPROVES]** Andrew listened to the four clips and approved ("put the motorcycle update live", 2026-10-17). Full browser suite: 67 passed, 1 failed (walk foot-slide 0.456 vs 0.45 bar, a noisy reading; passed on rerun), 13 dev tools skipped. **Deployed:** `round-3-fixes` fast-forwarded into main (7edd115); Railway `/health` shows 7edd115, Vercel's script carries the new build (`bike-idle` in it, `/audio/bike-idle.mp3` served); the sign-in test passes against the live site. Next: Andrew rides it online.
 
 ---
 
