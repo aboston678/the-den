@@ -90,6 +90,7 @@ function floorsAndCeilings(s: Structure) {
       if (lv === "upper" && cell.kind === "room") upperCeiling(s, cell);
     }
   }
+  overVoidWalls(s, upperCells);
   // Wherever the basement reaches past the rooms above it, cap it at main-floor level (the strip
   // between the den and the deck becomes a little terrace).
   const mainRooms = cellsOf("main").map((c) => c.box);
@@ -149,6 +150,46 @@ function upperCeiling(s: Structure, cell: Cell) {
     if (!d.open) continue;
     const r = dormerBox(d);
     if (r.x0 >= b.x0 - 1e-6 && r.x1 <= b.x1 + 1e-6 && r.z0 >= b.z0 - 1e-6 && r.z0 < b.z1) ceiling(s, r, d.ceilingY, "ceiling");
+  }
+}
+
+/**
+ * Where an upstairs room's flat ceiling meets the great room's open space (the balcony hallway), the
+ * wall carries on up from the ceiling to the roof, like a real house. Without it the camera, out over
+ * the great room and higher than the upstairs ceilings, looked down into the roof space: dormers,
+ * rafters and floating lights, with no ceiling (Andrew's photo, round 3).
+ */
+function overVoidWalls(s: Structure, upperCells: Cell[]) {
+  const step = 0.25, T = 0.05;
+  for (const v of upperCells.filter((c) => c.kind === "void").map((c) => c.box)) {
+    for (const room of upperCells.filter((c) => c.kind === "room").map((c) => c.box)) {
+      // Each side of the open space a room's edge runs along: the line, the stretch, and which way faces the open space.
+      const edges: { axis: "x" | "z"; at: number; from: number; to: number; dir: 1 | -1 }[] = [];
+      if (Math.abs(room.z1 - v.z0) < 1e-6) edges.push({ axis: "x", at: v.z0, from: Math.max(room.x0, v.x0), to: Math.min(room.x1, v.x1), dir: 1 });
+      if (Math.abs(room.z0 - v.z1) < 1e-6) edges.push({ axis: "x", at: v.z1, from: Math.max(room.x0, v.x0), to: Math.min(room.x1, v.x1), dir: -1 });
+      if (Math.abs(room.x1 - v.x0) < 1e-6) edges.push({ axis: "z", at: v.x0, from: Math.max(room.z0, v.z0), to: Math.min(room.z1, v.z1), dir: 1 });
+      if (Math.abs(room.x0 - v.x1) < 1e-6) edges.push({ axis: "z", at: v.x1, from: Math.max(room.z0, v.z0), to: Math.min(room.z1, v.z1), dir: -1 });
+      for (const e of edges) {
+        for (let u = e.from; u < e.to - 1e-6; u += step) {
+          const u1 = Math.min(e.to, u + step);
+          // The roof just on the open side of the line.
+          const top = (w: number) => (e.axis === "x" ? roofUnder(w, e.at + e.dir * 0.05) : roofUnder(e.at + e.dir * 0.05, w)) ?? UPPER_CEILING;
+          const t0 = top(u), t1 = top(u1);
+          if (Math.max(t0, t1) <= UPPER_CEILING + 1e-3) continue;
+          const P = (w: number, y: number): [number, number, number] => (e.axis === "x" ? [w, y, e.at] : [e.at, y, w]);
+          // Wound to face the open space.
+          const pts: [[number, number, number], [number, number, number], [number, number, number], [number, number, number]] =
+            (e.axis === "x") === (e.dir === 1)
+              ? [P(u, UPPER_CEILING), P(u1, UPPER_CEILING), P(u1, t1), P(u, t0)]
+              : [P(u1, UPPER_CEILING), P(u, UPPER_CEILING), P(u, t0), P(u1, t1)];
+          add(s.buckets, "ceiling", quad(pts, (p) => [e.axis === "x" ? p[0] : p[2], p[1]]));
+          const lo = e.at - (e.dir === 1 ? T : 0), hi = e.at + (e.dir === 1 ? 0 : T);
+          s.solids.push(e.axis === "x"
+            ? { min: [u, UPPER_CEILING, lo], max: [u1, Math.max(t0, t1), hi] }
+            : { min: [lo, UPPER_CEILING, u], max: [hi, Math.max(t0, t1), u1] }); // keeps the camera out of the roof space
+        }
+      }
+    }
   }
 }
 
