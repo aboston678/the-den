@@ -33,7 +33,7 @@ interface Window {
     perfBreakdown: () => string[];
     programNames?: () => string[];
     sky: () => { phase: string; daylight: number; exteriorLights: number };
-    remotes: () => { id: string; name: string; x: number; z: number; action: string; flashlight: boolean; wheelie: number; tagVisible: boolean; connected: boolean; fish: { rod: boolean; state: string; species: string } }[];
+    remotes: () => { id: string; name: string; x: number; z: number; action: string; flashlight: boolean; wheelie: number; tagVisible: boolean; connected: boolean; hidden: boolean; fish: { rod: boolean; state: string; species: string } }[];
     /** Fishing (2.4): cast with a power 0…1, our fishing state, catches, and a quick bite (dev only). */
     fish: {
       cast: (power: number) => boolean;
@@ -114,6 +114,33 @@ interface Window {
       start: () => void;
       drop: (col: number) => void;
       screenOfColumn: (col: number) => { x: number; y: number };
+    };
+    /** The bear hunt (2026-10-17): the hunt as this browser sees it, and dev/test controls. */
+    hunt?: {
+      state: () => {
+        phase: string;
+        ready: string[];
+        bearId: string;
+        bearHealth: number;
+        result: import("../shared/src/hunt/rules.ts").HuntResult | null;
+        roles: Record<string, string>;
+        role: string;
+        me: { gun: string; guns: string[]; scoped: string[]; ammo: number; reloadUntil: number; downUntil: number };
+        spot: string;
+        lockerOpen: boolean;
+        offset: number;
+      };
+      ready: (on?: boolean) => void;
+      fire: () => boolean;
+      fireAt: (x: number, y: number, z: number) => boolean;
+      aim: (on: boolean) => void;
+      locker: (what: "take" | "return" | "scope", gun: string, on?: boolean) => void;
+      gun: (gun: string) => void;
+      reload: () => void;
+      swipe: () => void;
+      skip: (s: number) => void;
+      spot: (name: string) => void;
+      dots: () => { id: string; colour: string }[];
     };
   };
 }

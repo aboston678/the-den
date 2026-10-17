@@ -44,6 +44,8 @@ export interface ShotEvent {
 export interface HuntEvents {
   /** Move this bear to its hiding spot (sent to that bear alone). */
   warp?: { id: string; spot: HideSpot };
+  /** Everyone in the hunt that just started. */
+  started?: string[];
   /** The hunt just ended. */
   over?: HuntResult & { players: string[] };
 }
@@ -60,6 +62,8 @@ export class Hunt {
   private players: string[] = [];
   /** While set, poses far from here are ignored (the bear's browser hasn't caught up with the move yet). */
   private warps = new Map<string, { x: number; z: number; until: number }>();
+  /** Dev and tests: the next bear goes to this hiding spot. */
+  devSpot: number | null = null;
 
   constructor(private rand: () => number = Math.random) {}
 
@@ -83,6 +87,7 @@ export class Hunt {
   }
 
   tick(state: HuntState, players: Players, now: number): HuntEvents {
+    if (state.phase !== "idle" || state.now) state.now = state.phase === "idle" ? 0 : now;
     // Ready only counts while you're standing in the circle.
     if (state.phase === "idle" || state.phase === "countdown" || state.phase === "over") {
       for (const id of [...state.ready.keys()]) {
@@ -129,7 +134,8 @@ export class Hunt {
 
   private start(state: HuntState, players: Players, ids: string[], now: number): HuntEvents {
     const bearId = ids[Math.min(ids.length - 1, Math.floor(this.rand() * ids.length))]!;
-    this.lastSpot = pickHideSpot(this.rand, this.lastSpot);
+    this.lastSpot = this.devSpot ?? pickHideSpot(this.rand, this.lastSpot);
+    this.devSpot = null;
     const spot = HIDE_SPOTS[this.lastSpot]!;
     this.players = ids;
     state.phase = "live";
@@ -160,7 +166,7 @@ export class Hunt {
         p.ammo = kit.ammo[kit.gun as GunId] ?? 0;
       }
     }
-    return { warp: { id: bearId, spot } };
+    return { warp: { id: bearId, spot }, started: ids };
   }
 
   /** End the hunt: roles and guns go away, the result stays up for a few seconds. */

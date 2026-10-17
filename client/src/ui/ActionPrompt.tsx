@@ -4,6 +4,7 @@ import { useC4Prompt } from "../game/connect4/Connect4Controls.tsx";
 import { useBikePrompt } from "../game/bike/BikeControls.tsx";
 import { useCastUi } from "../game/fishing/FishingControls.tsx";
 import { useDoorPrompt } from "../game/house/Doors.tsx";
+import { useHuntPrompt } from "../game/hunt/HuntControls.tsx";
 
 /** "E  Open door" when you're next to something you can use. The real HUD arrives in milestone 1.11. */
 export function ActionPrompt() {
@@ -13,7 +14,8 @@ export function ActionPrompt() {
   const seat = useCatanPrompt((s) => s.text);
   const c4 = useC4Prompt((s) => s.text);
   const bike = useBikePrompt((s) => s.text);
-  const text = door ?? bike ?? bucket ?? bowl ?? seat ?? c4;
+  const hunt = useHuntPrompt((s) => s.text);
+  const text = door ?? hunt ?? bike ?? bucket ?? bowl ?? seat ?? c4;
   if (!text) return null;
   return (
     <div className="action-prompt" data-testid="action-prompt">

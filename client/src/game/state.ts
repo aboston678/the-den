@@ -47,6 +47,8 @@ export const playerState = {
   bowlReleased: false,
   /** Play the celebrate clip now (a strike). */
   celebrateRequest: false,
+  /** Bear hunt: the muzzle of the gun in our hunter's hands (world), where our shots fly from. */
+  muzzle: new Vector3(),
   /** Screenshot helper: hide your own bear (it fills the frame in tight rooms). */
   hidden: false,
   /** Test helper: when true, the player records its toe positions each frame (foot-slide check). */
@@ -70,6 +72,10 @@ export const cameraState = {
   freeMouse: false,
   /** Extra field of view (degrees) for a sense of speed on the motorcycle. */
   fovKick: 0,
+  /** Bear hunt aiming (2026-10-17): 0 normal, 1 over the shoulder, 2 through a scope. */
+  aim: 0 as 0 | 1 | 2,
+  /** Through a scope: how many times it magnifies. */
+  zoom: 1,
 };
 
 export type { BearAction } from "@den/shared";
@@ -113,7 +119,7 @@ declare global {
       track?: { laps: () => { current: number | null; last: number | null; best: number | null; news: { name: string; s: number; best: boolean; record: boolean; mine: boolean }[] }; autopilot: (route: "out" | "lap" | null) => void };
       bike?: { state: () => { riding: boolean; speed: number; wheelTurns: number; prompt: string | null; me: import("./bike/store.ts").BikeView; others: Record<string, import("./bike/store.ts").BikeView> }; showBodies: (on: boolean) => void; setWheelAngle: (angle: number) => void };
       /** Other bears as this client sees them. */
-      remotes: () => { id: string; name: string; x: number; z: number; action: string; flashlight: boolean; wheelie: number; tagVisible: boolean; connected: boolean; fish: { rod: boolean; state: string; species: string } }[];
+      remotes: () => { id: string; name: string; x: number; z: number; action: string; flashlight: boolean; wheelie: number; tagVisible: boolean; connected: boolean; hidden: boolean; fish: { rod: boolean; state: string; species: string } }[];
     };
   }
 }
@@ -132,6 +138,7 @@ window.__den = {
       wheelie: r.current.wheelie,
       tagVisible: r.tagVisible,
       connected: r.connected,
+      hidden: !!r.hidden,
       fish: { rod: r.fish.rod, state: r.fish.state, species: r.fish.species },
     })),
   teleport: (x, z, y = Number.NaN) => {

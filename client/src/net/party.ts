@@ -1,6 +1,7 @@
 import { Callbacks, Client, type Room } from "@colyseus/sdk";
 import {
-  type BearAction, type BowlFrame, type C4Action, type C4Game, type CatanAction, type CatanPrivate, type CatanView, type FishState, MSG, PARTY_ROOM, type Pose, SERVER_MSG, type WorldName,
+  type BearAction, type BowlFrame, type C4Action, type C4Game, type CatanAction, type CatanPrivate, type CatanView, type FishState, type GunId, type HuntPhase, type HuntResult,
+  type HuntRole, MSG, PARTY_ROOM, type Pose, SERVER_MSG, type ShotClaim, type WorldName,
   isValidRoomCode, isWorldName, normalizeRoomCode, sanitizeBowlFrame, sanitizeNickname,
 } from "@den/shared";
 import { create } from "zustand";
@@ -10,10 +11,12 @@ import { resetCatan, useCatan } from "../game/catan/store.ts";
 import { resetC4, useC4 } from "../game/connect4/store.ts";
 import { type BikeView, NO_BIKE, dropBike, setBike, useBikes } from "../game/bike/store.ts";
 import { useLaps } from "../game/track/laps.ts";
+import { type ShotNews, gunList, resetHunt, useHunt } from "../game/hunt/store.ts";
+import { heardShot, heardSwipe, warpedTo } from "../game/hunt/events.ts";
 import { setServerClock } from "../game/sky/clock.ts";
 import { playerState } from "../game/state.ts";
 import { accessToken } from "./auth.ts";
-import { type FishView, addSnapshot, remotes } from "./remotes.ts";
+import { type FishView, type HuntView, addSnapshot, remotes } from "./remotes.ts";
 
 // Party networking (GAME_SPEC §7): create/join with a 5-character code, lobby list, host
 // starts the game, 20 Hz poses, and rejoining after a page reload.
@@ -53,7 +56,19 @@ interface NetPlayer {
   bikeY: number;
   bikeZ: number;
   bikeYaw: number;
+  role: string;
+  gun: string;
+  guns: string;
+  scoped: string;
+  ammo: number;
+  reloadUntil: number;
+  downUntil: number;
 }
+
+/** A player's part in the bear hunt as the server says. */
+const huntOf = (p: NetPlayer): HuntView => ({
+  role: (p.role ?? "") as HuntView["role"], gun: p.gun ?? "", scoped: gunList(p.scoped ?? "").includes(p.gun as GunId), downUntil: p.downUntil ?? 0,
+});
 
 /** A player's motorcycle as the server says. */
 const bikeOf = (p: NetPlayer): BikeView => ({ state: p.bike ?? "", x: p.bikeX, y: p.bikeY, z: p.bikeZ, yaw: p.bikeYaw });
@@ -354,6 +369,54 @@ function syncC4(r: Room) {
   useC4.setState({ seats, game: t.view ? (JSON.parse(t.view) as C4Game) : null, waitingFor: t.waitingFor, waitUntil: t.waitUntil });
 }
 
+/** The bear hunt (Andrew, 2026-10-17): the server runs it; we send what we do. */
+export const huntSend = {
+  ready: (on: boolean) => room?.send(MSG.huntReady, { on }),
+  locker: (what: "take" | "return" | "scope", gun: GunId, on?: boolean) => room?.send(MSG.huntLocker, { do: what, gun, on }),
+  gun: (gun: GunId) => room?.send(MSG.huntGun, { gun }),
+  reload: () => room?.send(MSG.huntReload),
+  fire: (shot: ShotClaim) => room?.send(MSG.huntFire, shot),
+  swipe: () => room?.send(MSG.huntSwipe),
+  /** Dev and tests: jump the hunt's clock forward (the server ignores it in production). */
+  devSkip: (skip: number) => room?.send(MSG.devHunt, { skip }),
+  /** Dev and tests: the next bear starts at this hiding spot (by name). */
+  devSpot: (spot: string) => room?.send(MSG.devHunt, { spot }),
+};
+
+interface NetHunt {
+  phase: string;
+  ready: { forEach(cb: (on: boolean, id: string) => void): void };
+  countdownEnd: number;
+  startedAt: number;
+  endsAt: number;
+  bearId: string;
+  bearHealth: number;
+  result: string;
+  now: number;
+}
+let lastHunt = "";
+
+/** Copy the hunt and everyone's roles into the hunt store (only when something changed). */
+function syncHunt(r: Room) {
+  const h = r.state?.hunt as NetHunt | undefined;
+  if (!h || !r.state?.players) return;
+  if (h.now) useHunt.setState({ offset: h.now - Date.now() });
+  const ready: string[] = [];
+  h.ready.forEach((on, id) => on && ready.push(id));
+  const roles: Record<string, HuntRole> = {};
+  r.state.players.forEach((p: NetPlayer, id: string) => {
+    if (p.role) roles[id] = p.role as HuntRole;
+  });
+  const key = `${h.phase}|${ready.join()}|${h.countdownEnd}|${h.startedAt}|${h.bearId}|${h.bearHealth}|${h.result}|${JSON.stringify(roles)}`;
+  if (key === lastHunt) return;
+  lastHunt = key;
+  useHunt.setState({
+    phase: (h.phase || "idle") as HuntPhase, ready, countdownEnd: h.countdownEnd, startedAt: h.startedAt, endsAt: h.endsAt, bearId: h.bearId,
+    bearHealth: h.bearHealth, result: h.result ? (JSON.parse(h.result) as HuntResult) : null, roles,
+    ...(h.phase === "live" ? {} : { spot: "", lockerOpen: false }),
+  });
+}
+
 /** Jump the party's clock (dev and tests; the server ignores it in production). */
 export function setDevTime(time: number | string) {
   room?.send(MSG.devTime, { time });
@@ -426,6 +489,7 @@ function bind(r: Room) {
         current: { x: p.x, y: p.y, z: p.z, speed: 0, action: "locomotion" as BearAction, flashlight: false, aimYaw: 0, aimPitch: 0, wheelie: 0 },
         tagVisible: false,
         fish: fishOf(p),
+        hunt: huntOf(p),
       };
       remotes.set(id, bear);
       const snap = () => {
@@ -440,6 +504,7 @@ function bind(r: Room) {
         const wasConnected = bear.connected;
         snap();
         bear.fish = fishOf(p);
+        bear.hunt = huntOf(p);
         setBike(id, bikeOf(p));
         if (wasConnected !== p.connected) sync();
       });
@@ -447,6 +512,9 @@ function bind(r: Room) {
       const mine = () => {
         useFishStore.setState({ me: fishOf(p) });
         setBike("me", bikeOf(p));
+        const was = useHunt.getState().me;
+        const guns = { gun: (p.gun ?? "") as GunId | "", guns: gunList(p.guns ?? ""), scoped: gunList(p.scoped ?? ""), ammo: p.ammo ?? 0, reloadUntil: p.reloadUntil ?? 0, downUntil: p.downUntil ?? 0 };
+        if (JSON.stringify(was) !== JSON.stringify(guns)) useHunt.setState({ me: guns });
       };
       mine();
       $.onChange(p, mine);
@@ -471,7 +539,11 @@ function bind(r: Room) {
     syncLanes(r);
     syncCatan(r);
     syncC4(r);
+    syncHunt(r);
   });
+  r.onMessage(SERVER_MSG.huntShot, (shot: Omit<ShotNews, "at" | "mine">) => heardShot({ ...shot, at: performance.now(), mine: shot.id === r.sessionId }));
+  r.onMessage(SERVER_MSG.huntWarp, (w: { x: number; y: number | null; z: number; name: string }) => warpedTo(w));
+  r.onMessage(SERVER_MSG.huntSwipe, (s: { id: string; down: string[] }) => heardSwipe(s.id, s.down, r.sessionId));
   r.onMessage(SERVER_MSG.lap, (l: { id: string; name: string; s: number; best: boolean; record: boolean }) => {
     useLaps.setState((st) => ({ news: [...st.news.slice(-4), { ...l, at: performance.now(), mine: l.id === r.sessionId }] }));
   });
@@ -513,6 +585,8 @@ function bind(r: Room) {
     lastC4 = "";
     useBikes.setState({ me: NO_BIKE, others: {} });
     useLaps.setState({ current: null, last: null, best: null, news: [] });
+    resetHunt();
+    lastHunt = "";
   });
 
   usePartyStore.setState({ status: "in-party", sessionId: r.sessionId, error: null });

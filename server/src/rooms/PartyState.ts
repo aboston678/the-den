@@ -107,6 +107,7 @@ export const Hunt = schema(
     bearHealth: t.uint8().default(100),
     result: t.string().default(""), // HuntResult as JSON while phase is "over"
     overUntil: t.float64().default(0),
+    now: t.float64().default(0), // the server's clock while a hunt is on, so browsers can count down
   },
   "Hunt",
 );

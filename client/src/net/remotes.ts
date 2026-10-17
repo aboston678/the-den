@@ -31,6 +31,15 @@ export interface Snapshot {
   wheelie: number;
 }
 
+/** A player's part in the bear hunt, as the server reports it (Andrew, 2026-10-17). */
+export interface HuntView {
+  role: "" | "bear" | "hunter";
+  gun: string;
+  scoped: boolean;
+  downUntil: number;
+}
+export const NO_HUNT: HuntView = { role: "", gun: "", scoped: false, downUntil: 0 };
+
 export interface RemoteBear {
   id: string;
   name: string;
@@ -40,6 +49,9 @@ export interface RemoteBear {
   current: { x: number; y: number; z: number; speed: number; action: BearAction; flashlight: boolean; aimYaw: number; aimPitch: number; wheelie: number };
   tagVisible: boolean;
   fish: FishView;
+  hunt: HuntView;
+  /** Not drawn: they're outside the bear hunt we're in. */
+  hidden?: boolean;
 }
 
 export const remotes = new Map<string, RemoteBear>();

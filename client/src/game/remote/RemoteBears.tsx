@@ -1,7 +1,7 @@
 import { useFrame, useThree } from "@react-three/fiber";
 import { CapsuleCollider, RigidBody, type RapierCollider, type RapierRigidBody, useRapier } from "@react-three/rapier";
-import { Suspense, useMemo, useRef } from "react";
-import { type Group, type Material, Mesh, Vector3 } from "three";
+import { Suspense, useEffect, useMemo, useRef } from "react";
+import { type Group, type Material, Mesh, MeshBasicMaterial, Vector3 } from "three";
 import { INTERP_DELAY_MS, sampleAt } from "../../net/interpolate.ts";
 import { usePartyStore } from "../../net/party.ts";
 import { remotes } from "../../net/remotes.ts";
@@ -20,6 +20,14 @@ import { CAST_RELEASE_S } from "../player/BearAnimator.ts";
 import { applyRide, useRider } from "../bike/rider.ts";
 import { groundY } from "../world/ground.ts";
 import { inGarage } from "@den/shared";
+import { makeGlow, poseHunter, useHunterRig } from "../hunt/hunterRig.ts";
+import { myRole, roleOf } from "../hunt/store.ts";
+
+/** Rapier collider handle → the player it belongs to (the bear hunt's bullets find their target with it). */
+export const colliderOwners = new Map<number, string>();
+
+/** The bear's view of hunters through walls and trees (bear hunt): flat glowing orange, drawn on top. */
+const GLOW = new MeshBasicMaterial({ color: "#ff6a1a", transparent: true, opacity: 0.55, depthTest: false, depthWrite: false });
 
 /** Name tags: fully visible up close, gone by 30 m (GAME_SPEC §5.3). */
 const TAG_FULL = 15;
@@ -58,6 +66,12 @@ function RemoteBearView({ id }: { id: string }) {
   const start = bear?.current ?? { x: 0, y: 0, z: 0 };
   const yaw = useRef(0);
   const rider = useRider(visual);
+  const hunter = useHunterRig(visual);
+  const glows = useMemo(() => makeGlow(hunter, GLOW), [hunter]);
+  const owned = useRef<number | null>(null);
+  useEffect(() => () => {
+    if (owned.current !== null) colliderOwners.delete(owned.current);
+  }, []);
   /** On a bike: lean worked out from how fast they're turning, and tip from the slope. */
   const ride = useRef({ yaw: 0, lean: 0, pitch: 0 });
   useRod(id, model, visual, () => ({ rod: remotes.get(id)?.fish.rod ?? false, action: animator.action, yaw: yaw.current }));
@@ -106,8 +120,24 @@ function RemoteBearView({ id }: { id: string }) {
     }
 
     body.current.setNextKinematicTranslation({ x: s.x, y: s.y + CAPSULE_CENTER, z: s.z });
+    if (collider.current && owned.current !== collider.current.handle) {
+      if (owned.current !== null) colliderOwners.delete(owned.current);
+      owned.current = collider.current.handle;
+      colliderOwners.set(owned.current, id);
+    }
     if (visual.current) visual.current.rotation.y = s.yaw;
     yaw.current = s.yaw;
+
+    // The bear hunt (2026-10-17): players in a hunt don't see (or bump into) bears who aren't in it.
+    const me = usePartyStore.getState().sessionId;
+    const mine = myRole(me), theirs = roleOf(id);
+    const hidden = mine !== "" && theirs === "";
+    if (visual.current) visual.current.visible = !hidden;
+    b.hidden = hidden;
+    if (collider.current && collider.current.isEnabled() === hidden) collider.current.setEnabled(!hidden);
+    const isHunter = theirs === "hunter";
+    model.visible = !isHunter;
+    for (const g of glows) g.visible = isHunter && mine === "bear";
 
     if (s.action !== animator.action) {
       animator.start(s.action, JUMP_AIR_TIME);
@@ -125,6 +155,16 @@ function RemoteBearView({ id }: { id: string }) {
     }
     reel.current.line = line;
     animator.update(dt, s.action === "locomotion" || s.action === "crouch" ? s.speed : 0);
+    if (isHunter) {
+      if (hunter.action !== s.action) {
+        hunter.animator.start(s.action, JUMP_AIR_TIME);
+        hunter.action = s.action;
+      }
+      hunter.animator.update(dt, s.action === "locomotion" || s.action === "crouch" ? s.speed : 0);
+    }
+    poseHunter(hunter, {
+      show: isHunter, action: s.action, speed: s.speed, gun: (b.hunt.gun || "") as never, scoped: b.hunt.scoped, pitch: s.aimPitch, aiming: s.speed < 2.5, dt,
+    });
     applyLipHold(id, model, yaw.current, remotes.get(id)?.fish.state === "landed", animator.action !== "celebrate" && animator.action !== "cast", dt);
     if (visual.current) {
       const r = ride.current, riding = animator.action === "ride";
@@ -135,9 +175,9 @@ function RemoteBearView({ id }: { id: string }) {
       const fx = Math.sin(s.yaw) * 1.1, fz = Math.cos(s.yaw) * 1.1;
       const slope = !riding || inGarage(s.x, s.z) ? 0 : Math.atan2(groundY(s.x + fx, s.z + fz) - groundY(s.x - fx, s.z - fz), 2.2);
       r.pitch += (Math.max(-0.35, Math.min(0.35, -slope)) - r.pitch) * Math.min(1, dt * 8);
-      applyRide(rider, model, visual.current, riding, s.speed, r.lean, r.pitch, dt, { wheelie: riding ? s.wheelie : 0 });
+      applyRide(rider, isHunter ? hunter.model : model, visual.current, riding, s.speed, r.lean, r.pitch, dt, { wheelie: riding ? s.wheelie : 0 });
     }
-    bearSounds(animator, s.x, s.y, s.z);
+    if (!hidden) bearSounds(isHunter ? hunter.animator : animator, s.x, s.y, s.z);
     b.current = { x: s.x, y: s.y, z: s.z, speed: s.speed, action: s.action, flashlight: s.flashlight, aimYaw: s.aimYaw, aimPitch: s.aimPitch, wheelie: s.wheelie };
 
     // Name tag: over the head, fading with distance, hidden behind walls (checked every 4th frame).
@@ -153,6 +193,8 @@ function RemoteBearView({ id }: { id: string }) {
       tag.dataset.occluded = hit && hit.timeOfImpact < dist - 0.3 ? "1" : "";
     }
     if (tag.dataset.occluded) opacity = 0;
+    // Hunters never see the bear's name tag (it would give it away), and nobody sees hidden bears' tags.
+    if (hidden || (theirs === "bear" && mine === "hunter")) opacity = 0;
     screen.copy(tagWorld).project(camera);
     if (screen.z > 1) opacity = 0; // behind the camera
     tag.style.transform = `translate(-50%, -50%) translate(${((screen.x + 1) / 2) * size.width}px, ${((1 - screen.y) / 2) * size.height}px)`;

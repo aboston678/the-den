@@ -45,7 +45,7 @@ export const MSG = {
   huntReload: "huntReload", // reload the gun in hand
   huntFire: "huntFire", // ShotClaim: a shot (the browser cast the ray; the server checks any hit)
   huntSwipe: "huntSwipe", // the bear swipes at hunters in front of it
-  devHunt: "devHunt", // { skip?, start? }: jump the hunt's clock (dev and tests only)
+  devHunt: "devHunt", // { skip?, spot? }: jump the hunt's clock, pick the next bear's hiding spot by name (dev and tests only)
 } as const;
 
 /** Messages the server sends to everyone in the party. */

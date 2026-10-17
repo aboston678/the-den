@@ -8,7 +8,10 @@ import { CAMERA, CAPSULE, CAPSULE_CENTER, CONTROLLER_OFFSET, CROUCH_SHRINK, JUMP
 import { applyRide, useRider } from "../bike/rider.ts";
 import { autopilot } from "../bike/autopilot.ts";
 
-import { castTo, sendPose, useFishStore } from "../../net/party.ts";
+import { castTo, sendPose, useFishStore, usePartyStore } from "../../net/party.ts";
+import { poseHunter, useHunterRig } from "../hunt/hunterRig.ts";
+import { gunUp, huntAim } from "../hunt/aim.ts";
+import { myRole, serverNow, useHunt } from "../hunt/store.ts";
 import { useRod } from "../fishing/rig.ts";
 import { applyLipHold } from "../fishing/lipHold.ts";
 import { useHeldBall } from "../bowling/heldBall.ts";
@@ -78,6 +81,7 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
 
   const { model, animator } = useBearModel();
   const rider = useRider(visual);
+  const hunter = useHunterRig(visual);
   const toes = useMemo(() => ["LeftToeBase", "RightToeBase"].map((n) => model.getObjectByName(n)!), [model]);
   useRod("me", model, visual, () => ({ rod: useFishStore.getState().me.rod, action: animator.action, yaw: playerState.yaw }));
   useHeldBall(model, visual, () => {
@@ -167,12 +171,24 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
       st.actionTime = 0;
     };
 
+    // --- the bear hunt (2026-10-17): a hunter can't dance or roar; knocked down by the bear's swipe, he can't move ---
+    const role = myRole(usePartyStore.getState().sessionId);
+    const isHunter = role === "hunter";
+    const knocked = isHunter && serverNow() < useHunt.getState().me.downUntil;
+    if (knocked && animator.action !== "down") start("down");
+    if (!knocked && animator.action === "down") start("locomotion");
+    if (huntAim.swipeRequest) {
+      huntAim.swipeRequest = false;
+      if (role === "bear" && grounded && !held && !seated && !riding && (animator.action === "locomotion" || animator.action === "crouch")) start("swipe");
+    }
+    if (animator.action === "swipe" && (animator.finished("Swipe") || st.actionTime > 1.6)) start("locomotion");
+
     // --- actions: dance (B), roar (Y), jump (Space) ---
     let action = animator.action;
     if (consumePress("KeyF")) playerState.flashlight = !playerState.flashlight;
     if (riding && animator.action !== "ride") start("ride");
     if (!riding && animator.action === "ride") start("locomotion");
-    if (consumePress("KeyB") && grounded && !held && !seated && !riding) {
+    if (consumePress("KeyB") && grounded && !held && !seated && !riding && !isHunter) {
       if (action === "dance") start("locomotion");
       else if (action === "locomotion") start("dance");
     }
@@ -183,7 +199,7 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
     }
     if (action === "crouch" && sprint && moving && canStand()) start("locomotion");
     action = animator.action;
-    if (consumePress("KeyY") && grounded && !held && !seated && !riding && now >= st.roarReadyAt && (action === "locomotion" || action === "dance")) {
+    if (consumePress("KeyY") && grounded && !held && !seated && !riding && !isHunter && now >= st.roarReadyAt && (action === "locomotion" || action === "dance")) {
       start("roar");
       st.roarReadyAt = now + MOVE.roarCooldown;
       void playAt("roar", playerState.position.x, playerState.position.y + 1.6, playerState.position.z, 1.8, 8);
@@ -272,7 +288,9 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
     const crouched = action === "crouch";
     const canMove = action === "locomotion" || action === "jump" || action === "fall" || crouched;
     const staggered = playerState.gameTime < st.staggerUntil;
-    const pace = crouched ? BEAR.crouchSpeed : sprint ? MOVE.sprintSpeed : MOVE.walkSpeed;
+    // A hunter with his gun up walks (no sprinting while aiming).
+    const aimingGun = isHunter && useHunt.getState().me.gun !== "" && gunUp();
+    const pace = crouched ? BEAR.crouchSpeed : sprint && !aimingGun ? MOVE.sprintSpeed : MOVE.walkSpeed;
     const targetSpeed = (canMove && moving ? pace : 0) * (staggered ? 0.3 : 1);
     // A crouched bear is shorter: shrink the capsule, keeping its feet where they are.
     if (crouched !== st.short && collider.current) {
@@ -287,8 +305,10 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
     if (riding) rideStep(dt);
     else if (moving && canMove) {
       st.dir = dir;
-      st.yaw = turnToward(st.yaw, facingYaw(dir), MOVE.turnSpeed * dt);
+      if (!aimingGun) st.yaw = turnToward(st.yaw, facingYaw(dir), MOVE.turnSpeed * dt);
     }
+    // Aiming, the hunter faces where the camera looks (and steps sideways or back instead of turning).
+    if (aimingGun && !riding && !seated) st.yaw = turnToward(st.yaw, cameraState.yaw + Math.PI, MOVE.turnSpeed * 2 * dt);
 
     /** The motorcycle (Andrew, 2026-10-16): W throttle, S brake/back up, A/D steer, Shift tuck; gears (round 3). */
     function rideStep(dt: number) {
@@ -456,23 +476,40 @@ export function Player({ spawn = [0, 0, 0] as [number, number, number] }) {
     playerState.yaw = st.yaw;
     if (visual.current) {
       visual.current.rotation.y = st.yaw;
-      // At the Catan board camera your own bear would fill the view; everyone else still sees it.
-      visual.current.visible = !playerState.hidden && !(playerState.seated && cameraState.freeMouse);
+      // At the Catan board camera your own bear would fill the view; everyone else still sees it. Through a scope, so would your hunter.
+      visual.current.visible = !playerState.hidden && !(playerState.seated && cameraState.freeMouse) && cameraState.aim !== 2;
     }
     animator.update(dt, Math.min(st.speed, groundSpeed));
+    // A hunter: his model instead of the bear's, playing the same action, gun in hand.
+    model.visible = !isHunter;
+    if (isHunter) {
+      if (hunter.action !== animator.action) {
+        hunter.animator.start(animator.action, JUMP_AIR_TIME);
+        hunter.action = animator.action;
+      }
+      hunter.animator.update(dt, Math.min(st.speed, groundSpeed));
+    }
+    const mine = useHunt.getState().me;
+    poseHunter(hunter, {
+      show: isHunter, action: animator.action, speed: groundSpeed, gun: mine.gun, scoped: mine.scoped.includes(mine.gun as never),
+      pitch: -cameraState.pitch + 0.12, aiming: aimingGun || groundSpeed < 2.5, dt,
+    });
+    if (hunter.mount.visible) playerState.muzzle.copy(hunter.muzzle);
+    else playerState.muzzle.set(playerState.position.x, playerState.position.y + 1.45, playerState.position.z);
     applyLipHold("me", model, playerState.yaw, fish.state === "landed", animator.action !== "celebrate" && animator.action !== "cast", dt);
     // A wheelie bobs a little as the rider balances it.
     const wheelie = riding ? st.wheelie.angle + 0.025 * Math.sin(clock.elapsedTime * 6) * Math.min(1, st.wheelie.angle / 0.2) : 0;
-    if (visual.current) applyRide(rider, model, visual.current, riding && animator.action === "ride", st.speed, st.lean, st.pitch, dt, { revs: bikeRevs(st.speed, st.gear), gear: st.gear, throttle: st.throttle, wheelie });
+    if (visual.current) applyRide(rider, isHunter ? hunter.model : model, visual.current, riding && animator.action === "ride", st.speed, st.lean, st.pitch, dt, { revs: bikeRevs(st.speed, st.gear), gear: st.gear, throttle: st.throttle, wheelie });
     playerState.bike.wheelTurns = rider.wheelTurns;
-    bearSounds(animator, playerState.position.x, playerState.position.y, playerState.position.z);
+    bearSounds(isHunter ? hunter.animator : animator, playerState.position.x, playerState.position.y, playerState.position.z);
 
     // --- tell the party where we are, 20 times a second ---
     st.sendTimer += dt;
     if (st.sendTimer >= 1 / NET_TICK_HZ) {
       st.sendTimer = 0;
       const pos = playerState.position;
-      const aim = flashlightAim();
+      // A hunter's arms follow where he really aims (the flashlight's aim is tipped for the beam).
+      const aim = isHunter ? { yaw: cameraState.yaw + Math.PI, pitch: Math.max(-1.2, Math.min(1.2, -cameraState.pitch + 0.12)) } : flashlightAim();
       sendPose({
         x: pos.x, y: pos.y, z: pos.z, yaw: st.yaw, speed: playerState.speed, action: animator.action,
         flashlight: playerState.flashlight, aimYaw: aim.yaw, aimPitch: aim.pitch, wheelie: Math.max(0, wheelie),

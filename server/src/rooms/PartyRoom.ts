@@ -12,6 +12,7 @@ import {
   SERVER_MSG,
   START_TIME,
   type WorldName,
+  HIDE_SPOTS,
   doorById,
   generateRoomCode,
   isWorldName,
@@ -280,8 +281,11 @@ export class PartyRoom extends Room<{ state: PartyState }> {
       const down = this.hunt.swipe(hunt, client.sessionId, p, this.state.players, Date.now());
       if (p.role === "bear") this.broadcast(SERVER_MSG.huntSwipe, { id: client.sessionId, down });
     });
-    this.onMessage(MSG.devHunt, (_client, message: { skip?: unknown }) => {
-      if (devToolsOn() && Number.isFinite(num(message?.skip))) this.hunt.devSkip(hunt, num(message?.skip));
+    this.onMessage(MSG.devHunt, (_client, message: { skip?: unknown; spot?: unknown }) => {
+      if (!devToolsOn()) return;
+      if (Number.isFinite(num(message?.skip))) this.hunt.devSkip(hunt, num(message?.skip));
+      const spot = HIDE_SPOTS.findIndex((s) => s.name === message?.spot);
+      if (spot >= 0) this.hunt.devSpot = spot;
     });
     this.clock.setInterval(() => this.afterHunt(this.hunt.tick(hunt, this.state.players, Date.now())), 250);
 
@@ -406,6 +410,11 @@ export class PartyRoom extends Room<{ state: PartyState }> {
 
   /** Act on what the hunt's tick asked for: move the bear to its spot (told to it alone), or the end. */
   private afterHunt(e: HuntEvents) {
+    // Fishing rods go back in the bucket for everyone in a hunt that's starting.
+    for (const id of e.started ?? []) {
+      const p = this.state.players.get(id);
+      if (p?.rod) this.fishing.rod(id, p, false);
+    }
     if (e.warp) {
       const bear = this.clients.find((c) => c.sessionId === e.warp!.id);
       const { spot } = e.warp;

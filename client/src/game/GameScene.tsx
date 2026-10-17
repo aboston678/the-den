@@ -11,6 +11,10 @@ import { BikeControls } from "./bike/BikeControls.tsx";
 import { Bikes } from "./bike/Bikes.tsx";
 import { LapControls } from "./track/laps.ts";
 import { FishingControls } from "./fishing/FishingControls.tsx";
+import { HuntCircle } from "./hunt/HuntCircle.tsx";
+import { HuntControls } from "./hunt/HuntControls.tsx";
+import { LockerGuns } from "./hunt/LockerGuns.tsx";
+import { Tracers } from "./hunt/Tracers.tsx";
 import { FishingLines } from "./fishing/FishingLines.tsx";
 import { ThirdPersonCamera } from "./camera/ThirdPersonCamera.tsx";
 import { attachKeyboard, beginInputFrame } from "./input/keyboard.ts";
@@ -55,6 +59,12 @@ export function GameScene() {
         </Suspense>
         <Suspense fallback={null}>
           <FishingLines />
+        </Suspense>
+        <HuntCircle />
+        <HuntControls />
+        <Tracers />
+        <Suspense fallback={null}>
+          <LockerGuns />
         </Suspense>
         <Flashlights />
         <ThirdPersonCamera />

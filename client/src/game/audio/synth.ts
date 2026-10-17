@@ -249,3 +249,80 @@ export function crashBuffer(ctx: BaseAudioContext) {
   }
   return toBuffer(ctx, data, rate);
 }
+
+/** Like toBuffer, but levelled by the loudest sample (a gunshot is one huge spike, so RMS levelling would clip it). */
+function toBufferPeak(ctx: BaseAudioContext, data: Float32Array, rate: number, peak = 0.9) {
+  let max = 0;
+  for (const v of data) max = Math.max(max, Math.abs(v));
+  const gain = peak / (max || 1);
+  for (let i = 0; i < data.length; i++) data[i]! *= gain;
+  const b = ctx.createBuffer(1, data.length, rate);
+  b.copyToChannel(data as Float32Array<ArrayBuffer>, 0);
+  return b;
+}
+
+/**
+ * A gunshot (bear hunt, 2026-10-17): a sharp crack of noise, a low boom that drops in pitch, and a
+ * long rumbling echo off the woods. Each gun gets its own mix: the sniper's heavy crack and long
+ * roll, the pistol's short bright pop, the AR's tight snap, the shotgun's deep boom.
+ */
+function gunshot(ctx: BaseAudioContext, o: { seed: number; crack: number; boom: number; boomHz: number; tail: number; tailGain: number; bright: number }) {
+  const rate = 44100, data = new Float32Array(Math.round(rate * (o.tail + 0.2)));
+  const r = rng(o.seed);
+  let lp = 0, lp2 = 0, phase = 0;
+  for (let i = 0; i < data.length; i++) {
+    const t = i / rate;
+    const n = r();
+    lp += (n - lp) * o.bright; // the crack: bright noise
+    lp2 += (n - lp2) * 0.04; // the echo: dark noise
+    const crack = (n * 0.6 + lp * 0.8) * Math.exp(-t / o.crack) * (t < 0.0015 ? t / 0.0015 : 1);
+    phase += (2 * Math.PI * o.boomHz * (0.45 + 0.55 * Math.exp(-t * 18))) / rate;
+    const boom = Math.sin(phase) * Math.exp(-t / o.boom) * 1.4;
+    // The echo swells in a little after the shot and rolls away.
+    const echo = lp2 * o.tailGain * Math.min(1, t / 0.06) * Math.exp(-t / (o.tail / 4)) * (1 + 0.35 * Math.sin(2 * Math.PI * 5.3 * t));
+    data[i] = crack + boom + echo * 6;
+  }
+  return toBufferPeak(ctx, data, rate);
+}
+
+export const sniperShotBuffer = (ctx: BaseAudioContext) => gunshot(ctx, { seed: 501, crack: 0.035, boom: 0.16, boomHz: 70, tail: 2.2, tailGain: 1.1, bright: 0.55 });
+export const pistolShotBuffer = (ctx: BaseAudioContext) => gunshot(ctx, { seed: 502, crack: 0.016, boom: 0.05, boomHz: 140, tail: 1.0, tailGain: 0.6, bright: 0.8 });
+export const arShotBuffer = (ctx: BaseAudioContext) => gunshot(ctx, { seed: 503, crack: 0.02, boom: 0.07, boomHz: 110, tail: 0.9, tailGain: 0.55, bright: 0.7 });
+export const shotgunShotBuffer = (ctx: BaseAudioContext) => gunshot(ctx, { seed: 504, crack: 0.04, boom: 0.22, boomHz: 55, tail: 1.8, tailGain: 1.2, bright: 0.4 });
+
+/** Reloading: the magazine out, in, and the action racked (three metallic clacks). */
+export function reloadBuffer(ctx: BaseAudioContext) {
+  const rate = 22050, data = new Float32Array(Math.round(rate * 0.9));
+  const r = rng(505);
+  for (const [at, hz, k] of [[0.05, 1800, 0.7], [0.42, 1400, 1], [0.72, 2300, 0.9]] as const) {
+    for (let i = Math.round(at * rate); i < data.length; i++) {
+      const t = i / rate - at;
+      data[i]! += (r() * 0.6 + Math.sin(2 * Math.PI * hz * t) * 0.8) * Math.exp(-t * 60) * k;
+    }
+  }
+  return toBufferPeak(ctx, data, rate, 0.6);
+}
+
+/** Pulling the trigger on an empty gun. */
+export function dryFireBuffer(ctx: BaseAudioContext) {
+  const rate = 22050, data = new Float32Array(Math.round(rate * 0.12));
+  const r = rng(506);
+  for (let i = 0; i < data.length; i++) {
+    const t = i / rate;
+    data[i] = (r() * 0.5 + Math.sin(2 * Math.PI * 2600 * t)) * Math.exp(-t * 90);
+  }
+  return toBufferPeak(ctx, data, rate, 0.5);
+}
+
+/** A bullet striking the bear: a dull thud. */
+export function hitThudBuffer(ctx: BaseAudioContext) {
+  const rate = 22050, data = new Float32Array(Math.round(rate * 0.25));
+  const r = rng(507);
+  let lp = 0;
+  for (let i = 0; i < data.length; i++) {
+    const t = i / rate;
+    lp += (r() - lp) * 0.15;
+    data[i] = (lp * 1.5 + Math.sin(2 * Math.PI * 90 * t)) * Math.exp(-t * 22);
+  }
+  return toBufferPeak(ctx, data, rate, 0.8);
+}

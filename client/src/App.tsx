@@ -10,6 +10,7 @@ import { CatanHud } from "./ui/CatanHud.tsx";
 import { Connect4Hud } from "./ui/Connect4Hud.tsx";
 import { LapHud } from "./ui/LapHud.tsx";
 import { BikeHud } from "./ui/BikeHud.tsx";
+import { HuntHud } from "./ui/HuntHud.tsx";
 import { ConnectionBadge, ControlsHint, PartyList } from "./ui/Hud.tsx";
 import { LoadingScreen } from "./ui/LoadingScreen.tsx";
 import { NameTags } from "./ui/NameTags.tsx";
@@ -68,6 +69,7 @@ export function App() {
       <Connect4Hud />
       <LapHud />
       <BikeHud />
+      <HuntHud />
       <PartyList />
       <Pause />
       <LoadingScreen />

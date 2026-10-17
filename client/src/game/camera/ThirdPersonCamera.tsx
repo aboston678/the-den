@@ -11,6 +11,13 @@ import { fullscreenIfWanted } from "../../ui/fullscreen.ts";
 
 const target = new Vector3();
 const offset = new Vector3();
+const side = new Vector3();
+/** Eased 0…1: how far over the shoulder we are (bear hunt aiming). */
+let shoulder = 0;
+/** Over the shoulder: this far to the right, this close behind, this much narrower a view. */
+const SHOULDER = { right: 0.55, distance: 1.7, height: 1.55, narrow: 1.35 } as const;
+/** Through a scope: the eye's height above the feet. */
+const EYE_HEIGHT = 1.62;
 /** Where the camera is looking, eased toward a shot's look-at point. */
 const looking = new Vector3();
 let wasOverride = false;
@@ -63,7 +70,10 @@ export function ThirdPersonCamera() {
     const dt = Math.min(rawDt, 0.1);
     // Speed widens the view a little on the motorcycle.
     const cam = camera as PerspectiveCamera;
-    const fov = approach(cam.fov, CAMERA.fov + cameraState.fovKick, 20 * dt);
+    shoulder = approach(shoulder, cameraState.aim === 1 ? 1 : 0, 6 * dt);
+    const scoped = cameraState.aim === 2 && !cameraState.override;
+    const wantFov = scoped ? CAMERA.fov / Math.max(1, cameraState.zoom) : (CAMERA.fov + cameraState.fovKick) / (1 + (SHOULDER.narrow - 1) * shoulder);
+    const fov = scoped ? wantFov : approach(cam.fov, wantFov, 40 * dt);
     if (fov !== cam.fov) {
       cam.fov = fov;
       cam.updateProjectionMatrix();
@@ -81,14 +91,25 @@ export function ThirdPersonCamera() {
     }
     wasOverride = false;
     const { yaw, pitch } = cameraState;
-    target.copy(playerState.position).y += CAMERA.targetHeight;
     offset.set(Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), Math.cos(yaw) * Math.cos(pitch));
+    if (scoped) {
+      // Through the scope: at the hunter's eye, looking where the camera looks.
+      camera.position.copy(playerState.position).y += EYE_HEIGHT;
+      camera.position.addScaledVector(offset, -0.15);
+      camera.lookAt(target.copy(camera.position).addScaledVector(offset, -10));
+      return;
+    }
+    target.copy(playerState.position).y += CAMERA.targetHeight + (SHOULDER.height - CAMERA.targetHeight) * shoulder;
+    // Over the right shoulder while aiming.
+    side.set(-Math.cos(yaw), 0, Math.sin(yaw));
+    target.addScaledVector(side, -SHOULDER.right * shoulder);
 
     // How far back can we go before hitting something (ignoring the bear itself)?
     const ray = new rapier.Ray(target, offset);
     const hit = world.castRay(ray, cameraState.distance + CAMERA.wallPadding, true, undefined, undefined, undefined, undefined,
       (c) => c.handle !== playerState.colliderHandle && !invisibleColliders.has(c.handle));
-    const allowed = hit ? Math.max(0.4, hit.timeOfImpact - CAMERA.wallPadding) : cameraState.distance;
+    const back = cameraState.distance + (SHOULDER.distance - cameraState.distance) * shoulder;
+    const allowed = hit ? Math.max(0.4, Math.min(back, hit.timeOfImpact - CAMERA.wallPadding)) : back;
     cameraState.current = allowed < cameraState.current ? allowed : approach(cameraState.current, allowed, 3 * dt);
 
     camera.position.copy(target).addScaledVector(offset, cameraState.current);

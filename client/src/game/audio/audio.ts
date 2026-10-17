@@ -1,8 +1,8 @@
 import { Audio, AudioListener, Object3D, PositionalAudio } from "three";
 import { settings, useSettings } from "../../ui/settings.ts";
 import {
-  ballReturnBuffer, ballRollBuffer, castWhooshBuffer, crashBuffer, diceRollBuffer, fanfareBuffer, garageDoorBuffer, lineSnapBuffer, plopBuffer, reelClickBuffer,
-  splashBuffer, sweepBuffer,
+  arShotBuffer, ballReturnBuffer, ballRollBuffer, castWhooshBuffer, crashBuffer, diceRollBuffer, dryFireBuffer, fanfareBuffer, garageDoorBuffer, hitThudBuffer,
+  lineSnapBuffer, pistolShotBuffer, plopBuffer, reelClickBuffer, reloadBuffer, shotgunShotBuffer, sniperShotBuffer, splashBuffer, sweepBuffer,
 } from "./synth.ts";
 import { asset } from "../../asset.ts";
 
@@ -76,6 +76,14 @@ const MADE_IN_CODE: Record<string, (ctx: BaseAudioContext) => AudioBuffer> = {
   "garage-door": garageDoorBuffer,
   fanfare: fanfareBuffer,
   "bike-crash": crashBuffer,
+  // The bear hunt (2026-10-17).
+  "shot-sniper": sniperShotBuffer,
+  "shot-pistol": pistolShotBuffer,
+  "shot-ar": arShotBuffer,
+  "shot-shotgun": shotgunShotBuffer,
+  "gun-reload": reloadBuffer,
+  "gun-dry": dryFireBuffer,
+  "hit-thud": hitThudBuffer,
 };
 
 /** A sound from client/public/audio/ (built by `npm run build:audio`), or one made in code. */

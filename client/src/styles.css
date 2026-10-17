@@ -736,3 +736,49 @@ body.catan-seated .controls-hint { display: none; }
 .bike-keys { grid-column: 1 / -1; font: 12px system-ui, sans-serif; color: rgb(239 230 210 / 0.7); text-align: center; }
 .bike-keys b { color: var(--ember); }
 .fish-big { margin-top: 6px; font-size: 13px; font-weight: 600; color: #ffd36a; text-align: center; }
+
+/* --- the bear hunt (2026-10-17) --- */
+.hunt-hud { position: fixed; inset: 0; pointer-events: none; z-index: 16; color: var(--cream); font-family: system-ui, sans-serif; }
+.hunt-hud kbd { display: inline-block; min-width: 18px; padding: 0 5px; border-radius: 4px; background: rgb(239 230 210 / 0.18); font: 600 12px system-ui; text-align: center; }
+.hunt-lobby { position: absolute; top: 22%; right: 24px; width: 260px; padding: 12px 16px; border-radius: 12px; background: rgb(10 22 40 / 0.82); border: 1px solid rgb(90 170 255 / 0.6); }
+.hunt-lobby h3 { margin: 0 0 6px; color: #7cc0ff; font: 700 20px "Oswald", system-ui, sans-serif; letter-spacing: 0.08em; text-transform: uppercase; }
+.hunt-lobby p { margin: 0 0 6px; font-size: 13px; line-height: 1.4; }
+.hunt-lobby ul { margin: 0; padding: 0; list-style: none; font-size: 14px; }
+.hunt-count { font: 700 26px "Oswald", system-ui, sans-serif !important; color: #fff; }
+.hunt-bar { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 14px; padding: 7px 16px; border-radius: 10px; background: rgb(12 18 14 / 0.82); font: 600 15px "Oswald", system-ui, sans-serif; letter-spacing: 0.03em; white-space: nowrap; }
+.hunt-bar.small { font-size: 13px; top: 54px; }
+.hunt-clock { font-variant-numeric: tabular-nums; font-size: 18px; }
+.hunt-health { position: relative; width: 140px; height: 12px; border-radius: 6px; background: rgb(255 255 255 / 0.15); overflow: hidden; }
+.hunt-health i { position: absolute; inset: 0 auto 0 0; background: linear-gradient(90deg, #c8321e, #ff7a3d); transition: width 0.25s; }
+.hunt-banner { position: absolute; top: 24%; left: 50%; transform: translateX(-50%); text-align: center; padding: 14px 24px; border-radius: 14px; background: rgb(12 18 14 / 0.78); max-width: min(520px, 90vw); }
+.hunt-banner h2 { margin: 0 0 4px; color: var(--ember); font: 700 30px "Oswald", system-ui, sans-serif; text-transform: uppercase; letter-spacing: 0.06em; }
+.hunt-banner p { margin: 0; font-size: 15px; }
+.hunt-cross { position: absolute; left: 50%; top: 50%; width: 22px; height: 22px; transform: translate(-50%, -50%); }
+.hunt-cross::before, .hunt-cross::after { content: ""; position: absolute; background: rgb(255 255 255 / 0.9); box-shadow: 0 0 2px #000; }
+.hunt-cross::before { left: 10px; top: 0; width: 2px; height: 22px; }
+.hunt-cross::after { top: 10px; left: 0; height: 2px; width: 22px; }
+.hunt-cross.hit::before, .hunt-cross.hit::after { background: #ff4b2b; }
+.hunt-hitmark { position: absolute; left: 50%; top: calc(50% + 22px); transform: translateX(-50%); color: #ff5a36; font: 700 14px "Oswald", system-ui, sans-serif; letter-spacing: 0.12em; text-shadow: 0 0 3px #000; }
+.hunt-scope { position: absolute; inset: 0; background: radial-gradient(circle at 50% 50%, transparent 0 36vmin, #000 36.4vmin); }
+.hunt-scope::before { content: ""; position: absolute; left: 50%; top: calc(50% - 36vmin); width: 1px; height: 72vmin; background: #000; }
+.hunt-scope::after { content: ""; position: absolute; top: 50%; left: calc(50% - 36vmin); height: 1px; width: 72vmin; background: #000; }
+.hunt-guns { position: absolute; left: 16px; bottom: 16px; display: grid; gap: 4px; padding: 10px 14px; border-radius: 12px; background: rgb(12 18 14 / 0.8); font-size: 14px; min-width: 200px; }
+.hunt-guns > div { opacity: 0.6; }
+.hunt-guns > div.on { opacity: 1; color: #fff; font-weight: 600; }
+.hunt-guns.bear > div { opacity: 1; }
+.hunt-ammo { font: 600 22px "Oswald", system-ui, sans-serif; opacity: 1 !important; }
+.hunt-ammo b { font-size: 30px; }
+.hunt-keys { margin: 2px 0 0; font-size: 12px; opacity: 0.7; }
+.hunt-down { position: absolute; left: 50%; top: 36%; transform: translateX(-50%); padding: 10px 20px; border-radius: 10px; background: rgb(120 20 10 / 0.8); font: 700 22px "Oswald", system-ui, sans-serif; }
+.hunt-map { position: absolute; top: 56px; right: 16px; width: 200px; height: 200px; border-radius: 50%; box-shadow: 0 2px 10px rgb(0 0 0 / 0.5); }
+.hunt-locker { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(520px, 92vw); padding: 16px 20px; border-radius: 14px; background: rgb(18 24 20 / 0.95); pointer-events: auto; display: grid; gap: 8px; }
+.hunt-locker h3 { margin: 0 0 4px; color: var(--ember); font: 700 22px "Oswald", system-ui, sans-serif; text-transform: uppercase; letter-spacing: 0.06em; }
+.hunt-locker .row { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; align-items: center; }
+.hunt-locker small { opacity: 0.65; margin-left: 6px; }
+.hunt-locker button { padding: 6px 12px; border-radius: 8px; border: 1px solid rgb(239 230 210 / 0.3); background: rgb(239 230 210 / 0.1); color: var(--cream); cursor: pointer; font: 600 13px system-ui; }
+.hunt-locker button:disabled { opacity: 0.35; cursor: default; }
+.hunt-locker button.close { justify-self: end; background: var(--ember); color: #1b1b1b; border: none; }
+.hunt-result { position: absolute; top: 26%; left: 50%; transform: translateX(-50%); text-align: center; padding: 18px 28px; border-radius: 16px; background: rgb(12 18 14 / 0.88); min-width: 360px; }
+.hunt-result h2 { margin: 0 0 8px; color: var(--ember); font: 700 30px "Oswald", system-ui, sans-serif; text-transform: uppercase; }
+.hunt-result p { margin: 4px 0; font-size: 16px; }
+.hunt-sub { opacity: 0.7; font-size: 13px !important; }
