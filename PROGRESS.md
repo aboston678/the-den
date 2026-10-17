@@ -140,6 +140,17 @@ Andrew asked for: top speed 155 mph; the bear sitting on the bike properly (toda
 - [x] **B8 Full tyres.** Andrew saw gaps go round the tyres as they rolled. The generated model fused each tyre's top into the mudguard over it (front fender, rear hugger), so the upper tread was patchy and partly stuck to the body. The bottom of each tyre is clean and perfectly round (front 0.370 m, rear 0.384 m). `tools/build-bike.mjs` now fits a circle to the bottom of the tread, learns the tyre's cross-section there, and builds each tyre from the clean bottom third (±62°) copied three times round the axle (not the whole bottom half as planned: the chain runs past the tyre near axle height). It clears the old upper tyre from the body, including where it bulged up to 6% into the mudguard; the mudguards are 8%+ out and stay. The rear tyre is cut a little narrower on the chain side. Dev hook `__den.bike.setWheelAngle(a)`; pictures at 0/60/120/180° both sides `review/round4/5-tyres.png` show whole tyres. Unit tests pass; all 3 bike browser tests pass (the lap test missed once, then passed twice).
 - [x] **B9 Deploy full tyres.** **[ANDREW APPROVES]** Andrew approved ("put the full-tyre fix live", 2026-10-17). **Deployed:** main fast-forwarded to ca01648; Railway `/health` shows ca01648, Vercel serves the new `bike.glb`; the sign-in test passes against the live site. Next: Andrew rides it online.
 
+## Andrew's requests: Bear hunt (branch `bear-hunt`, 2026-10-17)
+Andrew asked for a bear-hunt game: ready up in a blue circle by the dock, one random player is the hidden bear (points double each minute it survives, 10 min limit = 512), the rest are hunters (his own hunter design) with a basement gun locker (sniper, pistol, AR, shotgun, scopes). Plan: `~/.claude/plans/i-want-to-add-linked-cerf.md` (answers recorded there). Credit batch 109.75 OK'd: hunter model, 5 gun pictures + models, swipe clip (Right_Hand_Sword_Slash 219) and knock-down clip (Knock_Down 187).
+- [ ] **H0 Assets** (hunter, guns, clips). **[ANDREW APPROVES]** hunter + guns.
+- [ ] **H1 Rules in /shared.**
+- [ ] **H2 Server + stats + database script.**
+- [ ] **H3 Circle, ready-up, flow, HUD.**
+- [ ] **H4 Hunter in the game.**
+- [ ] **H5 Shooting, scopes, locker, gunshots.**
+- [ ] **H6 Mini-map, outlines, swipe.**
+- [ ] **H7 Leaderboard, spec, review + deploy.** **[ANDREW APPROVES]**
+
 ---
 
 ## Higgsfield credit ledger
@@ -187,6 +198,8 @@ Starting balance: 1,210 (2026-10-11)
 | 2026-10-16 | Motorcycle image→3D from concept #4 (price check 9; same batch), job 1d22d7d0-e006-4f20-8d75-7225546967b5 | `tripo_h3_1_image_to_3d` | 9 | 478.25 |
 | 2026-10-17 | Bike round 4 views ×3 (front, left, back) from concept #4 (price check 0.25 each; Andrew OK'd the 18.75 batch); jobs 15e244e0-db0b-48dd-ad0c-00cc94cc35a6, f9017108-f8e2-4bc1-9230-5e5cb3b521ed, 88a45cc3-13c9-4632-970b-7e806a71eee9 (`assets/concepts/motorcycle/v2-*.png`) | `gpt_image_2_5` | 0.75 | 477.5 |
 | 2026-10-17 | Bike round 4 multiview→3D, detailed geometry + texture, PBR (price check 18; same batch), job 8fe0c010-9008-4aca-8d5b-50fa670adcb1 | `tripo_h3_1_multiview_to_3d` | 18 | 459.5 |
+| 2026-10-17 | Bear hunt: hunter 3D model from Andrew's character sheet (front view), texture + PBR + A-pose + rig (1.85 m) + Idle (price check 47.5; Andrew OK'd the 109.75 batch), job aaa75d8f-caa0-474f-8ca9-c781b21c5c9b | `meshy_v7_image_to_3d` | 47.5 | 412 |
+| 2026-10-17 | Bear hunt gun pictures ×5: sniper, pistol, AR, shotgun, scope (price check 0.25 each; same batch); jobs 57ada2c2, c0275ba8, 6f8ac421, 36bc3d11, facf603e (`assets/concepts/hunt/`) | `gpt_image_2_5` | 1.25 | 410.75 |
 
 ## Decision log
 | Date | Decision | Why |
