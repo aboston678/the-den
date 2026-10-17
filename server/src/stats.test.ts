@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { recordBowlingGame, recordCatanGame, recordCatch } from "./stats.ts";
+import { recordBowlingGame, recordCatanGame, recordCatch, recordHunt } from "./stats.ts";
 
 const env = { ...process.env };
 afterEach(() => {
@@ -104,5 +104,33 @@ describe("saving catan games", () => {
     expect(await recordCatanGame(null, ["user-2"], call)).toEqual({ wins: 0 });
     expect(paths).toEqual(["/rest/v1/catan_games"]);
     expect(await recordCatanGame(null, [], call)).toBeNull();
+  });
+});
+
+describe("saving bear hunts", () => {
+  it("calls record_hunt with the bear's points and the hunter's takedown", async () => {
+    process.env.SUPABASE_URL = "https://example.supabase.co";
+    process.env.SUPABASE_SERVICE_ROLE_KEY = "secret";
+    let sent: unknown = null;
+    const call = (async (path: string, init?: RequestInit) => {
+      sent = { path, body: JSON.parse(String(init?.body)) };
+      return new Response(null, { status: 204 });
+    }) as typeof import("./auth.ts").supabase;
+    const h = { bear: "u-bear", points: 32, seconds: 372.4, how: "shot", takenBy: "u-hunter", players: ["u-bear", "u-hunter"] };
+    expect(await recordHunt(h, call)).toBe(true);
+    expect(sent).toEqual({
+      path: "/rest/v1/rpc/record_hunt",
+      body: { p_bear: "u-bear", p_points: 32, p_seconds: 372, p_how: "shot", p_taken_by: "u-hunter", p_players: ["u-bear", "u-hunter"] },
+    });
+  });
+
+  it("does nothing without signed-in players or keys, and survives a failed save", async () => {
+    delete process.env.SUPABASE_URL;
+    expect(await recordHunt({ bear: "a", points: 1, seconds: 60, how: "survived", takenBy: null, players: ["a"] })).toBe(false);
+    process.env.SUPABASE_URL = "https://example.supabase.co";
+    process.env.SUPABASE_SERVICE_ROLE_KEY = "secret";
+    const failing = (async () => new Response("nope", { status: 404 })) as typeof import("./auth.ts").supabase;
+    expect(await recordHunt({ bear: "a", points: 1, seconds: 60, how: "survived", takenBy: null, players: ["a"] }, failing)).toBe(false);
+    expect(await recordHunt({ bear: null, points: 1, seconds: 60, how: "survived", takenBy: null, players: [] }, failing)).toBe(false);
   });
 });

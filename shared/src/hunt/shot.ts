@@ -17,6 +17,8 @@ export interface ShotClaim {
   dir: V3;
   /** Where it hit the bear (only when the browser says it hit). */
   hit?: V3;
+  /** Where the bullet stopped otherwise (a wall, a tree, the ground), for the tracer. */
+  end?: V3;
 }
 
 /** Furthest the ray's start may be from the hunter (the camera zooms out to 6 m, plus lag). */
@@ -31,11 +33,11 @@ export function parseShot(raw: unknown): ShotClaim | null {
   const m = (raw ?? {}) as Record<string, unknown>;
   const gun = m.gun as GunId;
   if (!(gun in GUN)) return null;
-  const from = m.from as V3, dir = m.dir as V3, hit = m.hit as V3 | undefined;
+  const from = m.from as V3, dir = m.dir as V3, hit = m.hit as V3 | undefined, end = m.end as V3 | undefined;
   if (!finite(from) || !finite(dir)) return null;
   const len = Math.hypot(dir.x, dir.y, dir.z);
   if (len < 1e-6) return null;
-  return { gun, from: { ...from }, dir: { x: dir.x / len, y: dir.y / len, z: dir.z / len }, hit: finite(hit) ? { ...hit } : undefined };
+  return { gun, from: { ...from }, dir: { x: dir.x / len, y: dir.y / len, z: dir.z / len }, hit: finite(hit) ? { ...hit } : undefined, end: finite(end) ? { ...end } : undefined };
 }
 
 /**

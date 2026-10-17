@@ -89,3 +89,24 @@ export async function recordCatanGame(winnerId: string | null, playerIds: string
   if (!save.ok) return fail("wins", save);
   return { wins };
 }
+
+/**
+ * Save a finished bear hunt (Andrew, 2026-10-17) in one step (`record_hunt`): the hunt, the bear's
+ * points added to its total, +1 takedown for the hunter who landed the final hit. False if it couldn't
+ * be saved (or before the database script has been run).
+ */
+export async function recordHunt(
+  h: { bear: string | null; points: number; seconds: number; how: string; takenBy: string | null; players: string[] },
+  call = supabase,
+): Promise<boolean> {
+  if (!supabaseReady() || h.players.length === 0) return false;
+  const res = await call("/rest/v1/rpc/record_hunt", {
+    method: "POST",
+    body: JSON.stringify({ p_bear: h.bear, p_points: h.points, p_seconds: Math.round(h.seconds), p_how: h.how, p_taken_by: h.takenBy, p_players: h.players }),
+  });
+  if (!res.ok) {
+    console.warn(`[den] couldn't save a bear hunt: ${res.status} ${await res.text()}`);
+    return false;
+  }
+  return true;
+}

@@ -38,6 +38,14 @@ export const MSG = {
   // The motorcycle (Andrew, 2026-10-16).
   bike: "bike", // { do: "take" | "mount" | "park", x?, y?, z?, yaw? }: take the garage bike, get on yours, park it where it is
   lap: "lap", // { s }: I just finished a lap of the racetrack in s seconds (timed in my browser, checked here)
+  // The bear hunt (Andrew, 2026-10-17).
+  huntReady: "huntReady", // { on }: ready (or not) in the circle by the dock
+  huntLocker: "huntLocker", // { do: "take" | "return" | "scope", gun, on? }: at the gun locker in the basement den
+  huntGun: "huntGun", // { gun }: switch to a gun you carry
+  huntReload: "huntReload", // reload the gun in hand
+  huntFire: "huntFire", // ShotClaim: a shot (the browser cast the ray; the server checks any hit)
+  huntSwipe: "huntSwipe", // the bear swipes at hunters in front of it
+  devHunt: "devHunt", // { skip?, start? }: jump the hunt's clock (dev and tests only)
 } as const;
 
 /** Messages the server sends to everyone in the party. */
@@ -62,9 +70,17 @@ export const SERVER_MSG = {
   c4Won: "c4Won",
   /** { id, name, s, best, record }: someone finished a lap (best = their best this visit, record = the party's best). */
   lap: "lap",
+  /** ShotEvent: a gunshot, for everyone to hear (and see the tracer). */
+  huntShot: "huntShot",
+  /** { x, y, z, name }: go to your hiding spot (sent only to the bear). */
+  huntWarp: "huntWarp",
+  /** HuntResult: the hunt is over. */
+  huntOver: "huntOver",
+  /** { id, down }: the bear swiped; these hunters went down. */
+  huntSwipe: "huntSwipe",
 } as const;
 
-export const BEAR_ACTIONS = ["locomotion", "jump", "fall", "roar", "dance", "cast", "reel", "celebrate", "bowl", "sit", "stand", "crouch", "ride"] as const;
+export const BEAR_ACTIONS = ["locomotion", "jump", "fall", "roar", "dance", "cast", "reel", "celebrate", "bowl", "sit", "stand", "crouch", "ride", "swipe", "down"] as const;
 export type BearAction = (typeof BEAR_ACTIONS)[number];
 
 export interface Pose {

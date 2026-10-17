@@ -6,6 +6,7 @@ import {
   MAX_PLAYERS,
   MSG,
   NET_TICK_HZ,
+  type HuntResult,
   type Pose,
   RECONNECT_WINDOW_S,
   SERVER_MSG,
@@ -14,6 +15,7 @@ import {
   doorById,
   generateRoomCode,
   isWorldName,
+  parseShot,
   parseTime,
   sanitizeBowlFrame,
   sanitizeNickname,
@@ -29,7 +31,8 @@ import { Catan, type CatanResult } from "./catan.ts";
 import { type C4Result, Connect4 } from "./connect4.ts";
 import { type Catch, Fishing } from "./fishing.ts";
 import { Laps, bikeMessage } from "./bike.ts";
-import { recordBowlingGame, recordC4Game, recordCatanGame, recordCatch } from "../stats.ts";
+import { Hunt, type HuntEvents } from "./hunt.ts";
+import { recordBowlingGame, recordC4Game, recordCatanGame, recordCatch, recordHunt } from "../stats.ts";
 
 const num = (v: unknown) => (typeof v === "number" ? v : Number.NaN);
 
@@ -55,6 +58,7 @@ export class PartyRoom extends Room<{ state: PartyState }> {
   private catan = new Catan();
   private c4 = new Connect4();
   private laps = new Laps();
+  private hunt = new Hunt();
   /** When each bowler last sent a ball/pins frame (ms), to keep the stream to ~20 a second. */
   private lastFrameAt = new Map<string, number>();
   /** Supabase user id per bear (server-side only; used to save stats), null for development players. */
@@ -78,6 +82,10 @@ export class PartyRoom extends Room<{ state: PartyState }> {
       const player = this.state.players.get(client.sessionId);
       if (!player || this.state.phase !== "playing") return;
       const now = Date.now();
+      if (this.hunt.holdPose(client.sessionId, player, (message ?? {}) as { x?: unknown; z?: unknown }, now)) {
+        this.lastPoseAt.set(client.sessionId, now);
+        return;
+      }
       const seconds = (now - (this.lastPoseAt.get(client.sessionId) ?? now - 50)) / 1000;
       this.lastPoseAt.set(client.sessionId, now);
       const pose = sanitizePose(message, poseOf(player), seconds, player.bike === "riding");
@@ -239,6 +247,44 @@ export class PartyRoom extends Room<{ state: PartyState }> {
       if (done) void this.announceC4(done);
     }, 250);
 
+    // The bear hunt (Andrew, 2026-10-17): ready up in the circle by the dock; the server runs the hunt.
+    const hunt = this.state.hunt;
+    this.hunt.setup(hunt);
+    this.onMessage(MSG.huntReady, (client, message: { on?: unknown }) => {
+      const p = playing(client);
+      if (p) this.hunt.ready(hunt, client.sessionId, p, message?.on !== false);
+    });
+    this.onMessage(MSG.huntLocker, (client, message: { do?: unknown; gun?: unknown; on?: unknown }) => {
+      const p = playing(client);
+      if (p) this.hunt.locker(hunt, client.sessionId, p, message ?? {});
+    });
+    this.onMessage(MSG.huntGun, (client, message: { gun?: unknown }) => {
+      const p = playing(client);
+      if (p) this.hunt.select(hunt, client.sessionId, p, message?.gun);
+    });
+    this.onMessage(MSG.huntReload, (client) => {
+      const p = playing(client);
+      if (p) this.hunt.reload(hunt, client.sessionId, p, Date.now());
+    });
+    this.onMessage(MSG.huntFire, (client, message) => {
+      const p = playing(client), shot = parseShot(message);
+      if (!p || !shot) return;
+      const r = this.hunt.fire(hunt, client.sessionId, p, shot, this.state.players, Date.now());
+      if (!r) return;
+      this.broadcast(SERVER_MSG.huntShot, r.event);
+      if (r.over) void this.announceHunt(r.over);
+    });
+    this.onMessage(MSG.huntSwipe, (client) => {
+      const p = playing(client);
+      if (!p) return;
+      const down = this.hunt.swipe(hunt, client.sessionId, p, this.state.players, Date.now());
+      if (p.role === "bear") this.broadcast(SERVER_MSG.huntSwipe, { id: client.sessionId, down });
+    });
+    this.onMessage(MSG.devHunt, (_client, message: { skip?: unknown }) => {
+      if (devToolsOn() && Number.isFinite(num(message?.skip))) this.hunt.devSkip(hunt, num(message?.skip));
+    });
+    this.clock.setInterval(() => this.afterHunt(this.hunt.tick(hunt, this.state.players, Date.now())), 250);
+
     this.onMessage(MSG.devTime, (_client, message: { time?: unknown }) => {
       const time = parseTime(message?.time);
       if (devToolsOn() && time !== undefined) this.state.clock = time;
@@ -289,6 +335,8 @@ export class PartyRoom extends Room<{ state: PartyState }> {
   }
 
   onLeave(client: Client) {
+    const huntOver = this.hunt.leave(this.state.hunt, client.sessionId, this.state.players, Date.now());
+    if (huntOver) void this.announceHunt(huntOver);
     this.state.players.delete(client.sessionId);
     this.fishing.remove(client.sessionId);
     this.bowling.leave(this.state.lanes, client.sessionId, Date.now());
@@ -354,6 +402,25 @@ export class PartyRoom extends Room<{ state: PartyState }> {
     const players = r.playerIds.map((id) => this.userIds.get(id) ?? null).filter((u): u is string => !!u);
     await recordC4Game(winner, players).catch(() => null);
     this.broadcast(SERVER_MSG.c4Won, { id: r.winnerId, name: r.winnerName });
+  }
+
+  /** Act on what the hunt's tick asked for: move the bear to its spot (told to it alone), or the end. */
+  private afterHunt(e: HuntEvents) {
+    if (e.warp) {
+      const bear = this.clients.find((c) => c.sessionId === e.warp!.id);
+      const { spot } = e.warp;
+      bear?.send(SERVER_MSG.huntWarp, { x: spot.x, y: spot.y, z: spot.z, name: spot.name });
+    }
+    if (e.over) void this.announceHunt(e.over);
+  }
+
+  /** Save a finished hunt (the bear's points, the takedown) for signed-in players, then tell the party. */
+  private async announceHunt(r: HuntResult & { players: string[] }) {
+    const { players, ...result } = r;
+    this.broadcast(SERVER_MSG.huntOver, result);
+    const uid = (id: string | undefined) => (id ? (this.userIds.get(id) ?? null) : null);
+    const signedIn = players.map(uid).filter((u): u is string => !!u);
+    await recordHunt({ bear: uid(r.bearId), points: r.points, seconds: r.seconds, how: r.how, takenBy: uid(r.byId), players: signedIn }).catch(() => false);
   }
 
   private freeSlot() {

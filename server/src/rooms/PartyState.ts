@@ -34,6 +34,14 @@ export const Player = schema(
     bikeY: t.float32(),
     bikeZ: t.float32(),
     bikeYaw: t.float32(),
+    // The bear hunt (Andrew, 2026-10-17): "" not in one, "bear" or "hunter"; a hunter's guns.
+    role: t.string().default(""),
+    gun: t.string().default(""), // the gun in hand ("" none)
+    guns: t.string().default(""), // every gun carried, comma separated
+    scoped: t.string().default(""), // the guns with a scope fitted, comma separated
+    ammo: t.uint8(), // rounds left in the gun in hand
+    reloadUntil: t.float64().default(0), // reloading until then (ms since 1970)
+    downUntil: t.float64().default(0), // knocked down by the bear's swipe until then (ms since 1970)
   },
   "Player",
 );
@@ -86,6 +94,24 @@ export const C4Table = schema(
 );
 export type C4Table = SchemaType<typeof C4Table>;
 
+// The bear hunt (Andrew, 2026-10-17): who's ready in the circle by the dock, and the hunt itself.
+// The bear's hiding spot is never in here (it's sent to the bear alone).
+export const Hunt = schema(
+  {
+    phase: t.string().default("idle"), // idle | countdown | live | over
+    ready: t.map("boolean"), // session id -> ready (standing in the circle)
+    countdownEnd: t.float64().default(0), // ms since 1970
+    startedAt: t.float64().default(0),
+    endsAt: t.float64().default(0),
+    bearId: t.string().default(""),
+    bearHealth: t.uint8().default(100),
+    result: t.string().default(""), // HuntResult as JSON while phase is "over"
+    overUntil: t.float64().default(0),
+  },
+  "Hunt",
+);
+export type Hunt = SchemaType<typeof Hunt>;
+
 export const PartyState = schema(
   {
     phase: t.string().default("lobby"), // "lobby" | "playing"
@@ -98,6 +124,7 @@ export const PartyState = schema(
     lanes: t.map(Lane), // "1" and "2" (GAME_SPEC §15)
     catan: CatanTable,
     c4: C4Table,
+    hunt: Hunt,
   },
   "PartyState",
 );
