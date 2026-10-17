@@ -23,7 +23,7 @@ describe("graphics presets", () => {
       expect(b.dpr).toBeGreaterThanOrEqual(a.dpr);
       expect(b.shadowMap).toBeGreaterThanOrEqual(a.shadowMap);
       expect(b.treeLods[0]).toBeGreaterThanOrEqual(a.treeLods[0]);
-      expect(b.interiorLights).toBeGreaterThanOrEqual(a.interiorLights);
+      expect(b.lampLights).toBeGreaterThanOrEqual(a.lampLights);
     }
     expect(low.bloom || medium.bloom).toBe(false);
     expect(high.bloom && high.ambientOcclusion).toBe(true);

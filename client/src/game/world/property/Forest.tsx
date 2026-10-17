@@ -137,8 +137,9 @@ export function Forest() {
         maxDist: near,
         castShadow: true,
         parts: [...forestParts(trees, toon, `${kind}_lod0_bark`), ...forestParts(trees, toon, `${kind}_lod0_leaves`)],
-        // Cartoon trees are solid models (no see-through leaf cards), so even close up the far-detail one casts the same shadow.
-        shadowProxy: toon ? [...forestParts(trees, toon, `${kind}_lod2_bark`), ...forestParts(trees, toon, `${kind}_lod2_leaves`)] : undefined,
+        // Close up, the shadow comes from the far-detail tree too where the preset says so (and always for the
+        // solid cartoon trees): a dappled leafy shadow looks the same, at a fraction of the work.
+        shadowProxy: toon || q.simpleTreeShadows ? [...forestParts(trees, toon, `${kind}_lod2_bark`), ...forestParts(trees, toon, `${kind}_lod2_leaves`)] : undefined,
       },
       {
         maxDist: mid,

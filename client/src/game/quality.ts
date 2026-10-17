@@ -17,15 +17,20 @@ export interface Quality {
   treeLods: [number, number, number];
   /** How many detail levels of trees cast shadows (1 = only the nearest). */
   treeShadowLevels: number;
+  /** Close trees cast their shadow from the simplified far tree too (a leafy shadow looks the same; the full tree's leaves cost ~7 fps at the forest's edge). */
+  simpleTreeShadows: boolean;
   /** Saplings, ferns and small props are drawn this far. */
   smallFar: number;
   /** Outdoors, the rooms' furniture is drawn within this distance of the house walls (seen through the windows). */
   furnitureFar: number;
   /** Fog: where it starts and where it's solid. */
   fog: [number, number];
-  /** House lamps that are real lights (the rest just glow), inside and outside. */
-  interiorLights: number;
-  exteriorLights: number;
+  /**
+   * House lamps that are real lights (the rest just glow): one shared set that follows the nearest
+   * lamps that are on, inside or out. Every lit pixel pays for every one of them, day or night: on an
+   * M1, Medium with 4 indoor + 2 outdoor ran 36–47 fps at the heavy spots; 4 shared holds 60 (round 3).
+   */
+  lampLights: number;
   /** Does your flashlight cast shadows; does the room you're in get a shadow-casting lamp. */
   flashlightShadow: boolean;
   indoorShadow: boolean;
@@ -36,16 +41,16 @@ export interface Quality {
 
 export const PRESETS: Record<Tier, Quality> = {
   low: {
-    tier: "low", dpr: 0.75, shadowMap: 1024, shadowHalf: 35, treeLods: [18, 45, 150], treeShadowLevels: 2, smallFar: 30, furnitureFar: 12, fog: [25, 140],
-    interiorLights: 2, exteriorLights: 1, flashlightShadow: false, indoorShadow: false, bloom: false, ambientOcclusion: false,
+    tier: "low", dpr: 0.75, shadowMap: 1024, shadowHalf: 35, treeLods: [18, 45, 150], treeShadowLevels: 2, simpleTreeShadows: true, smallFar: 30, furnitureFar: 12, fog: [25, 140],
+    lampLights: 3, flashlightShadow: false, indoorShadow: false, bloom: false, ambientOcclusion: false,
   },
   medium: {
-    tier: "medium", dpr: 1, shadowMap: 2048, shadowHalf: 55, treeLods: [22, 48, 200], treeShadowLevels: 2, smallFar: 32, furnitureFar: 15, fog: [35, 185],
-    interiorLights: 4, exteriorLights: 2, flashlightShadow: true, indoorShadow: false, bloom: false, ambientOcclusion: false,
+    tier: "medium", dpr: 1, shadowMap: 2048, shadowHalf: 55, treeLods: [22, 48, 200], treeShadowLevels: 2, simpleTreeShadows: true, smallFar: 32, furnitureFar: 15, fog: [35, 185],
+    lampLights: 4, flashlightShadow: true, indoorShadow: false, bloom: false, ambientOcclusion: false,
   },
   high: {
-    tier: "high", dpr: 1.25, shadowMap: 4096, shadowHalf: 70, treeLods: [35, 80, 210], treeShadowLevels: 2, smallFar: 50, furnitureFar: 30, fog: [40, 200],
-    interiorLights: 6, exteriorLights: 3, flashlightShadow: true, indoorShadow: true, bloom: true, ambientOcclusion: true,
+    tier: "high", dpr: 1.25, shadowMap: 4096, shadowHalf: 70, treeLods: [35, 80, 210], treeShadowLevels: 2, simpleTreeShadows: false, smallFar: 50, furnitureFar: 30, fog: [40, 200],
+    lampLights: 9, flashlightShadow: true, indoorShadow: true, bloom: true, ambientOcclusion: true,
   },
 };
 

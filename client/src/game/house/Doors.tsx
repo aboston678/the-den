@@ -59,8 +59,10 @@ function leavesOf(d: Door): Leaf[] {
   }
 }
 
+const OUTDOORS = new Set(["outside", "porch", "deck", "greenhouse"]);
+
 /** Leaf meshes: the leaf box plus panels/glass/knob, built along +u from the pivot, hanging from y = 0 up. */
-function LeafLook({ leaf, h, axis, m }: { leaf: Leaf; h: number; axis: "x" | "z"; m: HouseMaterials }) {
+function LeafLook({ leaf, h, axis, m, shadow }: { leaf: Leaf; h: number; axis: "x" | "z"; m: HouseMaterials; shadow: boolean }) {
   const w = leaf.width, mid = (leaf.dir * w) / 2;
   const place = (u: number, y: number, d = 0): [number, number, number] => (axis === "x" ? [u, y, d] : [d, y, u]);
   const size = (lu: number, ly: number, ld: number): [number, number, number] => (axis === "x" ? [lu, ly, ld] : [ld, ly, lu]);
@@ -106,7 +108,7 @@ function LeafLook({ leaf, h, axis, m }: { leaf: Leaf; h: number; axis: "x" | "z"
   return (
     <>
       {merged.map(({ mat, g }) => (
-        <mesh key={mat} geometry={g} material={m.get(mat) as Material} castShadow={mat !== "glass"} receiveShadow />
+        <mesh key={mat} geometry={g} material={m.get(mat) as Material} castShadow={shadow && mat !== "glass"} receiveShadow />
       ))}
     </>
   );
@@ -181,6 +183,9 @@ function DoorView({ door, m }: { door: Door; m: HouseMaterials }) {
     });
   });
 
+  // Only doors to the outside cast sun shadows: an indoor door's shadow falls inside the house's own, and
+  // drawing them all into the sun's shadow map cost ~40 draw calls a frame (round 3 speed pass).
+  const outerDoor = OUTDOORS.has(door.a) || OUTDOORS.has(door.b);
   return (
     <>
       {leaves.map((leaf, i) => {
@@ -191,7 +196,7 @@ function DoorView({ door, m }: { door: Door; m: HouseMaterials }) {
         const centre = (leaf.dir * leaf.width) / 2, cy = leaf.kind === "tilt" ? -h / 2 : h / 2;
         return (
           <group key={i} ref={(g) => { pivots.current[i] = g; }} position={pos}>
-            <LeafLook leaf={leaf} h={h} axis={door.axis} m={m} />
+            <LeafLook leaf={leaf} h={h} axis={door.axis} m={m} shadow={outerDoor} />
             {/* Invisible box matching the leaf, whose world pose drives the collider. */}
             <mesh ref={(mm) => { solids.current[i] = mm; }} position={door.axis === "x" ? [centre, cy, 0] : [0, cy, centre]} visible={false}>
               <boxGeometry args={[0.01, 0.01, 0.01]} />
@@ -204,7 +209,7 @@ function DoorView({ door, m }: { door: Door; m: HouseMaterials }) {
         const u = door.axis === "x" ? door.x : door.z;
         const fixed: Leaf = { hingeU: u - door.width / 2 + 0.02, dir: 1, width: door.width / 2 - 0.02, style: "glass", kind: "swing" };
         const pos: [number, number, number] = door.axis === "x" ? [fixed.hingeU, y, c] : [c, y, fixed.hingeU];
-        return <group position={pos}><LeafLook leaf={fixed} h={h} axis={door.axis} m={m} /></group>;
+        return <group position={pos}><LeafLook leaf={fixed} h={h} axis={door.axis} m={m} shadow={outerDoor} /></group>;
       })()}
     </>
   );

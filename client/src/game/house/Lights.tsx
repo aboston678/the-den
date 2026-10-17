@@ -22,42 +22,59 @@ const OTHER_FLOOR_PENALTY = 8;
 
 interface Slot {
   light: PointLight;
-  fixture: Fixture | null;
+  lamp: Lamp | null;
   /** 0 … 1: fades out before moving, fades in after. */
   level: number;
 }
 
-/** A pool of lights that follow the nearest fixtures. */
+/** A lamp a real light can sit at: a ceiling light indoors, or a lantern outside. */
+interface Lamp {
+  fixture: Fixture;
+  outdoor: boolean;
+  intensity: number;
+}
+
+/**
+ * One pool of real lights shared by the indoor lamps and the outdoor lanterns, following the nearest
+ * lamps that are on (round 3: two separate pools cost an M1 ~15 fps on Medium, since every lit pixel
+ * pays for every light, even an unused one). Indoors that's the room's ceiling lights; outside at night,
+ * the lanterns.
+ */
 class LightPool {
   slots: Slot[];
   private timer = 0;
-  private wanted = new Set<Fixture>();
+  private wanted = new Set<Lamp>();
 
-  constructor(n: number, readonly fixtures: Fixture[], readonly intensity: number, distance: number) {
+  constructor(n: number, readonly lamps: Lamp[], distance: number) {
     this.slots = Array.from({ length: n }, () => {
       const light = new PointLight(WARM, 0, distance, 2);
       light.castShadow = false;
-      return { light, fixture: null, level: 0 };
+      return { light, lamp: null, level: 0 };
     });
   }
 
-  update(dt: number, x: number, y: number, z: number, onFloor: string | null, strength: number) {
+  /** `outside` = how lit the lanterns are (0 by day, 1 at night). */
+  update(dt: number, x: number, y: number, z: number, onFloor: string | null, outside: number) {
     this.timer -= dt;
+    const strength = (l: Lamp) => (l.outdoor ? outside : 1);
     if (this.timer <= 0) {
       this.timer = REASSIGN_S;
-      const score = (f: Fixture) => Math.hypot(f.pos[0] - x, f.pos[1] - y, f.pos[2] - z) + (onFloor && f.level !== onFloor ? OTHER_FLOOR_PENALTY : 0);
-      this.wanted = new Set([...this.fixtures].sort((a, b) => score(a) - score(b)).slice(0, this.slots.length));
+      const score = (l: Lamp) => Math.hypot(l.fixture.pos[0] - x, l.fixture.pos[1] - y, l.fixture.pos[2] - z)
+        + (onFloor && !l.outdoor && l.fixture.level !== onFloor ? OTHER_FLOOR_PENALTY : 0)
+        + (l.outdoor && onFloor ? OTHER_FLOOR_PENALTY : 0) // inside, the lanterns are through a wall
+        + (strength(l) < 0.01 ? 1000 : 0); // switched off (lanterns by day)
+      this.wanted = new Set([...this.lamps].sort((a, b) => score(a) - score(b)).slice(0, this.slots.length));
     }
-    const missing = [...this.wanted].filter((f) => !this.slots.some((s) => s.fixture === f));
+    const missing = [...this.wanted].filter((l) => !this.slots.some((s) => s.lamp === l));
     for (const s of this.slots) {
-      const keep = s.fixture && this.wanted.has(s.fixture);
+      const keep = s.lamp && this.wanted.has(s.lamp);
       if (keep) s.level = Math.min(1, s.level + dt / FADE_S);
       else if (s.level > 0) s.level = Math.max(0, s.level - dt / FADE_S);
       else if (missing.length) {
-        s.fixture = missing.shift()!;
-        s.light.position.set(...s.fixture.pos);
+        s.lamp = missing.shift()!;
+        s.light.position.set(...s.lamp.fixture.pos);
       }
-      s.light.intensity = this.intensity * (s.fixture?.power ?? 1) * s.level * strength;
+      s.light.intensity = s.lamp ? s.lamp.intensity * s.lamp.fixture.power * s.level * strength(s.lamp) : 0;
     }
   }
 }
@@ -113,8 +130,10 @@ function makeFire() {
 export function HouseLights({ windowGlow }: { windowGlow: MeshBasicMaterial }) {
   const q = useQuality(); // how many real lights (GAME_SPEC §17)
   const parts = useMemo(() => {
-    const interior = new LightPool(q.interiorLights, INTERIOR_FIXTURES, 7, 10);
-    const exterior = new LightPool(q.exteriorLights, EXTERIOR_FIXTURES, 5, 10);
+    const lamps = new LightPool(q.lampLights, [
+      ...INTERIOR_FIXTURES.map((fixture) => ({ fixture, outdoor: false, intensity: 7 })),
+      ...EXTERIOR_FIXTURES.map((fixture) => ({ fixture, outdoor: true, intensity: 5 })),
+    ], 10);
     const glowMat = new MeshStandardMaterial({ color: "#fff6e8", emissive: WARM, emissiveIntensity: 2.2, roughness: 0.6 });
     const lanternMat = new MeshStandardMaterial({ color: "#2a2620", emissive: WARM, emissiveIntensity: 0, roughness: 0.5 });
     const ceilingLamps = fixtureMeshes(INTERIOR_FIXTURES, new CylinderGeometry(0.2, 0.24, 0.08, 16), glowMat, 0.0);
@@ -131,7 +150,7 @@ export function HouseLights({ windowGlow }: { windowGlow: MeshBasicMaterial }) {
       shadowLamp.shadow.normalBias = 0.02;
       shadowLamp.shadow.needsUpdate = true; // draw it once now: a never-drawn shadow map blanks the screen (see Flashlight.tsx)
     }
-    return { interior, exterior, glowMat, lanternMat, ceilingLamps, lanterns, fire: makeFire(), shadowLamp };
+    return { lamps, glowMat, lanternMat, ceilingLamps, lanterns, fire: makeFire(), shadowLamp };
   }, [q]);
   useEffect(() => () => {
     parts.ceilingLamps.dispose();
@@ -166,8 +185,7 @@ export function HouseLights({ windowGlow }: { windowGlow: MeshBasicMaterial }) {
       }
       lamp.shadow.autoUpdate = !!best; // no shadow redraws outdoors
     }
-    parts.interior.update(dt, p.x, head, p.z, floor, 1);
-    parts.exterior.update(dt, p.x, head, p.z, null, outside);
+    parts.lamps.update(dt, p.x, head, p.z, floor, outside);
     parts.lanternMat.emissiveIntensity = 3 * outside;
     windowGlow.opacity = 0.7 * current.night;
 
@@ -188,8 +206,7 @@ export function HouseLights({ windowGlow }: { windowGlow: MeshBasicMaterial }) {
 
   return (
     <>
-      {parts.interior.slots.map((s, i) => <primitive key={`in${i}`} object={s.light} />)}
-      {parts.exterior.slots.map((s, i) => <primitive key={`out${i}`} object={s.light} />)}
+      {parts.lamps.slots.map((s, i) => <primitive key={`lamp${i}`} object={s.light} />)}
       <primitive object={parts.ceilingLamps} />
       <primitive object={parts.lanterns} />
       <primitive object={parts.fire.group} />

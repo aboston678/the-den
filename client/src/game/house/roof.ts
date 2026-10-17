@@ -79,6 +79,9 @@ export const ROOFS: Gable[] = [
   {
     id: "rear_gable", x0: 21.5, x1: 29.5, z0: 5, z1: 11.5, ridge: "z", eaveY: REAR_GABLE_EAVE, pitch: PITCH,
     noOverhang: ["start"],
+    // Its side eaves stop where they'd poke into the upstairs rooms under the main roof (the yellow
+    // bedroom and the west attic, round 3); out past the main roof's back edge they stay.
+    holes: [{ x0: 21.5 - 1, x1: 21.5, z0: 4, z1: 10 }, { x0: 29.5, x1: 29.5 + 1, z0: 4, z1: 10 }],
   },
   {
     id: "kitchen_wing", x0: 7.5, x1: 17, z0: 0.5, z1: 9, ridge: "x", eaveY: 2.7, pitch: PITCH, gableEnds: ["start", "end"],
