@@ -284,7 +284,7 @@ export class Hunt {
     this.lastSwipe.set(id, now);
     const down: string[] = [];
     players.forEach((h, hid) => {
-      if (h.role !== "hunter" || now < h.downUntil) return;
+      if (h.role !== "hunter" || now < h.downUntil || h.bike === "riding") return; // not off a moving bike
       if (canSwipe(p, h)) {
         h.downUntil = now + SWIPE.downS * 1000;
         down.push(hid);

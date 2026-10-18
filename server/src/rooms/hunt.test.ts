@@ -235,6 +235,8 @@ describe("bear hunt: the clock, the swipe, leaving", () => {
     expect(x.hunt.holdPose(x.hunterId, x.hunter, { x: 5, z: 5 }, T0 + 7000)).toBe(true);
     expect(x.hunt.swipe(x.state, x.bearId, x.bear, x.players, T0 + 9500)).toEqual([]); // cooling down
     expect(x.hunt.swipe(x.state, x.hunterId, x.hunter, x.players, T0 + 20_000)).toEqual([]); // hunters can't swipe
+    x.hunter.bike = "riding";
+    expect(x.hunt.swipe(x.state, x.bearId, x.bear, x.players, T0 + 30_000)).toEqual([]); // nor knock one off a bike
   });
 
   it("ends when the bear leaves (it keeps its points) or the last hunter leaves", () => {
